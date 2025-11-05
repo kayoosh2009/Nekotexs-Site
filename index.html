@@ -1,1 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nekotexs - A Pixel Token for Cats on Solana</title>
+    <style>
+        /* General Pixel Styles */
+        body {
+            font-family: 'Press Start 2P', cursive, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #2a3b5b; /* Dark Blue Background */
+            color: #e0e0e0; /* Light Text */
+            image-rendering: pixelated;
+            text-shadow: 2px 2px #1a2b4b;
+            /* Скрываем контент сайта до загрузки */
+            overflow: hidden;
+        }
 
+        /* --- PRELOADER STYLES --- */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1a2b4b; /* Очень темный фон */
+            color: #ffd700;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            text-align: center;
+            transition: opacity 0.5s ease-out;
+        }
+
+        #preloader .loading-text {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            animation: blink 1s step-start infinite;
+        }
+
+        #preloader .message {
+            font-size: 1em;
+            height: 40px; /* Фиксированная высота для предотвращения "прыжков" */
+            color: #e0e0e0;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* --- MAIN SITE STYLES --- */
+        #main-content {
+            opacity: 0; /* Скрываем основной контент изначально */
+            transition: opacity 0.5s ease-in;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 960px;
+            margin: auto;
+            padding: 20px 0;
+        }
+
+        header {
+            background-color: #3b5a93;
+            padding: 10px 0;
+            text-align: center;
+            border-bottom: 4px solid #1a2b4b;
+        }
+
+        header h1 {
+            color: #ffd700; /* Gold Color */
+            font-size: 3em;
+            margin: 10px 0;
+            text-shadow: 4px 4px #b8860b;
+        }
+
+        header img {
+            height: 70px; /* Увеличенный логотип */
+            vertical-align: middle;
+            image-rendering: pixelated;
+            box-shadow: 4px 4px 0 #b84e00; /* Пиксельная тень для лого */
+        }
+
+        nav a {
+            color: #e0e0e0;
+            margin: 0 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9em;
+            padding: 5px 8px;
+            border: 2px solid transparent;
+            display: inline-block;
+        }
+        nav a:hover {
+            color: #ffd700;
+            border: 2px solid #ffd700;
+            background-color: #4c6baf;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 60px 0;
+            background-color: #2a3b5b;
+            border-bottom: 4px solid #1a2b4b;
+        }
+        .hero h2 {
+            color: #f0f0f0;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px #1a2b4b;
+        }
+        .hero p {
+            font-size: 1.1em;
+            line-height: 1.5;
+            max-width: 700px;
+            margin: 20px auto;
+        }
+
+        .section {
+            padding: 40px 0;
+            border-bottom: 2px dashed #4c6baf;
+            background-color: #2a3b5b;
+        }
+        .section:last-of-type {
+            border-bottom: none;
+        }
+
+        .section h2 {
+            text-align: center;
+            color: #ffd700;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px #b8860b;
+        }
+
+        /* --- FAN ART GALLERY STYLES --- */
+        .art-preview {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px; /* Промежуток между картинками */
+            margin-bottom: 30px;
+            flex-wrap: wrap; /* Для адаптивности на маленьких экранах */
+        }
+
+        .art-item {
+            flex: 1 1 30%; /* Каждый элемент занимает около 30% ширины */
+            text-align: center;
+        }
+
+        .art-item img {
+            width: 100%;
+            height: auto;
+            max-width: 250px; /* Максимальная ширина для пиксельного арта */
+            aspect-ratio: 1 / 1; /* Квадратные изображения */
+            object-fit: cover;
+            border: 3px solid #ff8c00; /* Пиксельная рамка */
+            image-rendering: pixelated;
+            box-shadow: 5px 5px 0 #b84e00;
+        }
+        /* --- END FAN ART GALLERY STYLES --- */
+
+
+        .info-box {
+            background-color: #3b5a93;
+            padding: 30px;
+            border: 2px solid #1a2b4b;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-shadow: 4px 4px #1a2b4b;
+        }
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        .info-box ul li {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        .info-box ul li strong {
+            color: #ffd700;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #ff8c00; /* Orange color from cat */
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border: 2px solid #b84e00;
+            border-radius: 3px;
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 3px 3px #b84e00;
+            transition: all 0.1s ease-in-out;
+            text-shadow: 2px 2px #b84e00;
+        }
+        .button:hover {
+            background-color: #e67e00;
+            box-shadow: 1px 1px #b84e00;
+            transform: translate(2px, 2px);
+        }
+
+        .social-links {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px dashed #4c6baf;
+        }
+        .social-links a {
+            display: inline-block;
+            margin: 0 15px;
+            text-decoration: none;
+            transition: color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        }
+        .social-links a:hover {
+            transform: translateY(-5px);
+        }
+
+        .social-links img {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+            vertical-align: middle;
+        }
+
+
+        footer {
+            background-color: #1a2b4b;
+            color: #e0e0e0;
+            text-align: center;
+            padding: 15px 0;
+            margin-top: 30px;
+            border-top: 4px solid #3b5a93;
+            font-size: 0.8em;
+            text-shadow: none;
+        }
+        footer a {
+            color: #ffd700;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="preloader">
+        <h1 style="font-size: 4em; color: #ff8c00; text-shadow: 5px 5px #b84e00;">NEKOTEXS</h1>
+        <div class="loading-text">LOADING... PLEASE WAIT</div>
+        <div class="message" id="loading-message"></div>
+    </div>
+    <div id="main-content">
+        <header>
+            <div class="container">
+                <h1>Nekotexs <img src="img/logo.png" alt="Nekotexs Logo" style="height: 70px; vertical-align: middle; image-rendering: pixelated;"></h1>
+                <nav>
+                    <a href="#about">About</a>
+                    <a href="#tokenomics">Tokenomics</a>
+                    <a href="#charity">Charity</a>
+                    <a href="#fanart">Fan Art</a>
+                    <a href="#how-to-buy">How to Buy</a>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            <section id="about" class="hero">
+                <div class="container">
+                    <h2>Nekotexs: The Pixel Token for Real Cat Aid on Solana!</h2>
+                    <p>Welcome to Nekotexs – a unique crypto project on the Solana blockchain where every transaction generates feline joy. We combine the power of decentralized finance with our love for cats, creating a sustainable source of aid for those who need it most.</p>
+                    <a href="#DEX-Link-Placeholder" class="button">BUY $NEKOTEXS NOW!</a>
+                    <p style="margin-top: 20px;">Ticker: $NEKOTEXS</p>
+                    <p>Network: Solana</p>
+                </div>
+            </section>
+
+            <section id="charity" class="section">
+                <div class="container">
+                    <h2>💖 Charity: The Heart of Nekotexs</h2>
+                    <div class="info-box">
+                        <p>Our mission is simple: raise funds for cats using blockchain innovation. With every buy and sell of the Nekotexs token, a small percentage (Please specify the exact percentage, e.g., 3%) is automatically sent to a special, publicly trackable charity wallet. These funds are used exclusively for:</p>
+                        <ul>
+                            <li>✨ **Shelter Support:** Covering food, medication, and veterinary services.</li>
+                            <li>✨ **Aid for Strays:** Rescue, spaying/neutering, and rehoming.</li>
+                            <li>✨ **Awareness & Education:** Promoting animal welfare.</li>
+                        </ul>
+                        <p>We guarantee full transparency. The charity wallet address will be public, allowing you to track every transaction.</p>
+                        <a href="#" class="button" style="background-color: #4CAF50; border-color: #2E8B57;">VIEW CHARITY WALLET</a>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tokenomics" class="section">
+                <div class="container">
+                    <h2>📈 $NEKOTEXS Tokenomics: Growth and Impact</h2>
+                    <div class="info-box">
+                        <p>Nekotexs is designed for sustainable growth and maximum benefit for charity:</p>
+                        <ul>
+                            <li><strong>Total Supply:</strong> [Specify exact amount, e.g., 1,000,000,000] tokens</li>
+                            <li><strong>Transaction Tax (Buy/Sell):</strong> [Specify %], out of which:
+                                <ul>
+                                    <li>**[2-3%]** goes to the Charity Fund (Specify exact %)</li>
+                                    <li>**[X%]** goes to Marketing and Development</li>
+                                    <li>**[Y%]** goes to Liquidity Pool contribution</li>
+                                </ul>
+                            </li>
+                            <li><strong>Liquidity Pool (LP):</strong> Locked to ensure stability and trust.</li>
+                            <li><strong>Anti-Whale Mechanism:</strong> (If applicable) Limit on max transaction amount or ownership to prevent manipulation.</li>
+                        </ul>
+                        <p>The detailed tokenomics will be published in our Whitepaper (link below).</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="fanart" class="section">
+                <div class="container">
+                    <h2>🎨 Community Pixel Art Showcase</h2>
+                    <p style="text-align: center; margin-bottom: 30px;">A glimpse into the amazing pixel art created by our community! Thank you for the support!</p>
+
+                    <div class="art-preview">
+                        <div class="art-item">
+                            <img src="img/art1.png" alt="Fan Art 1 Placeholder">
+                        </div>
+                        <div class="art-item">
+                            <img src="img/art2.png" alt="Fan Art 2 Placeholder">
+                        </div>
+                        <div class="art-item">
+                            <img src="img/art3.png" alt="Fan Art 3 Placeholder">
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="galery.html" class="button" style="background-color: #4CAF50; border-color: #2E8B57; font-size: 1.2em;">VIEW FULL FAN ART GALLERY</a>
+                    </div>
+                </div>
+            </section>
+            <section id="how-to-buy" class="section">
+                <div class="container">
+                    <h2>🛒 <a href="#DEX-Link-Placeholder" style="color: inherit; text-decoration: none;">How to Buy Pixel $NEKOTEXS</a></h2>
+                    <div class="info-box">
+                        <p>Getting started with helping cats is easy! Click the link below to go directly to the Decentralized Exchange (DEX):</p>
+                        <a href="#DEX-Link-Placeholder" class="button" style="background-color: #8A2BE2; border-color: #4B0082;">CONTRACT ADDRESS & DEX LINK</a>
+                        <p style="margin-top: 15px;">**Contract Address:** [Here goes the Contract Address]</p>
+                        <ol style="margin-top: 20px; font-size: 0.9em; text-align: left;">
+                            <li>Install a **Solana Wallet** (e.g., Phantom or Solflare).</li>
+                            <li>Fund your wallet with **SOL** to cover transactions.</li>
+                            <li>Click the button above to go to the official DEX/Purchase page.</li>
+                            <li>Connect your wallet and swap SOL for $NEKOTEXS!</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <section class="social-links">
+                <div class="container">
+                    <h2>Join Our Pixel Community!</h2>
+                    <a href="#" target="_blank" aria-label="LinkedIn"><img src="https://img.icons8.com/color/48/000000/linkedin.png" alt="LinkedIn"></a>
+                    <a href="#" target="_blank" aria-label="Reddit"><img src="https://img.icons8.com/color/48/000000/reddit.png" alt="Reddit"></a>
+                    <a href="#" target="_blank" aria-label="Telegram"><img src="https://img.icons8.com/color/48/000000/telegram-app.png" alt="Telegram"></a>
+                    <a href="#" target="_blank" aria-label="X (Twitter)"><img src="https://img.icons8.com/fluency/48/000000/twitterx.png" alt="X"></a>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Nekotexs. All rights reserved. Made with love for pixels and cats. 😻</p>
+            <p style="margin-top: 10px;">Have questions? Contact us: <a href="mailto:Nekotex@gmx.com">Nekotex@gmx.com</a></p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const preloader = document.getElementById('preloader');
+            const mainContent = document.getElementById('main-content');
+            const messageElement = document.getElementById('loading-message');
+
+            // Сообщения, которые будут отображаться
+            const messages = [
+                "Verifying cat-person status...",
+                "Scanning for purrfect transaction blocks...",
+                "Excellent wallpaper with a cat!",
+                "Nya~",
+                "Loading treats and liquidity...",
+                "Almost ready to help the kitties...",
+                "Calculating charity donation percentage...",
+            ];
+
+            let messageIndex = 0;
+
+            // Функция смены сообщений
+            function changeMessage() {
+                messageElement.textContent = messages[messageIndex];
+                messageIndex = (messageIndex + 1) % messages.length;
+            }
+
+            // Запускаем смену сообщений каждые 600 миллисекунд
+            changeMessage(); // Показываем первое сообщение сразу
+            const messageInterval = setInterval(changeMessage, 600);
+
+            // Скрываем прелоадер через 3 секунды (или после завершения загрузки)
+            setTimeout(() => {
+                clearInterval(messageInterval); // Останавливаем смену сообщений
+                preloader.style.opacity = '0'; // Плавно скрываем
+
+                // После завершения анимации скрытия (0.5s)
+                setTimeout(() => {
+                    preloader.style.display = 'none';
+                    document.body.style.overflow = 'auto'; // Включаем скролл
+                    mainContent.style.opacity = '1'; // Показываем контент
+                }, 500);
+
+            }, 3000); // 3000 миллисекунд = 3 секунды
+        });
+    </script>
+</body>
+</html>

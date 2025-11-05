@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nekotexs - Fan Art Gallery</title>
+    <style>
+        /* General Pixel Styles */
+        body {
+            font-family: 'Press Start 2P', cursive, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #2a3b5b;
+            color: #e0e0e0;
+            image-rendering: pixelated;
+            text-shadow: 2px 2px #1a2b4b;
+            overflow: hidden; 
+        }
+
+        /* --- PRELOADER STYLES (Identical to main page) --- */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1a2b4b;
+            color: #ffd700;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            text-align: center;
+            transition: opacity 0.5s ease-out;
+        }
+
+        #preloader .loading-text {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            animation: blink 1s step-start infinite;
+        }
+
+        #preloader .message {
+            font-size: 1em;
+            height: 40px;
+            color: #e0e0e0;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* --- MAIN SITE STYLES --- */
+        #main-content {
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px; /* Увеличил максимальную ширину для 4 колонок */
+            margin: auto;
+            padding: 20px 0;
+        }
+
+        header {
+            background-color: #3b5a93;
+            padding: 10px 0;
+            text-align: center;
+            border-bottom: 4px solid #1a2b4b;
+        }
+
+        header h1 {
+            color: #ffd700;
+            font-size: 3em;
+            margin: 10px 0;
+            text-shadow: 4px 4px #b8860b;
+        }
+        
+        header img {
+            height: 70px;
+            vertical-align: middle;
+            image-rendering: pixelated;
+            box-shadow: 4px 4px 0 #b84e00;
+        }
+
+        nav a {
+            color: #e0e0e0;
+            margin: 0 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9em;
+            padding: 5px 8px;
+            border: 2px solid transparent;
+            display: inline-block;
+        }
+        nav a:hover {
+            color: #ffd700;
+            border: 2px solid #ffd700;
+            background-color: #4c6baf;
+        }
+        
+        /* --- GALLERY SPECIFIC STYLES (Pinterest / Masonry-like) --- */
+        #gallery {
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        #gallery h2 {
+            color: #ff8c00;
+            font-size: 2.5em;
+            margin-bottom: 40px;
+            text-shadow: 3px 3px #b84e00;
+        }
+
+        .art-grid {
+            /* CSS Grid для создания 4-колоночной адаптивной сетки */
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 колонки одинаковой ширины */
+            gap: 20px;
+            padding: 20px 0;
+        }
+        
+        .art-item {
+            text-align: center;
+            background-color: #3b5a93; /* Фон для контейнера */
+            padding: 10px;
+            border: 2px solid #1a2b4b;
+            box-shadow: 5px 5px 0 #1a2b4b;
+            transition: transform 0.3s ease-in-out; 
+            /* Стиль "Pinterest" - элементы могут иметь разную высоту */
+        }
+
+        .art-item:hover {
+            /* Эффект сдвига вверх и вниз */
+            transform: translateY(-10px); 
+        }
+
+        .art-item img {
+            width: 100%;
+            height: auto; /* Позволяет изображениям иметь разную высоту */
+            display: block;
+            border: 3px solid #ffd700;
+            image-rendering: pixelated;
+            margin-bottom: 10px;
+        }
+
+        .art-item p {
+            margin: 0;
+            padding-bottom: 5px;
+            color: #f0f0f0;
+            font-size: 0.9em;
+        }
+
+        .back-button {
+            margin-top: 60px;
+            margin-bottom: 40px;
+        }
+        
+        .button {
+            display: inline-block;
+            background-color: #ff8c00;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border: 2px solid #b84e00;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 3px 3px #b84e00;
+            transition: all 0.1s ease-in-out;
+            text-shadow: 2px 2px #b84e00;
+        }
+        .button:hover {
+            background-color: #e67e00;
+            box-shadow: 1px 1px #b84e00;
+            transform: translate(2px, 2px);
+        }
+
+        /* --- MEDIA QUERIES FOR RESPONSIVENESS (Адаптивность) --- */
+
+        /* Планшеты (до 992px) */
+        @media (max-width: 992px) {
+            .art-grid {
+                grid-template-columns: repeat(3, 1fr); /* 3 колонки на планшетах */
+            }
+        }
+
+        /* Маленькие планшеты / Телефоны в альбомной ориентации (до 768px) */
+        @media (max-width: 768px) {
+            .art-grid {
+                grid-template-columns: repeat(2, 1fr); /* 2 колонки на маленьких экранах */
+            }
+            header img {
+                height: 50px;
+            }
+        }
+
+        /* Телефоны (до 576px) */
+        @media (max-width: 576px) {
+            .art-grid {
+                grid-template-columns: 1fr; /* 1 колонка на телефонах */
+            }
+            .art-item:hover {
+                 transform: translateY(-5px); /* Меньший эффект сдвига на телефоне */
+            }
+        }
+        /* --- END MEDIA QUERIES --- */
+
+        footer {
+            background-color: #1a2b4b;
+            color: #e0e0e0;
+            text-align: center;
+            padding: 15px 0;
+            margin-top: 30px;
+            border-top: 4px solid #3b5a93;
+            font-size: 0.8em;
+            text-shadow: none;
+        }
+        footer a {
+            color: #ffd700;
+            text-decoration: none;
+        }
+    </style>
+    
+
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="preloader">
+        <h1 style="font-size: 4em; color: #ff8c00; text-shadow: 5px 5px #b84e00;">LOADING ART</h1>
+        <div class="loading-text">PLEASE WAIT</div>
+        <div class="message" id="loading-message"></div>
+    </div>
+    <div id="main-content">
+        <header>
+            <div class="container">
+                <h1>Nekotexs <img src="img/logo.png" alt="Nekotexs Logo" style="height: 70px; vertical-align: middle; image-rendering: pixelated;"></h1>
+                <nav>
+                    <a href="index.html">Home</a>
+                    <a href="#gallery">Art Gallery</a>
+                    <a href="index.html#social">Community</a>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            <section id="gallery">
+                <div class="container">
+                    <h2>✨ The Nekotexs Fan Art Hall of Fame ✨</h2>
+                    <p style="margin-bottom: 50px;">Thank you to our amazing community for these purrfect pixel creations! Hover over an image to see the 'Nya' effect. The gallery adjusts for any screen size!</p>
+
+                    <div class="art-grid" id="art-grid-container">
+                        </div>
+                    
+                    <div class="back-button">
+                        <a href="index.html" class="button" style="background-color: #4CAF50; border-color: #2E8B57;">← BACK TO HOME</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Nekotexs. All rights reserved. Made with love for pixels and cats. 😻</p>
+            <p style="margin-top: 10px;">Have questions? Contact us: <a href="mailto:Nekotex@gmx.com">Nekotex@gmx.com</a></p>
+        </footer>
+    </div>
+    
+    <script>
+        // Функция для генерации случайного целого числа
+        function getRandomInt(max) {
+            return Math.floor(Math.random() * max) + 1;
+        }
+        
+        // Массив сообщений для прелоадера
+        const messages = [
+            "Analyzing fan-art quality...",
+            "Petting all the pixel kitties...",
+            "Purrfect loading sequence initiated.",
+            "Compiling gallery data...",
+            "Almost ready to show the masterpieces!",
+        ];
+        
+        // --- ИЗМЕНИТЕ ЭТУ ЦИФРУ ---
+        const totalArts = 5; // <--- УКАЖИТЕ ФАКТИЧЕСКОЕ КОЛИЧЕСТВО ВАШИХ АРТОВ (1.png, 2.png, 3.png, etc.)
+        const numberOfItemsToDisplay = 12; // Сколько артов показать на странице (должно быть кратно 4 для PC)
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const preloader = document.getElementById('preloader');
+            const mainContent = document.getElementById('main-content');
+            const messageElement = document.getElementById('loading-message');
+            const artGridContainer = document.getElementById('art-grid-container');
+
+            // --- 1. PRELOADER LOGIC ---
+            let messageIndex = 0;
+            
+            function changeMessage() {
+                messageElement.textContent = messages[messageIndex];
+                messageIndex = (messageIndex + 1) % messages.length;
+            }
+
+            changeMessage();
+            const messageInterval = setInterval(changeMessage, 600);
+
+            // --- 2. GALLERY GENERATION (RANDOM) ---
+            function generateGallery() {
+                if (totalArts === 0) return;
+
+                for (let i = 0; i < numberOfItemsToDisplay; i++) {
+                    const randomArtNumber = getRandomInt(totalArts);
+                    const artSrc = `img/art/${randomArtNumber}.png`;
+                    
+                    const artItem = document.createElement('div');
+                    artItem.className = 'art-item';
+                    
+                    // ВАЖНО: для имитации Pinterest изображения должны иметь разную высоту. 
+                    // Убедитесь, что ваши файлы 1.png, 2.png и т.д. имеют разную высоту.
+                    artItem.innerHTML = `
+                        <img src="${artSrc}" alt="Fan Art #${randomArtNumber}">
+                        <p>Art ID: ${randomArtNumber}</p>
+                    `;
+                    
+                    artGridContainer.appendChild(artItem);
+                }
+            }
+
+            // Генерируем галерею
+            generateGallery();
+
+            // --- 3. HIDE PRELOADER ---
+            setTimeout(() => {
+                clearInterval(messageInterval);
+                preloader.style.opacity = '0';
+                
+                setTimeout(() => {
+                    preloader.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    mainContent.style.opacity = '1';
+                }, 500);
+
+            }, 3000); // 3 секунды загрузки
+        });
+    </script>
+</body>
+</html>
