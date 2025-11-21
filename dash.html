@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nekotexs | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #ffffff;
+        }
+        .font-pixel { font-family: 'Press Start 2P', cursive; }
+        
+        /* Animated Scanline for "Under Construction" vibe */
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: 10;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255, 140, 0, 0.1) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: absolute;
+            bottom: 100%;
+            animation: scanline 10s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100%; }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden relative">
+
+    <div class="scanline"></div>
+
+    <!-- Top Bar -->
+    <header class="w-full border-b border-gray-800 bg-black/50 p-6 flex justify-between items-center z-20">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-orange-500 rounded flex items-center justify-center font-pixel text-xs">NK</div>
+            <span class="font-bold tracking-wide">DASHBOARD</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="text-xs text-gray-400 text-right">
+                <div class="uppercase tracking-wider text-orange-500">Connected Wallet</div>
+                <div id="walletDisplay" class="font-mono">Loading...</div>
+            </div>
+            <button onclick="logout()" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded text-xs font-bold uppercase transition">
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content (Construction) -->
+    <main class="flex-1 flex flex-col items-center justify-center relative z-10 p-6">
+        
+        <div class="max-w-lg w-full bg-gray-900/50 border border-gray-800 rounded-2xl p-10 text-center backdrop-blur-sm">
+            <!-- Glitchy Icon -->
+            <div class="text-6xl mb-6 animate-pulse">
+                🚧
+            </div>
+            
+            <h1 class="text-3xl font-bold mb-4 text-white">Dashboard Under Construction</h1>
+            <p class="text-gray-400 mb-8">
+                Welcome, Trader. The Nekotexs interface is currently being compiled. 
+                <br><br>
+                Soon you will see your swap history, rewards, and charity impact here.
+            </p>
+
+            <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-orange-500 h-full w-2/3 animate-pulse"></div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mt-2 font-mono">
+                <span>DEVELOPMENT</span>
+                <span>67% COMPLETE</span>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Check Auth on Load
+        document.addEventListener("DOMContentLoaded", () => {
+            const wallet = localStorage.getItem('neko_wallet');
+            
+            if (!wallet) {
+                // If no wallet found, redirect back to index
+                window.location.href = "index.html";
+            } else {
+                // Display wallet (shortened)
+                const shortWallet = wallet.slice(0, 4) + '...' + wallet.slice(-4);
+                document.getElementById('walletDisplay').innerText = shortWallet;
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('neko_wallet');
+            // Disconnect from Phantom (optional, usually handled by the wallet itself)
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
