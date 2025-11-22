@@ -68,7 +68,6 @@
                     <a href="#tokenomics" class="text-gray-400 hover:text-white transition text-sm font-medium">Tokenomics</a>
                     <a href="#roadmap" class="text-gray-400 hover:text-white transition text-sm font-medium">Roadmap</a>
                 </div>
-                <!-- Changed onclick to openModal() -->
                 <button onclick="openModal()" class="btn-primary px-6 py-2 rounded-full font-bold text-sm tracking-wide uppercase">
                     Connect Wallet
                 </button>
@@ -188,7 +187,7 @@
         </div>
     </footer>
 
-    <!-- === NEW MANUAL CONNECT MODAL === -->
+    <!-- === UPDATED CONNECT MODAL === -->
     <div id="walletModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
         <!-- Backdrop (Blurry Dark) -->
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal()"></div>
@@ -196,32 +195,30 @@
         <!-- Modal Content -->
         <div class="relative bg-[#0a0a0a] border border-orange-500/50 p-8 rounded-2xl w-full max-w-md shadow-[0_0_50px_rgba(255,140,0,0.2)] transform transition-all modal-enter mx-4">
             
-            <!-- Header -->
             <div class="text-center mb-6">
                 <h3 class="text-2xl font-bold text-white">Connect Wallet</h3>
-                <p class="text-gray-400 text-xs mt-2">Enter your public Solana address manually</p>
+                <p class="text-gray-400 text-xs mt-2">Choose your preferred method</p>
             </div>
             
-            <!-- Input Field -->
-            <div class="mb-6">
-                <input type="text" id="manualWalletInput" 
-                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-4 text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition font-mono text-sm text-center placeholder-gray-600"
-                    placeholder="Example: 7xKX...9jLq"
-                >
-            </div>
-            
-            <!-- Connect Button -->
-            <button onclick="submitManualWallet()" class="w-full btn-primary py-3 rounded-lg font-bold text-white mb-6 uppercase tracking-wider hover:scale-[1.02] transition">
-                Enter Nekotexs
-            </button>
+            <div class="space-y-4">
+                <!-- Option 1: Phantom -->
+                <button onclick="connectPhantom()" class="w-full bg-[#AB9FF2] hover:bg-[#9a8ee0] text-black font-bold py-3 rounded-lg flex items-center justify-center gap-3 transition hover:scale-[1.02]">
+                    <img src="https://cryptologos.cc/logos/phantom-phantom-logo.png" class="w-6 h-6" alt="Phantom">
+                    Connect Phantom
+                </button>
 
-            <!-- Phantom Fallback Link -->
-            <div class="text-center text-sm text-gray-500 border-t border-gray-800 pt-6">
-                <p class="mb-3">Don't have a wallet?</p>
-                <a href="https://phantom.app/" target="_blank" class="inline-flex items-center justify-center gap-2 text-orange-400 hover:text-orange-300 transition group bg-orange-500/10 px-4 py-2 rounded-full border border-orange-500/20">
-                    <span class="font-semibold">Download Phantom</span>
-                    <span class="group-hover:translate-x-1 transition">→</span>
-                </a>
+                <div class="text-center text-gray-600 text-xs">- OR -</div>
+
+                <!-- Option 2: Manual -->
+                <div>
+                    <input type="text" id="manualWalletInput" 
+                        class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-orange-500 focus:outline-none font-mono text-sm text-center placeholder-gray-600 mb-2"
+                        placeholder="Enter Address Manually (7xKX...)"
+                    >
+                    <button onclick="submitManualWallet()" class="w-full border border-orange-500/30 text-orange-500 hover:bg-orange-500/10 font-bold py-3 rounded-lg transition uppercase tracking-wider text-sm">
+                        Enter Address
+                    </button>
+                </div>
             </div>
             
             <!-- Close Button -->
@@ -246,68 +243,64 @@
         // 2. Modal Logic
         function openModal() {
             document.getElementById('walletModal').classList.remove('hidden');
-            // Auto-focus input
-            setTimeout(() => document.getElementById('manualWalletInput').focus(), 100);
         }
 
         function closeModal() {
             document.getElementById('walletModal').classList.add('hidden');
         }
 
-        // 3. Submit Logic
-        async function submitManualWallet() {
-            const input = document.getElementById('manualWalletInput');
-            const address = input.value.trim();
-            const btn = document.querySelector('#walletModal button.btn-primary');
-
-            if (!address) {
-                input.classList.add('border-red-500');
-                setTimeout(() => input.classList.remove('border-red-500'), 2000);
-                return;
-            }
-
-            // UI Feedback
-            const originalText = btn.innerText;
-            btn.innerText = "VERIFYING...";
-            btn.disabled = true;
-
-            try {
-                // Save to Firebase
-                await saveUserToFirebase(address);
-                
-                // Save to Local Storage
-                localStorage.setItem('neko_wallet', address);
-                
-                // Redirect
-                window.location.href = "dash.html";
-            } catch (e) {
-                console.error(e);
-                btn.innerText = "ERROR, TRY AGAIN";
-                btn.disabled = false;
+        // 3. Phantom Connect
+        async function connectPhantom() {
+            const { solana } = window;
+            if (solana && solana.isPhantom) {
+                try {
+                    const response = await solana.connect();
+                    const address = response.publicKey.toString();
+                    await finalizeLogin(address, "phantom");
+                } catch (err) {
+                    console.error(err);
+                }
+            } else {
+                alert("Phantom Wallet not found!");
+                window.open("https://phantom.app/", "_blank");
             }
         }
 
-        // 4. Save User Data function
-        const saveUserToFirebase = async (walletAddress) => {
+        // 4. Manual Submit
+        async function submitManualWallet() {
+            const input = document.getElementById('manualWalletInput');
+            const address = input.value.trim();
+            if (!address) {
+                input.classList.add('border-red-500');
+                return;
+            }
+            await finalizeLogin(address, "manual");
+        }
+
+        // 5. Finalize & Save
+        async function finalizeLogin(address, method) {
+            try {
+                await saveUserToFirebase(address, method);
+                localStorage.setItem('neko_wallet', address);
+                window.location.href = "dash.html";
+            } catch (e) {
+                console.error("Login error", e);
+                alert("Login failed. See console.");
+            }
+        }
+
+        const saveUserToFirebase = async (walletAddress, method) => {
             try {
                 await db.collection("users").doc(walletAddress).set({
                     wallet: walletAddress,
                     lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
                     platform: "web",
-                    method: "manual_input"
+                    method: method
                 }, { merge: true });
-                console.log("User saved");
             } catch (error) {
                 console.error("Error saving user: ", error);
             }
         };
-        
-        // Allow "Enter" key to submit
-        document.getElementById('manualWalletInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                submitManualWallet();
-            }
-        });
     </script>
 </body>
 </html>
