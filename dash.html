@@ -3,103 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nekotexs | Dashboard</title>
+    <title>Nekotexs | Admin Core</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
-    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #050505;
-            color: #ffffff;
-        }
-        .font-pixel { font-family: 'Press Start 2P', cursive; }
-        
-        /* Animated Scanline for "Under Construction" vibe */
-        .scanline {
-            width: 100%;
-            height: 100px;
-            z-index: 10;
-            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255, 140, 0, 0.1) 50%, rgba(0,0,0,0) 100%);
-            opacity: 0.1;
-            position: absolute;
-            bottom: 100%;
-            animation: scanline 10s linear infinite;
-            pointer-events: none;
-        }
-        @keyframes scanline {
-            0% { bottom: 100%; }
-            100% { bottom: -100%; }
-        }
+        body { background-color: #050505; color: #e0e0e0; font-family: monospace; }
+        .glass { background: rgba(255, 255, 255, 0.03); border: 1px solid #333; }
+        .terminal-text { color: #00ff00; text-shadow: 0 0 5px rgba(0,255,0,0.3); }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden relative">
+<body class="p-6 min-h-screen flex flex-col">
 
-    <div class="scanline"></div>
+    <!-- LOGIN OVERLAY -->
+    <div id="loginScreen" class="fixed inset-0 bg-[#050505] z-50 flex flex-col items-center justify-center">
+        <h1 class="text-4xl font-bold mb-4 text-orange-500 tracking-widest">SYSTEM LOCKED</h1>
+        <p class="mb-8 text-gray-600 text-xs uppercase">Secure Connection Required</p>
+        <button onclick="connectAdmin()" class="bg-orange-600 hover:bg-orange-500 text-black font-bold py-3 px-10 rounded shadow-lg shadow-orange-900/40 transition">
+            AUTHENTICATE WALLET
+        </button>
+        <p id="errorMsg" class="text-red-500 mt-4 hidden font-bold bg-red-900/20 px-4 py-2 rounded">ACCESS DENIED</p>
+    </div>
 
-    <!-- Top Bar -->
-    <header class="w-full border-b border-gray-800 bg-black/50 p-6 flex justify-between items-center z-20">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-orange-500 rounded flex items-center justify-center font-pixel text-xs">NK</div>
-            <span class="font-bold tracking-wide">DASHBOARD</span>
-        </div>
-        <div class="flex items-center gap-4">
-            <div class="text-xs text-gray-400 text-right">
-                <div class="uppercase tracking-wider text-orange-500">Connected Wallet</div>
-                <div id="walletDisplay" class="font-mono">Loading...</div>
-            </div>
-            <button onclick="logout()" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded text-xs font-bold uppercase transition">
-                Logout
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Content (Construction) -->
-    <main class="flex-1 flex flex-col items-center justify-center relative z-10 p-6">
+    <!-- DASHBOARD -->
+    <div id="adminDash" class="hidden w-full max-w-6xl mx-auto">
         
-        <div class="max-w-lg w-full bg-gray-900/50 border border-gray-800 rounded-2xl p-10 text-center backdrop-blur-sm">
-            <!-- Glitchy Icon -->
-            <div class="text-6xl mb-6 animate-pulse">
-                🚧
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <h1 class="text-xl font-bold text-white">ADMIN_CONSOLE <span class="text-gray-600 text-sm font-normal">v2.0</span></h1>
             </div>
-            
-            <h1 class="text-3xl font-bold mb-4 text-white">Dashboard Under Construction</h1>
-            <p class="text-gray-400 mb-8">
-                Welcome, Trader. The Nekotexs interface is currently being compiled. 
-                <br><br>
-                Soon you will see your swap history, rewards, and charity impact here.
-            </p>
+            <a href="dash.html" class="text-xs text-gray-500 hover:text-white">← Back to Dashboard</a>
+        </div>
 
-            <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
-                <div class="bg-orange-500 h-full w-2/3 animate-pulse"></div>
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="glass p-6 rounded-lg">
+                <h3 class="text-gray-500 text-xs uppercase mb-1">Total Miners</h3>
+                <p class="text-3xl font-bold text-white" id="totalUsers">--</p>
             </div>
-            <div class="flex justify-between text-xs text-gray-500 mt-2 font-mono">
-                <span>DEVELOPMENT</span>
-                <span>67% COMPLETE</span>
+            <div class="glass p-6 rounded-lg">
+                <h3 class="text-gray-500 text-xs uppercase mb-1">Circulating Supply (Mined)</h3>
+                <p class="text-3xl font-bold terminal-text" id="totalSupply">--</p>
+            </div>
+            <div class="glass p-6 rounded-lg border-l-4 border-orange-600">
+                <h3 class="text-gray-500 text-xs uppercase mb-1">System Status</h3>
+                <p class="text-xl font-bold text-white">OPERATIONAL</p>
             </div>
         </div>
 
-    </main>
+        <!-- Data Table -->
+        <div class="glass rounded-lg overflow-hidden">
+            <div class="p-4 bg-white/5 border-b border-gray-800 flex justify-between items-center">
+                <h3 class="text-sm font-bold text-gray-300">USER DATABASE</h3>
+                <button onclick="loadData()" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1 rounded text-white transition">↻ REFRESH</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-black/40 text-gray-500 text-xs uppercase">
+                        <tr>
+                            <th class="p-4">Wallet</th>
+                            <th class="p-4">Balance ($NEKO)</th>
+                            <th class="p-4">Last Sync</th>
+                            <th class="p-4 text-right">Tools</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody" class="divide-y divide-gray-800 text-gray-300">
+                        <!-- Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Check Auth on Load
-        document.addEventListener("DOMContentLoaded", () => {
-            const wallet = localStorage.getItem('neko_wallet');
-            
-            if (!wallet) {
-                // If no wallet found, redirect back to index
-                window.location.href = "index.html";
-            } else {
-                // Display wallet (shortened)
-                const shortWallet = wallet.slice(0, 4) + '...' + wallet.slice(-4);
-                document.getElementById('walletDisplay').innerText = shortWallet;
-            }
-        });
+        // Firebase Init
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+            authDomain: "nekotexs.firebaseapp.com",
+            databaseURL: "https://nekotexs-default-rtdb.firebaseio.com",
+            projectId: "nekotexs",
+            storageBucket: "nekotexs.firebasestorage.app",
+            messagingSenderId: "596436176972",
+            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        function logout() {
-            localStorage.removeItem('neko_wallet');
-            // Disconnect from Phantom (optional, usually handled by the wallet itself)
-            window.location.href = "index.html";
+        const ADMIN_WALLET = "99LRmqppEMABzsZMYdDqhxqGaLDXZECpFqPBf9dHPdaf";
+
+        // Auth Logic
+        async function connectAdmin() {
+            const { solana } = window;
+            if (solana && solana.isPhantom) {
+                try {
+                    const response = await solana.connect();
+                    const key = response.publicKey.toString();
+                    
+                    if (key === ADMIN_WALLET) {
+                        document.getElementById('loginScreen').classList.add('hidden');
+                        document.getElementById('adminDash').classList.remove('hidden');
+                        loadData();
+                    } else {
+                        document.getElementById('errorMsg').classList.remove('hidden');
+                    }
+                } catch (err) { console.error(err); }
+            } else {
+                alert("Phantom Wallet Required");
+            }
+        }
+
+        // Load Data
+        async function loadData() {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '<tr><td class="p-4 text-gray-500">Fetching records...</td></tr>';
+
+            try {
+                const snapshot = await db.collection('users').orderBy('balance', 'desc').limit(50).get();
+                
+                let html = '';
+                let count = 0;
+                let total = 0;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    count++;
+                    const bal = data.balance || 0;
+                    total += bal;
+                    
+                    // Safer Date Parsing
+                    let dateStr = "N/A";
+                    if (data.lastSync && data.lastSync.seconds) {
+                        dateStr = new Date(data.lastSync.seconds * 1000).toLocaleString();
+                    }
+
+                    html += `
+                        <tr class="hover:bg-white/5 transition group">
+                            <td class="p-4 font-mono text-orange-400 text-xs">${data.wallet}</td>
+                            <td class="p-4 font-bold text-white">${bal.toFixed(4)}</td>
+                            <td class="p-4 text-gray-500 text-xs">${dateStr}</td>
+                            <td class="p-4 text-right">
+                                <button class="text-xs text-gray-500 hover:text-white underline" onclick="copy('${data.wallet}')">COPY ADDR</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                if (count === 0) html = '<tr><td colspan="4" class="p-4 text-center text-gray-600">Database Empty</td></tr>';
+
+                tbody.innerHTML = html;
+                document.getElementById('totalUsers').innerText = count;
+                document.getElementById('totalSupply').innerText = total.toFixed(2);
+
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-red-500">Error: ${e.message} (Check Rules)</td></tr>`;
+            }
+        }
+
+        function copy(text) {
+            navigator.clipboard.writeText(text);
         }
     </script>
 </body>
