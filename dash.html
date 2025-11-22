@@ -3,84 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nekotexs | Admin Core</title>
+    <title>Nekotexs | Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+    
     <style>
-        body { background-color: #050505; color: #e0e0e0; font-family: monospace; }
-        .glass { background: rgba(255, 255, 255, 0.03); border: 1px solid #333; }
-        .terminal-text { color: #00ff00; text-shadow: 0 0 5px rgba(0,255,0,0.3); }
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #ffffff; }
+        .font-pixel { font-family: 'Press Start 2P', cursive; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .nav-link { cursor: pointer; padding: 10px 15px; border-radius: 5px; transition: 0.2s; color: #aaa; }
+        .nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
     </style>
 </head>
-<body class="p-6 min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col">
 
-    <!-- LOGIN OVERLAY -->
-    <div id="loginScreen" class="fixed inset-0 bg-[#050505] z-50 flex flex-col items-center justify-center">
-        <h1 class="text-4xl font-bold mb-4 text-orange-500 tracking-widest">SYSTEM LOCKED</h1>
-        <p class="mb-8 text-gray-600 text-xs uppercase">Secure Connection Required</p>
-        <button onclick="connectAdmin()" class="bg-orange-600 hover:bg-orange-500 text-black font-bold py-3 px-10 rounded shadow-lg shadow-orange-900/40 transition">
-            AUTHENTICATE WALLET
-        </button>
-        <p id="errorMsg" class="text-red-500 mt-4 hidden font-bold bg-red-900/20 px-4 py-2 rounded">ACCESS DENIED</p>
-    </div>
+    <!-- NAVIGATION BAR -->
+    <nav class="border-b border-gray-800 bg-black/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-8 h-8 bg-orange-500 rounded flex items-center justify-center font-pixel text-[10px] text-black">NK</div>
+                <div class="hidden md:flex gap-2">
+                    <a class="nav-link text-white font-semibold">Overview</a>
+                    <a class="nav-link">Transactions</a>
+                    <a class="nav-link">Swap</a>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- ADMIN BUTTON (Hidden by default) -->
+                <a id="adminBtn" href="admin.html" class="hidden bg-red-900/50 text-red-400 border border-red-500/50 px-3 py-1 rounded text-xs font-bold hover:bg-red-900 transition">
+                    ADMIN PANEL
+                </a>
 
-    <!-- DASHBOARD -->
-    <div id="adminDash" class="hidden w-full max-w-6xl mx-auto">
+                <div class="text-right">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider">Wallet</div>
+                    <div id="walletDisplay" class="font-mono text-xs text-orange-500">Loading...</div>
+                </div>
+                <button onclick="logout()" class="text-gray-500 hover:text-white transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 max-w-7xl mx-auto w-full p-6 relative z-20">
         
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
-            <div class="flex items-center gap-3">
-                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <h1 class="text-xl font-bold text-white">ADMIN_CONSOLE <span class="text-gray-600 text-sm font-normal">v2.0</span></h1>
+        <!-- Profile Header -->
+        <div class="flex items-end mb-10">
+            <div class="w-24 h-24 bg-black border-4 border-[#050505] rounded-2xl overflow-hidden shadow-2xl relative z-30">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Neko" id="avatarImg" class="w-full h-full bg-gray-800">
             </div>
-            <a href="dash.html" class="text-xs text-gray-500 hover:text-white">← Back to Dashboard</a>
-        </div>
-
-        <!-- KPI Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="glass p-6 rounded-lg">
-                <h3 class="text-gray-500 text-xs uppercase mb-1">Total Miners</h3>
-                <p class="text-3xl font-bold text-white" id="totalUsers">--</p>
-            </div>
-            <div class="glass p-6 rounded-lg">
-                <h3 class="text-gray-500 text-xs uppercase mb-1">Circulating Supply (Mined)</h3>
-                <p class="text-3xl font-bold terminal-text" id="totalSupply">--</p>
-            </div>
-            <div class="glass p-6 rounded-lg border-l-4 border-orange-600">
-                <h3 class="text-gray-500 text-xs uppercase mb-1">System Status</h3>
-                <p class="text-xl font-bold text-white">OPERATIONAL</p>
+            <div class="ml-6 mb-2 relative z-30">
+                <h1 class="text-3xl font-bold">Trader Profile</h1>
+                <p class="text-gray-400 text-sm flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Online
+                </p>
             </div>
         </div>
 
-        <!-- Data Table -->
-        <div class="glass rounded-lg overflow-hidden">
-            <div class="p-4 bg-white/5 border-b border-gray-800 flex justify-between items-center">
-                <h3 class="text-sm font-bold text-gray-300">USER DATABASE</h3>
-                <button onclick="loadData()" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1 rounded text-white transition">↻ REFRESH</button>
+        <!-- Stats Grid -->
+        <div class="grid md:grid-cols-3 gap-6">
+            
+            <!-- Balance Card -->
+            <div class="glass p-8 rounded-2xl col-span-2 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                    <svg class="w-32 h-32 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>
+                </div>
+                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-2">Total Balance</h3>
+                <div class="flex items-baseline gap-2">
+                    <span id="balanceDisplay" class="text-5xl font-bold text-white">0.0000</span>
+                    <span class="text-xl text-orange-500 font-pixel">NEKO</span>
+                </div>
+                <div class="mt-6 flex gap-4">
+                    <button class="bg-orange-600 hover:bg-orange-500 text-white px-6 py-2 rounded font-bold transition shadow-lg shadow-orange-600/20">
+                        Withdraw
+                    </button>
+                    <button class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded font-bold transition">
+                        History
+                    </button>
+                </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-black/40 text-gray-500 text-xs uppercase">
-                        <tr>
-                            <th class="p-4">Wallet</th>
-                            <th class="p-4">Balance ($NEKO)</th>
-                            <th class="p-4">Last Sync</th>
-                            <th class="p-4 text-right">Tools</th>
-                        </tr>
-                    </thead>
-                    <tbody id="userTableBody" class="divide-y divide-gray-800 text-gray-300">
-                        <!-- Rows -->
-                    </tbody>
-                </table>
+
+            <!-- Node Status Card -->
+            <div class="glass p-8 rounded-2xl">
+                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-4">Sync Node Status</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between text-sm">
+                        <span>Status</span>
+                        <span class="text-green-400">Active</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>Last Sync</span>
+                        <span id="lastSyncDisplay" class="text-gray-300">Never</span>
+                    </div>
+                    <div class="pt-4 border-t border-gray-700">
+                        <p class="text-xs text-gray-500 mb-2">Install the extension to earn rewards passively.</p>
+                        <a href="#" class="text-orange-500 text-xs hover:underline">Download Extension -></a>
+                    </div>
+                </div>
             </div>
+
         </div>
-    </div>
+    </main>
 
     <script>
-        // Firebase Init
+        // --- CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
             authDomain: "nekotexs.firebaseapp.com",
@@ -92,80 +126,54 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-
+        
         const ADMIN_WALLET = "99LRmqppEMABzsZMYdDqhxqGaLDXZECpFqPBf9dHPdaf";
 
-        // Auth Logic
-        async function connectAdmin() {
-            const { solana } = window;
-            if (solana && solana.isPhantom) {
-                try {
-                    const response = await solana.connect();
-                    const key = response.publicKey.toString();
-                    
-                    if (key === ADMIN_WALLET) {
-                        document.getElementById('loginScreen').classList.add('hidden');
-                        document.getElementById('adminDash').classList.remove('hidden');
-                        loadData();
-                    } else {
-                        document.getElementById('errorMsg').classList.remove('hidden');
-                    }
-                } catch (err) { console.error(err); }
-            } else {
-                alert("Phantom Wallet Required");
+        // --- LOGIC ---
+        document.addEventListener("DOMContentLoaded", async () => {
+            const wallet = localStorage.getItem('neko_wallet');
+            
+            if (!wallet) {
+                window.location.href = "index.html";
+                return;
             }
-        }
 
-        // Load Data
-        async function loadData() {
-            const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = '<tr><td class="p-4 text-gray-500">Fetching records...</td></tr>';
+            // 1. Set Basic Info
+            const shortWallet = wallet.slice(0, 4) + '...' + wallet.slice(-4);
+            document.getElementById('walletDisplay').innerText = shortWallet;
+            document.getElementById('avatarImg').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${wallet}`;
 
+            // 2. Check Admin
+            if (wallet === ADMIN_WALLET) {
+                document.getElementById('adminBtn').classList.remove('hidden');
+            }
+
+            // 3. Fetch Real Data from Firestore
             try {
-                const snapshot = await db.collection('users').orderBy('balance', 'desc').limit(50).get();
-                
-                let html = '';
-                let count = 0;
-                let total = 0;
-
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    count++;
-                    const bal = data.balance || 0;
-                    total += bal;
-                    
-                    // Safer Date Parsing
-                    let dateStr = "N/A";
-                    if (data.lastSync && data.lastSync.seconds) {
-                        dateStr = new Date(data.lastSync.seconds * 1000).toLocaleString();
+                // Используем onSnapshot для реального времени (если расширение обновит баланс, тут он тоже обновится)
+                db.collection("users").doc(wallet).onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        const bal = data.balance || 0;
+                        document.getElementById('balanceDisplay').innerText = bal.toFixed(4);
+                        
+                        if (data.lastSync) {
+                            const date = new Date(data.lastSync.seconds * 1000);
+                            document.getElementById('lastSyncDisplay').innerText = date.toLocaleTimeString(); // Только время для компактности
+                        }
+                    } else {
+                        // Если юзер зашел первый раз и еще не имеет записи
+                        document.getElementById('balanceDisplay').innerText = "0.0000";
                     }
-
-                    html += `
-                        <tr class="hover:bg-white/5 transition group">
-                            <td class="p-4 font-mono text-orange-400 text-xs">${data.wallet}</td>
-                            <td class="p-4 font-bold text-white">${bal.toFixed(4)}</td>
-                            <td class="p-4 text-gray-500 text-xs">${dateStr}</td>
-                            <td class="p-4 text-right">
-                                <button class="text-xs text-gray-500 hover:text-white underline" onclick="copy('${data.wallet}')">COPY ADDR</button>
-                            </td>
-                        </tr>
-                    `;
                 });
-
-                if (count === 0) html = '<tr><td colspan="4" class="p-4 text-center text-gray-600">Database Empty</td></tr>';
-
-                tbody.innerHTML = html;
-                document.getElementById('totalUsers').innerText = count;
-                document.getElementById('totalSupply').innerText = total.toFixed(2);
-
             } catch (e) {
-                console.error(e);
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-red-500">Error: ${e.message} (Check Rules)</td></tr>`;
+                console.error("Error fetching data:", e);
             }
-        }
+        });
 
-        function copy(text) {
-            navigator.clipboard.writeText(text);
+        function logout() {
+            localStorage.removeItem('neko_wallet');
+            window.location.href = "index.html";
         }
     </script>
 </body>
