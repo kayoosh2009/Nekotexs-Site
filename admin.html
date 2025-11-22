@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nekotexs | Admin Core</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { background-color: #050505; color: #e0e0e0; font-family: 'Courier New', monospace; }
+        .terminal-green { color: #00ff00; text-shadow: 0 0 5px rgba(0,255,0,0.5); }
+        .glass { background: rgba(255, 255, 255, 0.03); border: 1px solid #333; backdrop-filter: blur(5px); }
+    </style>
+</head>
+<body class="p-10 min-h-screen">
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="flex flex-col items-center justify-center h-[80vh]">
+        <h1 class="text-4xl font-bold mb-2 text-orange-500 tracking-widest">NEKOTEXS ADMIN</h1>
+        <p class="mb-8 text-gray-600 text-xs uppercase">Restricted Access Level 5</p>
+        
+        <button onclick="connectAdmin()" class="bg-orange-600 hover:bg-orange-500 text-black font-bold py-3 px-10 rounded transition shadow-[0_0_20px_rgba(255,140,0,0.3)]">
+            VERIFY WALLET SIGNATURE
+        </button>
+        
+        <p id="errorMsg" class="text-red-500 mt-6 hidden animate-pulse">ACCESS DENIED: UNAUTHORIZED WALLET</p>
+    </div>
+
+    <!-- DASHBOARD (Hidden) -->
+    <div id="adminDash" class="hidden max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-end mb-10 border-b border-gray-800 pb-4">
+            <div>
+                <h1 class="text-2xl terminal-green">SYSTEM_OVERVIEW</h1>
+                <div class="text-xs text-gray-500 mt-1">STATUS: <span class="text-green-500">ONLINE</span></div>
+            </div>
+            <div class="text-right">
+                <div class="text-xs text-gray-600">ADMIN KEY</div>
+                <div class="text-orange-500 text-xs font-bold">99LR...HPdaf</div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="glass p-6 rounded">
+                <h3 class="text-gray-500 text-xs mb-2">ACTIVE MINERS</h3>
+                <p class="text-4xl font-bold text-white" id="totalUsers">0</p>
+            </div>
+            <div class="glass p-6 rounded">
+                <h3 class="text-gray-500 text-xs mb-2">TOTAL MINED ($NEKO)</h3>
+                <p class="text-4xl font-bold text-orange-400" id="totalSupply">0.00</p>
+            </div>
+            <div class="glass p-6 rounded border-red-900/30">
+                <h3 class="text-gray-500 text-xs mb-2">PENDING PAYOUTS</h3>
+                <p class="text-4xl font-bold text-red-400" id="pendingWithdraws">0</p>
+            </div>
+        </div>
+
+        <!-- Database Table -->
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-gray-400 text-sm">USER REGISTRY</h3>
+            <button onclick="loadData()" class="text-xs text-orange-500 hover:text-white underline">REFRESH DATA</button>
+        </div>
+        
+        <div class="glass rounded-lg overflow-hidden border border-gray-800">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-gray-900 text-gray-400 text-xs uppercase tracking-wider">
+                        <tr>
+                            <th class="p-4">Wallet Address</th>
+                            <th class="p-4">Balance</th>
+                            <th class="p-4">Last Seen</th>
+                            <th class="p-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody" class="divide-y divide-gray-800 text-gray-300">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+            authDomain: "nekotexs.firebaseapp.com",
+            databaseURL: "https://nekotexs-default-rtdb.firebaseio.com",
+            projectId: "nekotexs",
+            storageBucket: "nekotexs.firebasestorage.app",
+            messagingSenderId: "596436176972",
+            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const ADMIN_WALLET = "99LRmqppEMABzsZMYdDqhxqGaLDXZECpFqPBf9dHPdaf";
+
+        // --- AUTH LOGIC ---
+        async function connectAdmin() {
+            const { solana } = window;
+            if (solana && solana.isPhantom) {
+                try {
+                    const response = await solana.connect();
+                    const key = response.publicKey.toString();
+                    
+                    if (key === ADMIN_WALLET) {
+                        document.getElementById('loginScreen').classList.add('hidden');
+                        document.getElementById('adminDash').classList.remove('hidden');
+                        loadData();
+                    } else {
+                        const err = document.getElementById('errorMsg');
+                        err.classList.remove('hidden');
+                        err.innerText = `ACCESS DENIED: ${key.slice(0,4)}...${key.slice(-4)} IS NOT AUTHORIZED`;
+                    }
+                } catch (err) { console.error(err); }
+            } else {
+                alert("Phantom Wallet required for admin access.");
+            }
+        }
+
+        // --- DATA FETCHING ---
+        async function loadData() {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '<tr><td class="p-4 text-gray-500">Scanning blockchain nodes...</td></tr>';
+
+            try {
+                // Запрашиваем пользователей, сортируем по балансу
+                const snapshot = await db.collection('users').orderBy('balance', 'desc').limit(50).get();
+                
+                let html = '';
+                let count = 0;
+                let total = 0;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    count++;
+                    const bal = data.balance || 0;
+                    total += bal;
+
+                    const date = data.lastSync ? new Date(data.lastSync.seconds * 1000).toLocaleString() : "N/A";
+
+                    html += `
+                        <tr class="hover:bg-white/5 transition">
+                            <td class="p-4 font-mono text-orange-300 text-xs">${data.wallet}</td>
+                            <td class="p-4 font-bold">${bal.toFixed(4)} NEKO</td>
+                            <td class="p-4 text-gray-500 text-xs">${date}</td>
+                            <td class="p-4 text-right">
+                                <button class="text-xs bg-gray-800 hover:bg-white text-white px-2 py-1 rounded" onclick="copy('${data.wallet}')">COPY</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                if (count === 0) html = '<tr><td class="p-4 text-gray-500">No miners active yet.</td></tr>';
+
+                tbody.innerHTML = html;
+                document.getElementById('totalUsers').innerText = count;
+                document.getElementById('totalSupply').innerText = total.toFixed(2);
+
+                // Withdrawals check (просто для статистики)
+                const wdSnap = await db.collection('withdrawals').where('status', '==', 'pending').get();
+                document.getElementById('pendingWithdraws').innerText = wdSnap.size;
+
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = `<tr><td class="p-4 text-red-500">Database Error: ${e.message}<br>Make sure Firestore Rules are set to 'allow read, write: if true;'</td></tr>`;
+            }
+        }
+
+        function copy(text) {
+            navigator.clipboard.writeText(text);
+            alert("Copied: " + text);
+        }
+    </script>
+</body>
+</html>
