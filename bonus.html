@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nekotexs | Surprise Bonus!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { background-color: #000; color: white; overflow: hidden; }
+        .chest { font-size: 100px; animation: bounce 2s infinite; cursor: pointer; }
+        @keyframes bounce { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-20px);} }
+        .confetti { position: absolute; width: 10px; height: 10px; background: #f00; animation: fall 3s linear forwards; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center h-screen">
+
+    <div id="loadingState" class="text-center">
+        <h1 class="text-2xl font-bold text-orange-500 mb-4">INCOMING TRANSMISSION...</h1>
+        <p class="text-gray-400">Decrypting reward data from node...</p>
+    </div>
+
+    <div id="rewardState" class="hidden text-center z-10">
+        <div class="chest" onclick="claim()">🎁</div>
+        <h1 class="text-4xl font-bold text-yellow-400 mt-4">MYSTERY BONUS FOUND!</h1>
+        <p class="text-gray-300 mt-2">Your node found a hidden block.</p>
+        <div class="mt-6 bg-gray-800 p-4 rounded-lg border border-orange-500">
+            <span class="text-2xl font-mono text-orange-500" id="amountDisplay">0.0000</span>
+            <span class="text-white font-bold"> $NEKO</span>
+        </div>
+        <p class="text-xs text-gray-500 mt-4">Added to your wallet balance automatically.</p>
+    </div>
+
+    <script>
+        // 1. Firebase Config (Тот же, что и на index.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+            authDomain: "nekotexs.firebaseapp.com",
+            databaseURL: "https://nekotexs-default-rtdb.firebaseio.com",
+            projectId: "nekotexs",
+            storageBucket: "nekotexs.firebasestorage.app",
+            messagingSenderId: "596436176972",
+            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 2. Logic
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Парсим URL: ?w=WALLET&a=AMOUNT
+            const params = new URLSearchParams(window.location.search);
+            const wallet = params.get('w');
+            const amount = parseFloat(params.get('a'));
+
+            if (!wallet || !amount) {
+                document.body.innerHTML = "<h1 class='text-white text-center mt-20'>No data found. Keep browsing!</h1>";
+                return;
+            }
+
+            // Имитация "расшифровки" (для эффекта)
+            setTimeout(async () => {
+                try {
+                    // --- СОХРАНЕНИЕ В FIREBASE ---
+                    // Мы используем атомарную транзакцию increment, чтобы добавить к существующему балансу
+                    const userRef = db.collection("users").doc(wallet);
+                    
+                    // Создаем документ, если его нет, или обновляем
+                    await userRef.set({
+                        wallet: wallet,
+                        lastBonus: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+
+                    // Добавляем баланс
+                    await userRef.update({
+                        balance: firebase.firestore.FieldValue.increment(amount)
+                    });
+
+                    // Показываем UI
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('rewardState').classList.remove('hidden');
+                    document.getElementById('amountDisplay').innerText = amount.toFixed(4);
+                    
+                    startConfetti();
+
+                } catch (e) {
+                    console.error(e);
+                    alert("Error syncing with blockchain.");
+                }
+            }, 2000);
+        });
+
+        function startConfetti() {
+            for(let i=0; i<50; i++) {
+                const c = document.createElement('div');
+                c.classList.add('confetti');
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.backgroundColor = ['#f00', '#0f0', '#00f', '#ff0'][Math.floor(Math.random()*4)];
+                c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                document.body.appendChild(c);
+            }
+        }
+    </script>
+</body>
+</html>
