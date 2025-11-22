@@ -1,86 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nekotexs | User Dashboard</title>
+    <title>Nekotexs | Дашборд</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Firebase Imports (Модульные, обязательные для среды Canvas) -->
+    <!-- Firebase Imports (ОБЯЗАТЕЛЬНО модульные, v11.6.1) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc, setLogLevel, collection, query, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ (Предоставляются Canvas) ---
+        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ CANVAS (Используются для инициализации) ---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
-        // --- ИНИЦИАЛИЗАЦИЯ FIREBASE И АУТЕНТИФИКАЦИЯ ---
+        // --- ПЕРЕМЕННЫЕ СОСТОЯНИЯ ---
         let db;
         let auth;
         let userId = null;
         let isAuthReady = false;
-
-        if (firebaseConfig) {
-            setLogLevel('Debug'); // Уровень логирования для отладки Firestore
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-
-            // 1. Настройка Аутентификации: ждем, пока Firebase определит состояние пользователя
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    userId = user.uid;
-                } else if (initialAuthToken) {
-                    try {
-                        // Вход с предоставленным токеном
-                        await signInWithCustomToken(auth, initialAuthToken);
-                        userId = auth.currentUser.uid;
-                    } catch (error) {
-                        console.error("Auth error with token. Falling back to anonymous:", error);
-                        await signInAnonymously(auth);
-                        userId = auth.currentUser.uid;
-                    }
-                } else {
-                    // Анонимный вход
-                    await signInAnonymously(auth);
-                    userId = auth.currentUser.uid;
-                }
-                
-                // Пользователь готов. Можно начинать работу с Firestore.
-                isAuthReady = true;
-                if (userId) {
-                    console.log(`Authenticated User ID: ${userId}`);
-                    // Отображаем полный ID пользователя (Обязательное требование)
-                    document.getElementById('userIdDisplay').textContent = `ID: ${userId}`;
-                    initializeDashboard(userId);
-                }
-            });
-        }
-        
-        // --- ОСНОВНАЯ ЛОГИКА ДАШБОРДА ---
 
         const AVATAR_SEEDS = [
             'Neko', 'Kitsune', 'Panda', 'Robot', 'Designer', 'Adventurer', 'Milo', 'Luna', 'Lily', 'Shadow',
             'Pixel', 'Voxel', 'Bot', 'Star', 'Moon' 
         ];
 
-        // Эта функция запускается только после успешной аутентификации
-        function initializeDashboard(uid) {
-            if (!db) return;
+        // --- ИНИЦИАЛИЗАЦИЯ И АУТЕНТИФИКАЦИЯ ---
 
-            // PRIVATE USER DATA PATH: /artifacts/{appId}/users/{userId}/data/profile
+        if (firebaseConfig) {
+            setLogLevel('Debug'); // Логирование для отладки
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            // 1. Настройка Аутентификации: ждем, пока Firebase определит состояние пользователя
+            onAuthStateChanged(auth, async (user) => {
+                let current_user = user;
+
+                if (!current_user) {
+                    try {
+                        // Попытка входа с токеном Canvas или анонимный вход
+                        if (initialAuthToken) {
+                            const result = await signInWithCustomToken(auth, initialAuthToken);
+                            current_user = result.user;
+                        } else {
+                            const result = await signInAnonymously(auth);
+                            current_user = result.user;
+                        }
+                    } catch (error) {
+                        console.error("Auth error:", error);
+                        // Если вход не удался, мы все равно продолжаем, но userId будет null или анонимным
+                        current_user = auth.currentUser; 
+                    }
+                }
+                
+                if (current_user) {
+                    userId = current_user.uid;
+                } else {
+                    // Генерация временного ID, если аутентификация не удалась
+                    userId = crypto.randomUUID(); 
+                }
+                
+                isAuthReady = true;
+                console.log(`Authenticated User ID (Final): ${userId}`);
+                
+                // Отображаем полный ID пользователя (Обязательное требование Canvas)
+                document.getElementById('userIdDisplay').textContent = `ID: ${userId}`;
+                document.getElementById('walletDisplay').textContent = userId.substring(0, 6) + '...' + userId.substring(userId.length - 4);
+
+                initializeDashboard(userId);
+            });
+        }
+        
+        // --- ОСНОВНАЯ ЛОГИКА ДАШБОРДА (Запускается ТОЛЬКО после Auth) ---
+
+        function initializeDashboard(uid) {
+            if (!db || !uid) return;
+
+            // ПРИВАТНЫЙ ПУТЬ: /artifacts/{appId}/users/{userId}/data/profile
             const userProfileDocRef = doc(db, "artifacts", appId, "users", uid, "data", "profile");
-            // PUBLIC TRANSACTIONS COLLECTION: /artifacts/{appId}/public/data/transactions
+            // ПУБЛИЧНЫЙ ПУТЬ: /artifacts/{appId}/public/data/transactions
             const transactionsCollectionRef = collection(db, "artifacts", appId, "public", "data", "transactions");
 
-            // 1. Слушатель Профиля (Баланс, Имя, Аватар)
+            // 1. Слушатель Профиля (Баланс, Имя, Аватар, Метрики)
             onSnapshot(userProfileDocRef, (docSnap) => {
-                // Данные по умолчанию, если документа еще нет
                 const defaultProfile = { 
-                    name: "Trader", 
+                    name: "Трейдер", 
                     avatarSeed: "Neko", 
                     balance: 0,
                     totalMined: 0,
@@ -91,10 +99,9 @@
                 let profile = defaultProfile;
 
                 if (docSnap.exists()) {
-                    // Если документ существует, используем его данные
                     profile = { ...defaultProfile, ...docSnap.data() };
                 } else {
-                    // Если документ не существует, создаем его с данными по умолчанию
+                    // Если документа нет, создаем его с данными по умолчанию
                     setDoc(userProfileDocRef, defaultProfile).catch(e => console.error("Error setting default profile:", e));
                 }
                 
@@ -104,44 +111,38 @@
                 console.error("Error reading profile data:", error);
             });
 
-            // 2. Слушатель Транзакций
+            // 2. Слушатель Транзакций (Фильтруем по кошельку/userId в памяти, так как Firestore-правила могут не разрешить complex queries)
             const txQuery = query(transactionsCollectionRef); 
             
             onSnapshot(txQuery, (snapshot) => {
-                let allTransactions = [];
+                let userTransactions = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    // Фильтруем транзакции по текущему пользователю (userId выступает в роли wallet)
-                    if (data.wallet === uid) {
-                        allTransactions.push({ id: doc.id, ...data });
+                    // Фильтруем транзакции, принадлежащие текущему пользователю
+                    if (data.wallet === uid || data.userId === uid) { 
+                        userTransactions.push({ id: doc.id, ...data });
                     }
                 });
                 
-                // Сортировка по timestamp в памяти (чтобы избежать проблем с индексами)
-                allTransactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                // Сортировка по timestamp (в памяти)
+                userTransactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
                 
-                updateTransactionsUI(allTransactions.slice(0, 5)); // Показываем 5 последних
+                updateTransactionsUI(userTransactions.slice(0, 5)); // Показываем 5 последних
             }, (error) => {
                 console.error("Error reading transactions:", error);
-                document.getElementById('transactionsList').innerHTML = '<p class="text-red-400 text-xs text-center p-4">Error loading transactions.</p>';
+                document.getElementById('transactionsList').innerHTML = '<p class="text-red-400 text-xs text-center p-4">Ошибка загрузки транзакций.</p>';
             });
         }
 
         // --- ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ---
 
         function updateProfileUI(profile, uid) {
-            document.getElementById('userNameDisplay').textContent = profile.name || "Trader";
-            // *** ЭТО КРИТИЧЕСКИ ВАЖНОЕ ОБНОВЛЕНИЕ БАЛАНСА ***
+            document.getElementById('userNameDisplay').textContent = profile.name || "Трейдер";
             document.getElementById('balanceDisplay').textContent = (profile.balance || 0).toFixed(4);
-            // **********************************************
-            
             document.getElementById('totalMinedDisplay').textContent = (profile.totalMined || 0).toFixed(4);
             document.getElementById('totalWithdrawnDisplay').textContent = (profile.totalWithdrawn || 0).toFixed(4);
             document.getElementById('totalDonatedDisplay').textContent = (profile.totalDonated || 0).toFixed(4);
             
-            // Форматированный адрес кошелька (UID)
-            document.getElementById('walletDisplay').textContent = uid.substring(0, 6) + '...' + uid.substring(uid.length - 4);
-
             const avatarSeed = profile.avatarSeed || "Neko";
             document.getElementById('avatarImg').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${avatarSeed}`;
             document.getElementById('profileNameInput').value = profile.name || '';
@@ -160,20 +161,20 @@
             list.innerHTML = ''; 
 
             if (transactions.length === 0) {
-                list.innerHTML = '<p class="text-gray-500 text-xs text-center p-2">No recent transactions found.</p>';
+                list.innerHTML = '<p class="text-gray-500 text-xs text-center p-2">Нет недавних транзакций.</p>';
                 return;
             }
 
             transactions.forEach(tx => {
                 const isDeposit = tx.type === 'DEPOSIT' || (tx.amount && tx.amount > 0);
-                const typeText = isDeposit ? 'Deposit' : 'Withdrawal';
-                const sign = isDeposit ? '+' : '';
+                const typeText = isDeposit ? 'Пополнение' : 'Вывод';
+                const sign = isDeposit ? '+' : (tx.amount && tx.amount < 0) ? '' : '-';
+                const amount = Math.abs(tx.amount || 0).toFixed(4);
                 const colorClass = isDeposit ? 'text-green-400' : 'text-red-400';
                 
-                let dateStr = "N/A";
-                // Преобразование временной метки Firestore в читаемую строку
+                let dateStr = "Н/Д";
                 if (tx.timestamp && tx.timestamp.seconds) {
-                    dateStr = new Date(tx.timestamp.seconds * 1000).toLocaleString('en-US', { 
+                    dateStr = new Date(tx.timestamp.seconds * 1000).toLocaleString('ru-RU', { 
                         day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
                     });
                 } 
@@ -181,14 +182,14 @@
                 const txElement = `
                     <div class="flex justify-between items-center text-xs p-2 bg-black/30 rounded">
                         <span class="text-gray-400">${dateStr}</span>
-                        <span class="${colorClass} font-bold">${sign}${(tx.amount || 0).toFixed(4)} NEKO</span>
+                        <span class="${colorClass} font-bold">${sign}${amount} NEKO</span>
                         <span class="text-gray-500">${typeText}</span>
                     </div>
                 `;
                 list.innerHTML += txElement;
             });
         }
-
+        
         // --- ОБРАБОТЧИКИ МОДАЛЬНОГО ОКНА ПРОФИЛЯ ---
         
         window.initializeAvatarSelector = function() {
@@ -198,7 +199,7 @@
             AVATAR_SEEDS.forEach(seed => {
                 const img = document.createElement('img');
                 img.src = `https://api.dicebear.com/7.x/identicon/svg?seed=${seed}`;
-                img.alt = `${seed} Avatar`;
+                img.alt = `${seed} Аватар`;
                 img.className = 'avatar-option rounded-full transition duration-150 ease-in-out';
                 img.dataset.seed = seed;
                 
@@ -213,10 +214,12 @@
         window.openProfileModal = function() {
             if (!isAuthReady) return;
             // Установка текущего имени
-            document.getElementById('profileNameInput').value = document.getElementById('userNameDisplay').innerText;
+            document.getElementById('profileNameInput').value = document.getElementById('userNameDisplay').innerText === 'Трейдер' ? '' : document.getElementById('userNameDisplay').innerText;
             
             // Выделение текущего аватара
-            const currentSeed = document.getElementById('avatarImg').src.split('seed=')[1];
+            const currentImgSrc = document.getElementById('avatarImg').src;
+            const currentSeed = currentImgSrc.includes('seed=') ? currentImgSrc.split('seed=')[1].split('&')[0] : 'Neko';
+
             document.querySelectorAll('.avatar-option').forEach(el => {
                 el.classList.remove('selected');
                 if (el.dataset.seed === currentSeed) {
@@ -240,8 +243,8 @@
             const newAvatarSeed = selectedAvatar ? selectedAvatar.dataset.seed : 'Neko';
 
             if (newName.length < 2) {
-                // Сообщение об ошибке вместо alert()
-                document.getElementById('modalFeedback').textContent = "Username must be at least 2 characters long.";
+                // Используем UI для сообщения об ошибке
+                document.getElementById('modalFeedback').textContent = "Имя пользователя должно содержать не менее 2 символов.";
                 document.getElementById('modalFeedback').classList.remove('hidden');
                 return;
             }
@@ -250,7 +253,6 @@
             const userProfileDocRef = doc(db, "artifacts", appId, "users", userId, "data", "profile");
             
             try {
-                // Обновление документа
                 await updateDoc(userProfileDocRef, {
                     name: newName,
                     avatarSeed: newAvatarSeed
@@ -262,7 +264,7 @@
 
             } catch (error) {
                 console.error("Error updating profile:", error);
-                document.getElementById('modalFeedback').textContent = "Failed to save profile. Please try again.";
+                document.getElementById('modalFeedback').textContent = "Не удалось сохранить профиль. Попробуйте снова.";
                 document.getElementById('modalFeedback').classList.remove('hidden');
             }
         }
@@ -282,17 +284,18 @@
         document.addEventListener("DOMContentLoaded", () => {
             window.initializeAvatarSelector();
         });
+        
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
     
     <style>
-        /* Общие стили */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #050505; 
             color: #ffffff; 
         }
+        .font-pixel { font-family: 'Press Start 2P', cursive; }
         .glass { 
             background: rgba(255, 255, 255, 0.05); 
             backdrop-filter: blur(10px); 
@@ -309,7 +312,6 @@
             background: rgba(255,255,255,0.1); 
             color: white; 
         }
-        /* Стили для выбора аватара */
         .avatar-option { 
             width: 50px; 
             height: 50px; 
@@ -322,8 +324,6 @@
             border-color: #f97316; /* Оранжевый акцент */
             box-shadow: 0 0 8px rgba(249, 115, 22, 0.6);
         }
-        
-        /* Анимация модального окна */
         .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
@@ -334,26 +334,27 @@
     <nav class="border-b border-gray-800 bg-black/50 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div class="w-8 h-8 bg-orange-600 rounded flex items-center justify-center font-bold text-sm text-black">NK</div>
+                <div class="w-8 h-8 bg-orange-600 rounded flex items-center justify-center font-pixel text-[10px] text-black">NK</div>
                 <div class="hidden md:flex gap-2">
-                    <a class="nav-link text-white font-semibold">Overview</a>
-                    <a class="nav-link">Transactions</a>
-                    <a class="nav-link">Exchange</a>
+                    <a class="nav-link text-white font-semibold">Обзор</a>
+                    <a class="nav-link">Транзакции</a>
+                    <a class="nav-link">Обмен</a>
                 </div>
             </div>
             
             <div class="flex items-center gap-4">
-                <!-- USER ID DISPLAY (ОБЯЗАТЕЛЬНО) -->
+                <!-- ID ПОЛЬЗОВАТЕЛЯ (ОБЯЗАТЕЛЬНО) -->
                 <div class="hidden md:block text-right">
-                    <div id="userIdDisplay" class="font-mono text-xs text-gray-500">ID: Loading...</div>
-                    <div class="text-[10px] text-gray-500 uppercase tracking-wider">User ID</div>
+                    <div id="userIdDisplay" class="font-mono text-xs text-gray-500">ID: Загрузка...</div>
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider">ID Пользователя</div>
                 </div>
 
                 <div class="text-right">
-                    <div class="text-[10px] text-gray-500 uppercase tracking-wider">Wallet Address</div>
-                    <div id="walletDisplay" class="font-mono text-xs text-orange-400">Loading...</div>
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider">Кошелек</div>
+                    <div id="walletDisplay" class="font-mono text-xs text-orange-400">Загрузка...</div>
                 </div>
-                <button onclick="logout()" class="text-gray-500 hover:text-white transition" aria-label="Logout">
+
+                <button onclick="logout()" class="text-gray-500 hover:text-white transition" aria-label="Выход">
                     <!-- Кнопка выхода -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -369,16 +370,16 @@
         <!-- Profile Header -->
         <div class="flex items-end mb-10 border-b border-gray-800 pb-6">
             <div class="w-24 h-24 bg-black border-4 border-gray-900 rounded-2xl overflow-hidden shadow-xl relative z-30">
-                <img id="avatarImg" class="w-full h-full bg-gray-800" src="https://api.dicebear.com/7.x/identicon/svg?seed=Neko" alt="User Avatar">
+                <img id="avatarImg" class="w-full h-full bg-gray-800" src="https://api.dicebear.com/7.x/identicon/svg?seed=Neko" alt="Аватар пользователя">
             </div>
             <div class="ml-6 mb-2 relative z-30">
-                <h1 class="text-3xl font-bold" id="userNameDisplay">Trader</h1>
+                <h1 class="text-3xl font-bold" id="userNameDisplay">Трейдер</h1>
                 <p class="text-gray-400 text-sm flex items-center gap-2">
-                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Online
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> В сети
                 </p>
                 <!-- Кнопка редактирования профиля -->
                 <button onclick="openProfileModal()" class="text-xs text-orange-500 hover:text-white mt-1 border border-orange-500/50 px-3 py-1 rounded transition">
-                    Edit Profile
+                    Редактировать профиль
                 </button>
             </div>
         </div>
@@ -388,35 +389,35 @@
             
             <!-- Balance Card (Primary) -->
             <div class="glass p-6 rounded-2xl col-span-2 relative overflow-hidden group border-l-4 border-orange-600 bg-gray-900/50 shadow-lg shadow-black/20">
-                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-2">Total Balance</h3>
+                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-2">Общий баланс</h3>
                 <div class="flex items-baseline gap-2">
                     <span id="balanceDisplay" class="text-4xl font-extrabold text-white">0.0000</span>
-                    <span class="text-xl text-orange-500 font-semibold">NEKO</span>
+                    <span class="text-xl text-orange-500 font-pixel">NEKO</span>
                 </div>
                 <div class="mt-4 flex flex-wrap gap-4">
                     <!-- Кнопка вывода -->
                     <a href="withdraw.html" class="bg-orange-600 hover:bg-orange-500 text-black px-4 py-2 rounded-lg font-bold transition shadow-lg shadow-orange-600/30 text-sm">
-                        Withdraw
+                        Вывод
                     </a>
                     <!-- Кнопка обмена -->
                     <button class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold transition text-sm">
-                        Exchange
+                        Обмен
                     </button>
                 </div>
             </div>
 
             <!-- Total Mined Card -->
             <div class="glass p-6 rounded-2xl border border-gray-800">
-                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Total Mined</h3>
+                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Всего заработано</h3>
                 <p class="text-2xl font-bold text-green-400" id="totalMinedDisplay">0.00</p>
-                <p class="text-xs text-gray-500 mt-2">Node Balance</p>
+                <p class="text-xs text-gray-500 mt-2">Баланс ноды</p>
             </div>
 
             <!-- Total Withdrawn Card -->
             <div class="glass p-6 rounded-2xl border border-gray-800">
-                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Total Withdrawn</h3>
+                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Всего выведено</h3>
                 <p class="text-2xl font-bold text-red-400" id="totalWithdrawnDisplay">0.00</p>
-                <p class="text-xs text-gray-500 mt-2">Completed Requests</p>
+                <p class="text-xs text-gray-500 mt-2">Завершенные заявки</p>
             </div>
         </div>
 
@@ -424,17 +425,17 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
             <!-- Total Donated Card -->
-            <div class="glass p-6 rounded-2xl border-l-4 border-purple-600">
-                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Donated to Cats</h3>
-                <p class="text-3xl font-bold text-purple-400" id="totalDonatedDisplay">0.00</p>
-                <p class="text-xs text-gray-500 mt-2">Automatically from transactions</p>
+            <div class="glass p-6 rounded-2xl border-l-4 border-fuchsia-600">
+                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Пожертвовано кошкам 😻</h3>
+                <p class="text-3xl font-bold text-fuchsia-400" id="totalDonatedDisplay">0.00</p>
+                <p class="text-xs text-gray-500 mt-2">Автоматически из ваших транзакций</p>
             </div>
 
             <!-- Transactions List (Col-span 2) -->
             <div class="glass p-6 rounded-2xl col-span-1 md:col-span-2 border border-gray-700">
-                <h3 class="text-gray-300 text-xl font-semibold mb-4 border-b border-gray-800 pb-2">Last 5 Transactions</h3>
+                <h3 class="text-gray-300 text-xl font-semibold mb-4 border-b border-gray-800 pb-2">Последние 5 транзакций</h3>
                 <div class="space-y-3" id="transactionsList">
-                    <p class="text-gray-500 text-xs text-center p-2">Loading transactions...</p>
+                    <p class="text-gray-500 text-xs text-center p-2">Загрузка транзакций...</p>
                 </div>
             </div>
         </div>
@@ -449,8 +450,8 @@
         <div id="modalContent" class="glass p-8 rounded-2xl w-full max-w-md mx-auto relative shadow-2xl modal-enter" onclick="event.stopPropagation()">
             
             <div class="text-center mb-6">
-                <h3 class="text-2xl font-bold text-white">Edit Profile</h3>
-                <p class="text-gray-400 text-xs mt-2">Name and Avatar</p>
+                <h3 class="text-2xl font-bold text-white">Редактировать профиль</h3>
+                <p class="text-gray-400 text-xs mt-2">Имя и Аватар</p>
             </div>
             
             <!-- Сообщение об ошибке/обратной связи -->
@@ -459,23 +460,23 @@
             <div class="space-y-6">
                 <!-- Ввод имени -->
                 <div>
-                    <label class="text-xs text-gray-400 uppercase mb-2 block">Your Name (Nickname)</label>
+                    <label class="text-xs text-gray-400 uppercase mb-2 block">Ваше имя (ник)</label>
                     <input type="text" id="profileNameInput" maxlength="20"
                         class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-orange-500 focus:outline-none text-sm placeholder-gray-600"
-                        placeholder="e.g., CryptoCatLover"
+                        placeholder="Например, CryptoCatLover"
                     >
                 </div>
 
                 <!-- Выбор Аватара -->
                 <div>
-                    <label class="text-xs text-gray-400 uppercase mb-2 block">Select Avatar</label>
+                    <label class="text-xs text-gray-400 uppercase mb-2 block">Выберите Аватар</label>
                     <div id="avatarSelector" class="flex flex-wrap gap-3 justify-center bg-black/30 p-4 rounded-lg">
                         <!-- Аватары будут внедрены JS -->
                     </div>
                 </div>
                 
                 <button onclick="saveProfile()" class="w-full bg-orange-600 hover:bg-orange-500 text-black font-bold py-3 rounded-lg transition uppercase tracking-wider text-sm">
-                    Save Changes
+                    Сохранить изменения
                 </button>
             </div>
             
