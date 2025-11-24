@@ -1,681 +1,396 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Nekotexs | Dashboard</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Firebase -->
-
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
-
-<style>
-
-body { font-family: 'Inter', sans-serif; background-color: #050505; color: #ffffff; }
-
-.font-pixel { font-family: 'Press Start 2P', cursive; }
-
-.glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-
-.nav-link { cursor: pointer; padding: 10px 15px; border-radius: 5px; transition: 0.2s; color: #aaa; }
-
-.nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
-
-.avatar-option { width: 50px; height: 50px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
-
-.avatar-option.selected { border-color: #ff8c00; }
-
-/* Modal Animation */
-
-.modal-enter { animation: fadeIn 0.3s ease-out forwards; }
-
-@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nekotexs | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase Imports (Compat for easier usage with your existing logic) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #ffffff; }
+        .font-pixel { font-family: 'Press Start 2P', cursive; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .nav-link { cursor: pointer; padding: 10px 15px; border-radius: 5px; transition: 0.2s; color: #aaa; }
+        .nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
+        .avatar-option { width: 50px; height: 50px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
+        .avatar-option.selected { border-color: #ff8c00; }
+        
+        /* Modal Animation */
+        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
 </head>
-
 <body class="min-h-screen flex flex-col">
 
-
-
-<!-- NAVIGATION BAR -->
-
-<nav class="border-b border-gray-800 bg-black/50 backdrop-blur-md sticky top-0 z-50">
-
-<div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-
-<div class="flex items-center gap-4">
-
-<div class="w-8 h-8 bg-orange-500 rounded flex items-center justify-center font-pixel text-[10px] text-black">NK</div>
-
-<div class="hidden md:flex gap-2">
-
-<a class="nav-link text-white font-semibold">Обзор</a>
-
-<a class="nav-link">Транзакции</a>
-
-<a class="nav-link">Обмен</a>
-
-</div>
-
-</div>
-
-<div class="flex items-center gap-4">
-
-<!-- ADMIN BUTTON (Hidden by default) -->
-
-<a id="adminBtn" href="admin.html" class="hidden bg-red-900/50 text-red-400 border border-red-500/50 px-3 py-1 rounded text-xs font-bold hover:bg-red-900 transition">
-
-АДМИН ПАНЕЛЬ
-
-</a>
-
-
-
-<div class="text-right">
-
-<div class="text-[10px] text-gray-500 uppercase tracking-wider">Кошелек</div>
-
-<div id="walletDisplay" class="font-mono text-xs text-orange-500">Загрузка...</div>
-
-</div>
-
-<button onclick="logout()" class="text-gray-500 hover:text-white transition">
-
-<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-
-</svg>
-
-</button>
-
-</div>
-
-</div>
-
-</nav>
-
-
-
-<!-- MAIN CONTENT -->
-
-<main class="flex-1 max-w-7xl mx-auto w-full p-6 relative z-20">
-
-<!-- Profile Header -->
-
-<div class="flex items-end mb-10">
-
-<div class="w-24 h-24 bg-black border-4 border-[#050505] rounded-2xl overflow-hidden shadow-2xl relative z-30">
-
-<img id="avatarImg" class="w-full h-full bg-gray-800" src="https://api.dicebear.com/7.x/identicon/svg?seed=Neko">
-
-</div>
-
-<div class="ml-6 mb-2 relative z-30">
-
-<h1 class="text-3xl font-bold" id="userNameDisplay">Трейдер</h1>
-
-<p class="text-gray-400 text-sm flex items-center gap-2">
-
-<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> В сети
-
-</p>
-
-<button onclick="openProfileModal()" class="text-xs text-orange-500 hover:text-white mt-1">
-
-Редактировать профиль
-
-</button>
-
-</div>
-
-</div>
-
-
-
-<!-- KPI Grid (Balance + Flow) -->
-
-<div class="grid md:grid-cols-4 gap-6 mb-6">
-
-<!-- Balance Card -->
-
-<div class="glass p-6 rounded-2xl col-span-2 relative overflow-hidden group border-l-4 border-orange-600">
-
-<h3 class="text-gray-400 text-sm uppercase tracking-widest mb-2">Общий баланс</h3>
-
-<div class="flex items-baseline gap-2">
-
-<span id="balanceDisplay" class="text-4xl font-bold text-white">0.0000</span>
-
-<span class="text-xl text-orange-500 font-pixel">NEKO</span>
-
-</div>
-
-<div class="mt-4 flex gap-4">
-
-<button onclick="window.location.href='withdraw.html'" class="bg-orange-600 hover:bg-orange-500 text-black px-4 py-2 rounded font-bold transition shadow-lg shadow-orange-600/20 text-sm">
-
-Вывод
-
-</button>
-
-<button class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded font-bold transition text-sm">
-
-Обмен
-
-</button>
-
-</div>
-
-</div>
-
-
-
-<!-- Total Mined Card -->
-
-<div class="glass p-6 rounded-2xl">
-
-<h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Всего заработано</h3>
-
-<p class="text-2xl font-bold text-green-400" id="totalMinedDisplay">0.00</p>
-
-<p class="text-xs text-gray-500 mt-2">Баланс ноды</p>
-
-</div>
-
-
-
-<!-- Total Withdrawn Card -->
-
-<div class="glass p-6 rounded-2xl">
-
-<h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Всего выведено</h3>
-
-<p class="text-2xl font-bold text-red-400" id="totalWithdrawnDisplay">0.00</p>
-
-<p class="text-xs text-gray-500 mt-2">Завершенные заявки</p>
-
-</div>
-
-</div>
-
-
-
-<!-- Secondary Grid (Donations + Node Status) -->
-
-<div class="grid md:grid-cols-3 gap-6">
-
-
-
-<!-- Total Donated Card -->
-
-<div class="glass p-6 rounded-2xl border-l-4 border-fuchsia-600">
-
-<h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Пожертвовано кошкам 😻</h3>
-
-<p class="text-3xl font-bold text-fuchsia-400" id="totalDonatedDisplay">0.00</p>
-
-<p class="text-xs text-gray-500 mt-2">Автоматически из ваших транзакций</p>
-
-</div>
-
-
-
-<!-- Transactions List -->
-
-<div class="glass p-6 rounded-2xl col-span-2">
-
-<h3 class="text-gray-300 text-sm uppercase tracking-widest mb-4 border-b border-gray-700 pb-2">Последние 5 транзакций</h3>
-
-<div class="space-y-3" id="transactionsList">
-
-<p class="text-gray-500 text-xs text-center">Нет недавних транзакций.</p>
-
-</div>
-
-</div>
-
-</div>
-
-</main>
-
-<!-- === PROFILE EDIT MODAL === -->
-
-<div id="profileModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
-
-<!-- Backdrop -->
-
-<div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeProfileModal()"></div>
-
-<!-- Modal Content -->
-
-<div class="relative bg-[#0a0a0a] border border-orange-500/50 p-8 rounded-2xl w-full max-w-md shadow-[0_0_50px_rgba(255,140,0,0.2)] transform transition-all modal-enter mx-4">
-
-<div class="text-center mb-6">
-
-<h3 class="text-2xl font-bold text-white">Редактировать профиль</h3>
-
-<p class="text-gray-400 text-xs mt-2">Имя и Аватар</p>
-
-</div>
-
-<div class="space-y-6">
-
-<!-- Name Input -->
-
-<div>
-
-<label class="text-xs text-gray-400 uppercase mb-2 block">Ваше имя (ник)</label>
-
-<input type="text" id="profileNameInput" maxlength="20"
-
-class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-orange-500 focus:outline-none text-sm placeholder-gray-600"
-
-placeholder="Например, CryptoCatLover"
-
->
-
-</div>
-
-
-
-<!-- Avatar Selection -->
-
-<div>
-
-<label class="text-xs text-gray-400 uppercase mb-2 block">Выберите Аватар (1-15)</label>
-
-<div id="avatarSelector" class="flex flex-wrap gap-2 justify-center bg-black/30 p-4 rounded-lg">
-
-<!-- Avatars will be injected here by JS -->
-
-</div>
-
-</div>
-
-<button onclick="saveProfile()" class="w-full bg-orange-600 hover:bg-orange-500 text-black font-bold py-3 rounded-lg transition uppercase tracking-wider text-sm">
-
-Сохранить изменения
-
-</button>
-
-</div>
-
-<!-- Close Button -->
-
-<button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">✕</button>
-
-</div>
-
-</div>
-
-
-
-
-
-<script>
-
-// --- CONFIG ---
-
-const firebaseConfig = {
-
-apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
-
-authDomain: "nekotexs.firebaseapp.com",
-
-databaseURL: "https://nekotexs-default-rtdb.firebaseio.com",
-
-projectId: "nekotexs",
-
-storageBucket: "nekotexs.firebasestorage.app",
-
-messagingSenderId: "596436176972",
-
-appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
-
-};
-
-firebase.initializeApp(firebaseConfig);
-
-const db = firebase.firestore();
-
-const ADMIN_WALLET = "99LRmqppEMABzsZMYdDqhxqGaLDXZECpFqPBf9dHPdaf";
-
-let currentUserWallet = null;
-
-let selectedAvatarId = 1;
-
-const AVATAR_COUNT = 15; // Количество доступных аватаров
-
-
-
-// --- INIT ---
-
-document.addEventListener("DOMContentLoaded", async () => {
-
-currentUserWallet = localStorage.getItem('neko_wallet');
-
-if (!currentUserWallet) {
-
-window.location.href = "index.html";
-
-return;
-
-}
-
-
-
-// 1. Set Basic Info
-
-const shortWallet = currentUserWallet.slice(0, 4) + '...' + currentUserWallet.slice(-4);
-
-document.getElementById('walletDisplay').innerText = shortWallet;
-
-document.getElementById('avatarImg').src = getAvatarPath(1, currentUserWallet); // Default fallback
-
-
-
-// 2. Check Admin
-
-if (currentUserWallet === ADMIN_WALLET) {
-
-document.getElementById('adminBtn').classList.remove('hidden');
-
-}
-
-
-
-// 3. Setup Firestore Listeners
-
-listenToUserData();
-
-listenToTransactions();
-
-// 4. Initialize Avatar Selector
-
-initializeAvatarSelector();
-
-});
-
-// --- DATA LISTENERS ---
-
-
-
-function listenToUserData() {
-
-// Слушаем данные пользователя (баланс, имя, аватар, агрегированные метрики)
-
-db.collection("users").doc(currentUserWallet).onSnapshot((doc) => {
-
-const data = doc.data();
-
-const bal = data?.balance || 0;
-
-const name = data?.name || "Трейдер";
-
-const avatarId = data?.avatarId || 0;
-
-const totalMined = data?.totalMined || 0;
-
-const totalWithdrawn = data?.totalWithdrawn || 0;
-
-const totalDonated = data?.totalDonated || 0;
-
-// Обновление баланса и метрик
-
-document.getElementById('balanceDisplay').innerText = bal.toFixed(4);
-
-document.getElementById('totalMinedDisplay').innerText = totalMined.toFixed(4);
-
-document.getElementById('totalWithdrawnDisplay').innerText = totalWithdrawn.toFixed(4);
-
-document.getElementById('totalDonatedDisplay').innerText = totalDonated.toFixed(4);
-
-// Обновление имени и аватара
-
-document.getElementById('userNameDisplay').innerText = name;
-
-document.getElementById('avatarImg').src = getAvatarPath(avatarId, currentUserWallet);
-
-selectedAvatarId = avatarId; // Обновляем выбранный ID
-
-});
-
-}
-
-function listenToTransactions() {
-
-// Слушаем последние 5 транзакций
-
-db.collection("transactions")
-
-.where('wallet', '==', currentUserWallet)
-
-.orderBy('timestamp', 'desc')
-
-.limit(5)
-
-.onSnapshot(snapshot => {
-
-const list = document.getElementById('transactionsList');
-
-let html = '';
-
-
-
-if (snapshot.empty) {
-
-list.innerHTML = '<p class="text-gray-500 text-xs text-center">Нет недавних транзакций.</p>';
-
-return;
-
-}
-
-
-
-snapshot.forEach(doc => {
-
-const data = doc.data();
-
-const type = data.type === 'deposit' ? 'Пополнение' : 'Вывод';
-
-const amount = data.amount || 0;
-
-const color = data.type === 'deposit' ? 'text-green-400' : 'text-red-400';
-
-const sign = data.type === 'deposit' ? '+' : '-';
-
-let dateStr = "N/A";
-
-if (data.timestamp && data.timestamp.seconds) {
-
-dateStr = new Date(data.timestamp.seconds * 1000).toLocaleString('ru-RU', {
-
-day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-
-});
-
-}
-
-
-
-html += `
-
-<div class="flex justify-between items-center text-xs p-2 bg-black/30 rounded">
-
-<span class="text-gray-400">${dateStr}</span>
-
-<span class="${color} font-bold">${sign}${amount.toFixed(4)} NEKO</span>
-
-<span class="text-gray-500">${type}</span>
-
-</div>
-
-`;
-
-});
-
-
-
-list.innerHTML = html;
-
-});
-
-}
-
-// --- PROFILE LOGIC ---
-
-
-
-function getAvatarPath(id, seed) {
-
-// Используем заглушку, так как нет реальных файлов img/avatar/*.png
-
-if (id >= 1 && id <= AVATAR_COUNT) {
-
-return `https://placehold.co/50x50/3730a3/ffffff?text=${id}`; // Placeholder for custom avatar
-
-}
-
-// Аватар по умолчанию (identicon)
-
-return `https://api.dicebear.com/7.x/identicon/svg?seed=${seed}`;
-
-}
-
-function initializeAvatarSelector() {
-
-const selector = document.getElementById('avatarSelector');
-
-for (let i = 1; i <= AVATAR_COUNT; i++) {
-
-const img = document.createElement('img');
-
-img.src = getAvatarPath(i, currentUserWallet);
-
-img.alt = `Avatar ${i}`;
-
-img.className = 'avatar-option rounded-full';
-
-img.dataset.id = i;
-
-// Обработчик выбора
-
-img.onclick = () => {
-
-document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
-
-img.classList.add('selected');
-
-selectedAvatarId = i;
-
-};
-
-selector.appendChild(img);
-
-}
-
-}
-
-
-
-function openProfileModal() {
-
-// Устанавливаем текущее имя в поле ввода
-
-document.getElementById('profileNameInput').value = document.getElementById('userNameDisplay').innerText === 'Трейдер' ? '' : document.getElementById('userNameDisplay').innerText;
-
-// Выделяем текущий выбранный аватар
-
-document.querySelectorAll('.avatar-option').forEach(el => {
-
-el.classList.remove('selected');
-
-if (parseInt(el.dataset.id) === selectedAvatarId) {
-
-el.classList.add('selected');
-
-}
-
-});
-
-document.getElementById('profileModal').classList.remove('hidden');
-
-}
-
-
-
-function closeProfileModal() {
-
-document.getElementById('profileModal').classList.add('hidden');
-
-}
-
-async function saveProfile() {
-
-const newName = document.getElementById('profileNameInput').value.trim();
-
-const newAvatarId = selectedAvatarId;
-
-
-
-if (!newName) {
-
-alert("Имя не может быть пустым.");
-
-return;
-
-}
-
-try {
-
-// Обновляем имя и ID аватара в Firestore
-
-await db.collection("users").doc(currentUserWallet).update({
-
-name: newName,
-
-avatarId: newAvatarId
-
-});
-
-closeProfileModal();
-
-} catch (e) {
-
-console.error("Error saving profile:", e);
-
-alert("Ошибка при сохранении профиля. Попробуйте позже.");
-
-}
-
-}
-
-
-
-function logout() {
-
-localStorage.removeItem('neko_wallet');
-
-window.location.href = "index.html";
-
-}
-
-</script>
-
+    <!-- NAVIGATION BAR -->
+    <nav class="border-b border-gray-800 bg-black/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-8 h-8 bg-orange-500 rounded flex items-center justify-center font-pixel text-[10px] text-black">NK</div>
+                <div class="hidden md:flex gap-2">
+                    <a class="nav-link text-white font-semibold">Overview</a>
+                    <a class="nav-link">Transactions</a>
+                    <a class="nav-link">Swap</a>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- ADMIN BUTTON (Hidden by default) -->
+                <a id="adminBtn" href="admin.html" class="hidden bg-red-900/50 text-red-400 border border-red-500/50 px-3 py-1 rounded text-xs font-bold hover:bg-red-900 transition">
+                    ADMIN PANEL
+                </a>
+
+                <div class="text-right">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider">Wallet</div>
+                    <div id="walletDisplay" class="font-mono text-xs text-orange-500">Loading...</div>
+                </div>
+                <button onclick="logout()" class="text-gray-500 hover:text-white transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 max-w-7xl mx-auto w-full p-6 relative z-20">
+        
+        <!-- Profile Header -->
+        <div class="flex items-end mb-10">
+            <div class="w-24 h-24 bg-black border-4 border-[#050505] rounded-2xl overflow-hidden shadow-2xl relative z-30">
+                <img id="avatarImg" class="w-full h-full bg-gray-800" src="https://api.dicebear.com/7.x/identicon/svg?seed=Neko">
+            </div>
+            <div class="ml-6 mb-2 relative z-30">
+                <h1 class="text-3xl font-bold" id="userNameDisplay">Trader</h1>
+                <p class="text-gray-400 text-sm flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Online
+                </p>
+                <button onclick="openProfileModal()" class="text-xs text-orange-500 hover:text-white mt-1">
+                    Edit Profile
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Grid (Balance + Flow) -->
+        <div class="grid md:grid-cols-4 gap-6 mb-6">
+            
+            <!-- Balance Card -->
+            <div class="glass p-6 rounded-2xl col-span-2 relative overflow-hidden group border-l-4 border-orange-600">
+                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-2">Total Balance</h3>
+                <div class="flex items-baseline gap-2">
+                    <span id="balanceDisplay" class="text-4xl font-bold text-white">0.0000</span>
+                    <span class="text-xl text-orange-500 font-pixel">NEKO</span>
+                </div>
+                <div class="mt-4 flex gap-4">
+                    <button onclick="window.location.href='withdraw.html'" class="bg-orange-600 hover:bg-orange-500 text-black px-4 py-2 rounded font-bold transition shadow-lg shadow-orange-600/20 text-sm">
+                        Withdraw
+                    </button>
+                    <button class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded font-bold transition text-sm">
+                        Swap
+                    </button>
+                </div>
+            </div>
+
+            <!-- Total Mined Card -->
+            <div class="glass p-6 rounded-2xl">
+                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Total Mined</h3>
+                <p class="text-2xl font-bold text-green-400" id="totalMinedDisplay">0.00</p>
+                <p class="text-xs text-gray-500 mt-2">Node Balance</p>
+            </div>
+
+            <!-- Total Withdrawn Card -->
+            <div class="glass p-6 rounded-2xl">
+                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Total Withdrawn</h3>
+                <p class="text-2xl font-bold text-red-400" id="totalWithdrawnDisplay">0.00</p>
+                <p class="text-xs text-gray-500 mt-2">Completed Payouts</p>
+            </div>
+        </div>
+
+        <!-- Secondary Grid (Donations + Node Status) -->
+        <div class="grid md:grid-cols-3 gap-6">
+
+            <!-- Total Donated Card -->
+            <div class="glass p-6 rounded-2xl border-l-4 border-fuchsia-600">
+                <h3 class="text-gray-400 text-sm uppercase tracking-widest mb-1">Donated to Cats 😻</h3>
+                <p class="text-3xl font-bold text-fuchsia-400" id="totalDonatedDisplay">0.00</p>
+                <p class="text-xs text-gray-500 mt-2">Auto-deducted from txs</p>
+            </div>
+
+            <!-- Transactions List -->
+            <div class="glass p-6 rounded-2xl col-span-2">
+                <h3 class="text-gray-300 text-sm uppercase tracking-widest mb-4 border-b border-gray-700 pb-2">Last 5 Transactions</h3>
+                <div class="space-y-3" id="transactionsList">
+                    <p class="text-gray-500 text-xs text-center">No recent transactions.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- === PROFILE EDIT MODAL === -->
+    <div id="profileModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeProfileModal()"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative bg-[#0a0a0a] border border-orange-500/50 p-8 rounded-2xl w-full max-w-md shadow-[0_0_50px_rgba(255,140,0,0.2)] transform transition-all modal-enter mx-4">
+            
+            <div class="text-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Edit Profile</h3>
+                <p class="text-gray-400 text-xs mt-2">Name and Avatar</p>
+            </div>
+            
+            <div class="space-y-6">
+                <!-- Name Input -->
+                <div>
+                    <label class="text-xs text-gray-400 uppercase mb-2 block">Your Name (Nickname)</label>
+                    <input type="text" id="profileNameInput" maxlength="20"
+                        class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-orange-500 focus:outline-none text-sm placeholder-gray-600"
+                        placeholder="e.g. CryptoCatLover"
+                    >
+                </div>
+
+                <!-- Avatar Selection -->
+                <div>
+                    <label class="text-xs text-gray-400 uppercase mb-2 block">Select Avatar (1-15)</label>
+                    <div id="avatarSelector" class="flex flex-wrap gap-2 justify-center bg-black/30 p-4 rounded-lg">
+                        <!-- Avatars will be injected here by JS -->
+                    </div>
+                </div>
+                
+                <button onclick="saveProfile()" class="w-full bg-orange-600 hover:bg-orange-500 text-black font-bold py-3 rounded-lg transition uppercase tracking-wider text-sm">
+                    Save Changes
+                </button>
+            </div>
+            
+            <!-- Close Button -->
+            <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">✕</button>
+        </div>
+    </div>
+
+
+    <script>
+        // --- 1. ENVIRONMENT SETUP (CRITICAL FIXES) ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'nekotexs-default';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+            authDomain: "nekotexs.firebaseapp.com",
+            databaseURL: "https://nekotexs-default-rtdb.firebaseio.com",
+            projectId: "nekotexs",
+            storageBucket: "nekotexs.firebasestorage.app",
+            messagingSenderId: "596436176972",
+            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        const ADMIN_WALLET = "99LRmqppEMABzsZMYdDqhxqGaLDXZECpFqPBf9dHPdaf";
+        let currentUserWallet = null;
+        let selectedAvatarId = 1;
+        const AVATAR_COUNT = 15;
+
+        // --- 2. AUTHENTICATION & INIT ---
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Get wallet from LocalStorage (User's identifier)
+            currentUserWallet = localStorage.getItem('neko_wallet');
+            
+            if (!currentUserWallet) {
+                window.location.href = "index.html";
+                return;
+            }
+
+            // === CRITICAL FIX: MUST SIGN IN ANONYMOUSLY TO ACCESS DB ===
+            try {
+                if (initialAuthToken) {
+                    await auth.signInWithCustomToken(initialAuthToken);
+                } else {
+                    await auth.signInAnonymously();
+                }
+            } catch(e) {
+                console.error("Auth failed, attempting fallback...", e);
+            }
+
+            // 1. Set Basic Info
+            const shortWallet = currentUserWallet.slice(0, 4) + '...' + currentUserWallet.slice(-4);
+            document.getElementById('walletDisplay').innerText = shortWallet;
+            document.getElementById('avatarImg').src = getAvatarPath(1, currentUserWallet);
+
+            // 2. Check Admin
+            if (currentUserWallet === ADMIN_WALLET) {
+                document.getElementById('adminBtn').classList.remove('hidden');
+            }
+
+            // 3. Setup Firestore Listeners with FIXED PATHS
+            listenToUserData();
+            listenToTransactions();
+            
+            // 4. Initialize Avatar Selector
+            initializeAvatarSelector();
+        });
+
+        // --- 3. DATA LISTENERS (FIXED PATHS) ---
+
+        function listenToUserData() {
+            // Use public data path for wallet-based lookup: artifacts/{appId}/public/data/users/{wallet}
+            const userRef = db.collection("artifacts").doc(appId).collection("public").doc("data").collection("users").doc(currentUserWallet);
+
+            userRef.onSnapshot((doc) => {
+                if (!doc.exists) {
+                    // Create if doesn't exist (auto-init)
+                    userRef.set({
+                        wallet: currentUserWallet,
+                        balance: 0,
+                        totalMined: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, {merge: true});
+                    return;
+                }
+
+                const data = doc.data();
+                const bal = data?.balance || 0;
+                const name = data?.name || "Trader";
+                const avatarId = data?.avatarId || 0;
+                const totalMined = data?.totalMined || 0;
+                const totalWithdrawn = data?.totalWithdrawn || 0;
+                const totalDonated = data?.totalDonated || 0;
+                
+                // Update UI
+                document.getElementById('balanceDisplay').innerText = bal.toFixed(4);
+                document.getElementById('totalMinedDisplay').innerText = totalMined.toFixed(4);
+                document.getElementById('totalWithdrawnDisplay').innerText = totalWithdrawn.toFixed(4);
+                document.getElementById('totalDonatedDisplay').innerText = totalDonated.toFixed(4);
+                document.getElementById('userNameDisplay').innerText = name;
+                document.getElementById('avatarImg').src = getAvatarPath(avatarId, currentUserWallet);
+                selectedAvatarId = avatarId; 
+            }, (error) => {
+                console.error("Data Listener Error:", error);
+            });
+        }
+        
+        function listenToTransactions() {
+            // Path: artifacts/{appId}/public/data/transactions
+            const txRef = db.collection("artifacts").doc(appId).collection("public").doc("data").collection("transactions");
+
+            txRef
+              .where('wallet', '==', currentUserWallet)
+              .orderBy('timestamp', 'desc')
+              .limit(5)
+              .onSnapshot(snapshot => {
+                const list = document.getElementById('transactionsList');
+                let html = '';
+
+                if (snapshot.empty) {
+                    list.innerHTML = '<p class="text-gray-500 text-xs text-center">No recent transactions.</p>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const type = data.type === 'deposit' ? 'Deposit' : 'Withdraw';
+                    const amount = data.amount || 0;
+                    const color = data.type === 'deposit' ? 'text-green-400' : 'text-red-400';
+                    const sign = data.type === 'deposit' ? '+' : '-';
+                    
+                    let dateStr = "N/A";
+                    if (data.timestamp && data.timestamp.seconds) {
+                        dateStr = new Date(data.timestamp.seconds * 1000).toLocaleDateString();
+                    }
+
+                    html += `
+                        <div class="flex justify-between items-center text-xs p-2 bg-black/30 rounded">
+                            <span class="text-gray-400">${dateStr}</span>
+                            <span class="${color} font-bold">${sign}${amount.toFixed(4)} NEKO</span>
+                            <span class="text-gray-500">${type}</span>
+                        </div>
+                    `;
+                });
+
+                list.innerHTML = html;
+            });
+        }
+        
+        // --- PROFILE LOGIC ---
+
+        function getAvatarPath(id, seed) {
+            if (id >= 1 && id <= AVATAR_COUNT) {
+                return `https://placehold.co/50x50/3730a3/ffffff?text=${id}`;
+            }
+            return `https://api.dicebear.com/7.x/identicon/svg?seed=${seed}`;
+        }
+        
+        function initializeAvatarSelector() {
+            const selector = document.getElementById('avatarSelector');
+            for (let i = 1; i <= AVATAR_COUNT; i++) {
+                const img = document.createElement('img');
+                img.src = getAvatarPath(i, currentUserWallet);
+                img.alt = `Avatar ${i}`;
+                img.className = 'avatar-option rounded-full';
+                img.dataset.id = i;
+                
+                img.onclick = () => {
+                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                    img.classList.add('selected');
+                    selectedAvatarId = i;
+                };
+                selector.appendChild(img);
+            }
+        }
+
+        function openProfileModal() {
+            document.getElementById('profileNameInput').value = document.getElementById('userNameDisplay').innerText === 'Trader' ? '' : document.getElementById('userNameDisplay').innerText;
+            
+            document.querySelectorAll('.avatar-option').forEach(el => {
+                el.classList.remove('selected');
+                if (parseInt(el.dataset.id) === selectedAvatarId) {
+                    el.classList.add('selected');
+                }
+            });
+            
+            document.getElementById('profileModal').classList.remove('hidden');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.add('hidden');
+        }
+        
+        async function saveProfile() {
+            const newName = document.getElementById('profileNameInput').value.trim();
+            const newAvatarId = selectedAvatarId;
+
+            if (!newName) {
+                alert("Name cannot be empty.");
+                return;
+            }
+            
+            try {
+                // Save to: artifacts/{appId}/public/data/users/{wallet}
+                const userRef = db.collection("artifacts").doc(appId).collection("public").doc("data").collection("users").doc(currentUserWallet);
+                
+                await userRef.update({
+                    name: newName,
+                    avatarId: newAvatarId
+                });
+                closeProfileModal();
+            } catch (e) {
+                console.error("Error saving profile:", e);
+                alert("Error saving. Try again.");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('neko_wallet');
+            window.location.href = "index.html";
+        }
+    </script>
 </body>
-
 </html>
