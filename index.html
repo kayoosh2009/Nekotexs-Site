@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nekotexs | The Future of Feline Finance</title>
+    <title>Nekotexs | Main page</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,49 +12,122 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
     
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth;
+
+        if (firebaseConfig) {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    try {
+                        if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+                        else await signInAnonymously(auth);
+                    } catch (e) { console.error("Auth init error", e); }
+                }
+            });
+        }
+
+        // --- AUTO-LOGIN LOGIC ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedWallet = localStorage.getItem('neko_wallet');
+            const isLogout = new URLSearchParams(window.location.search).get('action') === 'logout';
+
+            // If wallet exists and user didn't just log out, redirect automatically
+            if (savedWallet && !isLogout) {
+                console.log("Auto-login detected for:", savedWallet);
+                // Adding a small delay for visual effect or immediate redirect
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                setTimeout(() => {
+                    window.location.href = "user_dashboard_en.html";
+                }, 800);
+            }
+        });
+
+        window.connectPhantom = async () => {
+            const { solana } = window;
+            if (solana && solana.isPhantom) {
+                try {
+                    const response = await solana.connect();
+                    const address = response.publicKey.toString();
+                    await finalizeLogin(address, "phantom");
+                } catch (err) {
+                    console.error(err);
+                }
+            } else {
+                alert("Phantom Wallet not found!");
+                window.open("https://phantom.app/", "_blank");
+            }
+        };
+
+        window.submitManualWallet = async () => {
+            const input = document.getElementById('manualWalletInput');
+            const address = input.value.trim();
+            if (!address) {
+                input.classList.add('border-red-500');
+                return;
+            }
+            await finalizeLogin(address, "manual");
+        };
+
+        async function finalizeLogin(address, method) {
+            try {
+                localStorage.setItem('neko_wallet', address);
+
+                if (db) {
+                    // Saving initial user data to public path for consistency
+                    await setDoc(doc(db, "artifacts", appId, "public", "data", "users", address), {
+                        wallet: address,
+                        lastLogin: serverTimestamp(),
+                        platform: "web",
+                        method: method
+                    }, { merge: true });
+                }
+
+                window.location.href = "user_dashboard_en.html";
+            } catch (e) {
+                console.error("Login error", e);
+                window.location.href = "user_dashboard_en.html"; 
+            }
+        }
+
+        window.openModal = () => document.getElementById('walletModal').classList.remove('hidden');
+        window.closeModal = () => document.getElementById('walletModal').classList.add('hidden');
+    </script>
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #050505;
-            color: #ffffff;
-            overflow-x: hidden;
-        }
-        
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #ffffff; overflow-x: hidden; }
         .font-pixel { font-family: 'Press Start 2P', cursive; }
         .glow-text { text-shadow: 0 0 20px rgba(255, 140, 0, 0.6); }
-        
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-primary {
-            background: linear-gradient(90deg, #ff8c00, #ff4500);
-            transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px rgba(255, 69, 0, 0.4);
-        }
-
-        /* Ticker Animation */
-        @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
+        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-primary { background: linear-gradient(90deg, #ff8c00, #ff4500); transition: all 0.3s ease; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(255, 69, 0, 0.4); }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         .ticker-wrap { overflow: hidden; white-space: nowrap; }
         .ticker { display: inline-block; animation: scroll 20s linear infinite; }
-
-        /* Modal Animation */
         .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class="antialiased selection:bg-orange-500 selection:text-white">
+
+    <!-- Auto-Login Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black z-[200] hidden flex items-center justify-center">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-orange-500 font-mono text-sm animate-pulse">RETURNING TO DASHBOARD...</p>
+        </div>
+    </div>
 
     <!-- Navigation -->
     <nav class="w-full fixed top-0 z-50 border-b border-gray-800 bg-black/80 backdrop-blur-md">
@@ -65,6 +138,7 @@
             </div>
             <div class="flex items-center gap-6">
                 <div class="hidden md:flex gap-6">
+                    <a href="#features" class="text-gray-400 hover:text-white transition text-sm font-medium">Features</a>
                     <a href="#tokenomics" class="text-gray-400 hover:text-white transition text-sm font-medium">Tokenomics</a>
                     <a href="#roadmap" class="text-gray-400 hover:text-white transition text-sm font-medium">Roadmap</a>
                 </div>
@@ -100,7 +174,7 @@
                     Start Trading Now
                 </button>
                 <button class="px-8 py-4 rounded-lg border border-gray-700 hover:bg-gray-800 transition text-gray-300 font-medium">
-                    View Chart
+                    Live Chart
                 </button>
             </div>
         </div>
@@ -113,40 +187,46 @@
         </div>
     </div>
 
-    <!-- Features Grid -->
-    <section class="py-20 bg-black border-b border-gray-800 relative">
+    <!-- Detailed Features Grid -->
+    <section id="features" class="py-24 bg-black border-b border-gray-800 relative">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold mb-4">Why Nekotexs?</h2>
-                <p class="text-gray-400">More than just a memecoin. We are building an ecosystem.</p>
+                <h2 class="text-3xl font-bold mb-4">How It Works</h2>
+                <p class="text-gray-400">Simple steps to start earning and helping.</p>
             </div>
             <div class="grid md:grid-cols-3 gap-8">
-                <div class="glass-panel p-8 rounded-2xl hover:bg-white/5 transition group">
-                    <div class="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center mb-6 text-3xl group-hover:scale-110 transition duration-300">😻</div>
-                    <h3 class="text-xl font-bold mb-3 text-white">Charity Protocol</h3>
-                    <p class="text-gray-400 leading-relaxed text-sm">Smart contracts automatically route 2% of volume to a transparent charity wallet.</p>
+                <!-- Step 1 -->
+                <div class="glass-panel p-8 rounded-2xl hover:bg-white/5 transition group relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-9xl font-bold text-white/5">1</div>
+                    <div class="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center mb-6 text-2xl border border-gray-800">🔗</div>
+                    <h3 class="text-xl font-bold mb-3 text-white">Connect Wallet</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Link your Phantom or Solflare wallet. No registration, no email, no personal data required.</p>
                 </div>
-                <div class="glass-panel p-8 rounded-2xl hover:bg-white/5 transition group">
-                    <div class="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center mb-6 text-3xl group-hover:scale-110 transition duration-300">💎</div>
-                    <h3 class="text-xl font-bold mb-3 text-white">Trader Rewards</h3>
-                    <p class="text-gray-400 leading-relaxed text-sm">Use our platform to swap and earn 2% cashback in $NEKO tokens.</p>
+                <!-- Step 2 -->
+                <div class="glass-panel p-8 rounded-2xl hover:bg-white/5 transition group relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-9xl font-bold text-white/5">2</div>
+                    <div class="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center mb-6 text-2xl border border-gray-800">🔄</div>
+                    <h3 class="text-xl font-bold mb-3 text-white">Swap Tokens</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Trade SOL, USDC, and other tokens. 2% of fees go directly to our verified charity wallet.</p>
                 </div>
-                <div class="glass-panel p-8 rounded-2xl hover:bg-white/5 transition group">
-                    <div class="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center mb-6 text-3xl group-hover:scale-110 transition duration-300">🔐</div>
-                    <h3 class="text-xl font-bold mb-3 text-white">Permissionless</h3>
-                    <p class="text-gray-400 leading-relaxed text-sm">No IDs. No sign-ups. Just connect your wallet and trade instantly.</p>
+                <!-- Step 3 -->
+                <div class="glass-panel p-8 rounded-2xl hover:bg-white/5 transition group relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-9xl font-bold text-white/5">3</div>
+                    <div class="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center mb-6 text-2xl border border-gray-800">🎁</div>
+                    <h3 class="text-xl font-bold mb-3 text-white">Earn Rewards</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Holders receive airdrops. Use our browser extension to mine $NEKO passively while surfing.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Tokenomics Section -->
-    <section id="tokenomics" class="py-24 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-gray-900 to-transparent -z-10"></div>
+    <section id="tokenomics" class="py-24 relative overflow-hidden bg-gray-900/20">
         <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
             <div>
                 <h2 class="text-4xl font-extrabold mb-6">Tokenomics</h2>
                 <p class="text-gray-400 mb-8 text-lg">Designed for sustainability. A deflationary mechanism combined with automatic liquidity generation.</p>
+                
                 <div class="space-y-6">
                     <div>
                         <div class="flex justify-between text-sm font-bold mb-2"><span>Liquidity Pool</span><span class="text-orange-500">45%</span></div>
@@ -163,14 +243,15 @@
                 </div>
             </div>
             <div class="relative">
-                <div class="glass-panel p-10 rounded-3xl border-orange-500/20 relative z-10">
+                <div class="glass-panel p-10 rounded-3xl border-orange-500/20 relative z-10 backdrop-blur-xl">
                     <div class="flex items-center justify-between mb-8">
                         <div><p class="text-gray-400 text-sm">Contract Address</p><p class="font-mono text-xs text-orange-500 mt-1">Solana: 7xKX...9jLq</p></div>
-                        <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold">N</div>
+                        <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-black">N</div>
                     </div>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center bg-white/5 p-3 rounded-lg"><span class="text-sm">🐱 Donation Wallet</span><span class="text-xs font-mono text-green-400">Active</span></div>
                         <div class="flex justify-between items-center bg-white/5 p-3 rounded-lg"><span class="text-sm">🔒 LP Lock</span><span class="text-xs font-mono text-green-400">100 Years</span></div>
+                        <div class="flex justify-between items-center bg-white/5 p-3 rounded-lg"><span class="text-sm">🔥 Burn Rate</span><span class="text-xs font-mono text-orange-400">1% per Tx</span></div>
                     </div>
                 </div>
             </div>
@@ -184,123 +265,35 @@
                 <div class="w-8 h-8 bg-gray-800 rounded flex items-center justify-center font-pixel text-[10px] text-gray-400">NK</div>
                 <span class="text-gray-500">© 2025 Nekotexs Protocol.</span>
             </div>
+            <div class="flex gap-6">
+                <a href="#" class="text-gray-500 hover:text-white transition">Twitter</a>
+                <a href="#" class="text-gray-500 hover:text-white transition">Telegram</a>
+                <a href="#" class="text-gray-500 hover:text-white transition">Docs</a>
+            </div>
         </div>
     </footer>
 
-    <!-- === UPDATED CONNECT MODAL === -->
+    <!-- Modal -->
     <div id="walletModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
-        <!-- Backdrop (Blurry Dark) -->
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal()"></div>
-        
-        <!-- Modal Content -->
-        <div class="relative bg-[#0a0a0a] border border-orange-500/50 p-8 rounded-2xl w-full max-w-md shadow-[0_0_50px_rgba(255,140,0,0.2)] transform transition-all modal-enter mx-4">
-            
+        <div class="relative bg-[#0a0a0a] border border-orange-500/50 p-8 rounded-2xl w-full max-w-md shadow-[0_0_50px_rgba(255,140,0,0.2)] modal-enter mx-4">
             <div class="text-center mb-6">
                 <h3 class="text-2xl font-bold text-white">Connect Wallet</h3>
                 <p class="text-gray-400 text-xs mt-2">Choose your preferred method</p>
             </div>
-            
             <div class="space-y-4">
-                <!-- Option 1: Phantom -->
                 <button onclick="connectPhantom()" class="w-full bg-[#AB9FF2] hover:bg-[#9a8ee0] text-black font-bold py-3 rounded-lg flex items-center justify-center gap-3 transition hover:scale-[1.02]">
                     <img src="https://cryptologos.cc/logos/phantom-phantom-logo.png" class="w-6 h-6" alt="Phantom">
                     Connect Phantom
                 </button>
-
                 <div class="text-center text-gray-600 text-xs">- OR -</div>
-
-                <!-- Option 2: Manual -->
                 <div>
-                    <input type="text" id="manualWalletInput" 
-                        class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-orange-500 focus:outline-none font-mono text-sm text-center placeholder-gray-600 mb-2"
-                        placeholder="Enter Address Manually (7xKX...)"
-                    >
-                    <button onclick="submitManualWallet()" class="w-full border border-orange-500/30 text-orange-500 hover:bg-orange-500/10 font-bold py-3 rounded-lg transition uppercase tracking-wider text-sm">
-                        Enter Address
-                    </button>
+                    <input type="text" id="manualWalletInput" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-orange-500 focus:outline-none font-mono text-sm text-center placeholder-gray-600 mb-2" placeholder="Enter Address Manually (7xKX...)">
+                    <button onclick="submitManualWallet()" class="w-full border border-orange-500/30 text-orange-500 hover:bg-orange-500/10 font-bold py-3 rounded-lg transition uppercase tracking-wider text-sm">Enter Address</button>
                 </div>
             </div>
-            
-            <!-- Close Button -->
             <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">✕</button>
         </div>
     </div>
-
-    <script>
-        // 1. Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
-            authDomain: "nekotexs.firebaseapp.com",
-            databaseURL: "https://nekotexs-default-rtdb.firebaseio.com",
-            projectId: "nekotexs",
-            storageBucket: "nekotexs.firebasestorage.app",
-            messagingSenderId: "596436176972",
-            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        // 2. Modal Logic
-        function openModal() {
-            document.getElementById('walletModal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('walletModal').classList.add('hidden');
-        }
-
-        // 3. Phantom Connect
-        async function connectPhantom() {
-            const { solana } = window;
-            if (solana && solana.isPhantom) {
-                try {
-                    const response = await solana.connect();
-                    const address = response.publicKey.toString();
-                    await finalizeLogin(address, "phantom");
-                } catch (err) {
-                    console.error(err);
-                }
-            } else {
-                alert("Phantom Wallet not found!");
-                window.open("https://phantom.app/", "_blank");
-            }
-        }
-
-        // 4. Manual Submit
-        async function submitManualWallet() {
-            const input = document.getElementById('manualWalletInput');
-            const address = input.value.trim();
-            if (!address) {
-                input.classList.add('border-red-500');
-                return;
-            }
-            await finalizeLogin(address, "manual");
-        }
-
-        // 5. Finalize & Save
-        async function finalizeLogin(address, method) {
-            try {
-                await saveUserToFirebase(address, method);
-                localStorage.setItem('neko_wallet', address);
-                window.location.href = "dash.html";
-            } catch (e) {
-                console.error("Login error", e);
-                alert("Login failed. See console.");
-            }
-        }
-
-        const saveUserToFirebase = async (walletAddress, method) => {
-            try {
-                await db.collection("users").doc(walletAddress).set({
-                    wallet: walletAddress,
-                    lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                    platform: "web",
-                    method: method
-                }, { merge: true });
-            } catch (error) {
-                console.error("Error saving user: ", error);
-            }
-        };
-    </script>
 </body>
 </html>
