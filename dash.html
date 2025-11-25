@@ -3,219 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nekotexs | Dashboard</title>
+    <title>Under Development - 67%</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts: Inter for main text, Press Start 2P for accent -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
-
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, updateDoc, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // ВСТАВЬ СВОЙ КОНФИГ ИЗ FIREBASE CONSOLE
-        const firebaseConfig = {
-            apiKey: "AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-            authDomain: "nekotexs.firebaseapp.com",
-            projectId: "nekotexs",
-            storageBucket: "nekotexs.appspot.com",
-            messagingSenderId: "1234567890",
-            appId: "1:1234567890:web:abcdef1234567890"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        let currentWallet = null;
-
-        // При загрузке страницы
-        window.addEventListener('DOMContentLoaded', async () => {
-            currentWallet = localStorage.getItem('neko_wallet');
-
-            if (!currentWallet) {
-                alert("Connect wallet first!");
-                window.location.replace("./index.html");
-                return;
-            }
-
-            // Короткий адрес в шапке
-            document.getElementById('walletDisplay').textContent = 
-                currentWallet.slice(0, 6) + '...' + currentWallet.slice(-4);
-
-            // Анонимная авторизация
-            onAuthStateChanged(auth, async (user) => {
-                if (!user) await signInAnonymously(auth);
-                loadUserData();
-                loadTransactionHistory();
-            });
-        });
-
-        // Загрузка основных данных пользователя
-        function loadUserData() {
-            const userRef = doc(db, "users", currentWallet);
-
-            onSnapshot(userRef, (snap) => {
-                if (!snap.exists()) {
-                    document.getElementById('balanceDisplay').textContent = "0.00000000";
-                    document.getElementById('userNameDisplay').textContent = "Not found";
-                    return;
-                }
-
-                const d = snap.data();
-
-                const balance = Number(d.balance || 0);
-                const name = d.name || "Trader";
-                const avatarSeed = d.avatarId || d.name || currentWallet;
-
-                document.getElementById('balanceDisplay').textContent = balance.toFixed(8);
-                document.getElementById('userNameDisplay').textContent = name;
-                document.getElementById('avatarImg').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${avatarSeed}`;
-
-                // Заполняем модалку профиля
-                document.getElementById('profileNameInput').value = name;
-            }, (err) => {
-                console.error("Firestore error:", err);
-                document.getElementById('balanceDisplay').textContent = "Error";
-            });
-        }
-
-        // История транзакций (если у тебя есть подколлекция withdrawals внутри пользователя)
-        function loadTransactionHistory() {
-            const withdrawalsRef = collection(db, "users", currentWallet, "withdrawals");
-            const list = document.getElementById('transactionsList');
-
-            const q = query(withdrawalsRef, orderBy("timestamp", "desc"), limit(5));
-
-            onSnapshot(q, (snapshot) => {
-                list.innerHTML = '';
-                if (snapshot.empty) {
-                    list.innerHTML = '<p class="text-gray-500 text-xs text-center p-3">No withdrawals yet</p>';
-                    return;
-                }
-
-                snapshot.forEach(doc => {
-                    const t = doc.data();
-                    const date = t.timestamp?.toDate?.()?.toLocaleDateString() || "—";
-                    const amount = Number(t.amount || 0).toFixed(4);
-                    const status = t.status === "completed" ? "Completed" : "Pending";
-                    const color = t.status === "completed" ? "text-green-400" : "text-yellow-400";
-
-                    list.innerHTML += `
-                        <div class="flex justify-between items-center text-xs p-3 bg-black/30 rounded border border-gray-800">
-                            <div>
-                                <span class="block text-gray-300 font-bold">Withdrawal</span>
-                                <span class="text-[10px] text-gray-500">${date}</span>
-                            </div>
-                            <div class="text-right">
-                                <span class="block text-red-400 font-mono">-${amount} NEKO</span>
-                                <span class="${color} text-[10px] uppercase">${status}</span>
-                            </div>
-                        </div>`;
-                });
-            }, () => {
-                list.innerHTML = '<p class="text-gray-500 text-xs text-center p-3">History not available</p>';
-            });
-        }
-
-        // Редактирование профиля
-        window.openProfileModal = () => document.getElementById('profileModal').classList.remove('hidden');
-        window.closeProfileModal = () => document.getElementById('profileModal').classList.add('hidden');
-
-        window.saveProfile = async () => {
-            const name = document.getElementById('profileNameInput').value.trim();
-            if (name.length < 2) {
-                document.getElementById('profileNameInput').classList.add('border-red-500');
-                return;
-            }
-
-            try {
-                await updateDoc(doc(db, "users", currentWallet), { name });
-                closeProfileModal();
-            } catch (e) {
-                alert("Save failed: " + e.message);
-            }
-        };
-
-        // Выход
-        window.logout = () => {
-            localStorage.removeItem('neko_wallet');
-            signOut(auth);
-            window.location.replace("./index.html?action=logout");
-        };
-    </script>
-
+    
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #fff; }
-        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #050505; /* Dark background */
+            color: #ffffff; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .font-pixel { font-family: 'Press Start 2P', cursive; }
+        .glow-text { text-shadow: 0 0 15px rgba(255, 140, 0, 0.4); }
+        .glass-panel { 
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255, 140, 0, 0.1); /* Orange border accent */
+            box-shadow: 0 0 40px rgba(255, 140, 0, 0.15); /* Soft orange glow */
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="antialiased p-4">
 
-    <!-- NAV -->
-    <nav class="border-b border-gray-800 bg-black/50 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <img src="https://placehold.co/32x32/ff8c00/ffffff?text=NK" alt="Logo" class="w-8 h-8 rounded">
-                <span class="hidden md:block font-bold text-orange-500">NEKOTEXS</span>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="text-right hidden sm:block">
-                    <div class="text-[10px] text-gray-500 uppercase">Wallet</div>
-                    <div id="walletDisplay" class="font-mono text-xs text-orange-400">—</div>
-                </div>
-                <button onclick="logout()" class="text-gray-400 hover:text-white p-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <!-- MAIN -->
-    <main class="flex-1 max-w-4xl mx-auto w-full p-6">
-        <div class="flex items-end gap-6 mb-10 border-b border-gray-800 pb-8">
-            <img id="avatarImg" class="w-24 h-24 rounded-xl border-4 border-gray-800" src="" alt="avatar">
-            <div>
-                <h1 class="text-3xl font-bold" id="userNameDisplay">Loading...</h1>
-                <button onclick="openProfileModal()" class="text-sm text-orange-500 hover:text-orange-400">Edit Profile</button>
-            </div>
+    <div class="glass-panel p-8 sm:p-12 rounded-2xl w-full max-w-lg mx-auto transition-all duration-300">
+        
+        <div class="mb-8">
+            <span class="text-orange-500 text-6xl md:text-8xl font-extrabold block mb-4 glow-text">
+                67%
+            </span>
+            <h1 class="font-pixel text-lg sm:text-2xl text-white tracking-wider uppercase">
+                Under Construction
+            </h1>
         </div>
 
-        <!-- Balance Card -->
-        <div class="glass p-8 rounded-2xl text-center border-l-4 border-orange-600 mb-10">
-            <p class="text-gray-400 text-sm uppercase tracking-wider">Your Balance</p>
-            <div class="mt-4">
-                <span id="balanceDisplay" class="text-6xl font-bold text-orange-400">0.00000000</span>
-                <span class="text-3xl text-orange-500 ml-2">NEKO</span>
-            </div>
-            <div class="mt-6 flex justify-center gap-4">
-                <a href="./withdraw.html" class="bg-orange-600 hover:bg-orange-500 text-black font-bold py-3 px-8 rounded-lg">Withdraw</a>
-                <button class="border border-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-lg">Swap</button>
-            </div>
-        </div>
+        <p class="text-gray-400 text-sm mb-6">
+            This page is currently being developed and is 67% complete. We are working hard to bring you this feature.
+        </p>
 
-        <!-- Activity -->
-        <div class="glass p-6 rounded-2xl">
-            <h3 class="text-xl font-bold mb-4 text-orange-500">Recent Activity</h3>
-            <div id="transactionsList" class="space-y-3">
-                <p class="text-gray-500 text-center">Loading...</p>
-            </div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-800 rounded-full h-3 mb-8 overflow-hidden">
+            <div 
+                class="bg-gradient-to-r from-orange-500 to-red-600 h-3 rounded-full transition-all duration-1000 ease-out" 
+                style="width: 67%;"
+            ></div>
         </div>
-    </main>
+        
+        <!-- Retro-styled Message -->
+        <p class="font-pixel text-xs text-orange-400 animate-pulse mt-4">
+            [ LOADING FEATURE... PLEASE STAND BY ]
+        </p>
 
-    <!-- Profile Modal -->
-    <div id="profileModal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 hidden p-4">
-        <div class="glass p-8 rounded-2xl max-w-sm w-full">
-            <h2 class="text-2xl font-bold text-orange-500 mb-6">Edit Profile</h2>
-            <label class="block text-sm text-gray-400 mb-2">Display Name</label>
-            <input type="text" id="profileNameInput" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-orange-500 focus:outline-none mb-6">
-            <div class="flex justify-end gap-3">
-                <button onclick="closeProfileModal()" class="px-6 py-3 text-gray-400 hover:text-white">Cancel</button>
-                <button onclick="saveProfile()" class="bg-orange-600 hover:bg-orange-500 text-black font-bold px-8 py-3 rounded-lg">Save</button>
-            </div>
-        </div>
+        <!-- Back to Dashboard button (if user came from index.html/dash.html) -->
+        <a href="index.html" class="inline-block mt-8 text-sm px-6 py-2 rounded-full border border-gray-700 hover:bg-gray-800 transition text-gray-300 font-medium">
+            Go Back to main page
+        </a>
     </div>
+
 </body>
 </html>
