@@ -6,14 +6,14 @@
     <title>Nekotexs | Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
-    
-    <!-- Firebase SDK v9+ (модульный импорт) -->
+
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ВСТАВЬ СЮДА СВОИ ДАННЫЕ ИЗ FIREBASE КОНСОЛИ
+        // ВСТАВЬ СВОЙ КОНФИГ ИЗ FIREBASE CONSOLE
         const firebaseConfig = {
             apiKey: "AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
             authDomain: "nekotexs.firebaseapp.com",
@@ -23,26 +23,18 @@
             appId: "1:1234567890:web:abcdef1234567890"
         };
 
-        // Если у тебя другой appId в пути artifacts → поменяй здесь
-        const APP_ID = "default-app-id";  // ←←← ПРОВЕРЬ! Может быть "nekotexs-live" или что-то своё
-
-        const ADMIN_WALLET = "99LRmqppEMABzsZMYdDqhxqGaLDXZECpFqPBf9dHPdaf";
-
-        const AVATAR_SEEDS = ['Neko','Kitsune','Panda','Robot','Milo','Luna','Shadow','Pixel','Star','Moon'];
-
-        // Инициализация Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         let currentWallet = null;
 
-        // Проверка кошелька при загрузке
+        // При загрузке страницы
         window.addEventListener('DOMContentLoaded', async () => {
             currentWallet = localStorage.getItem('neko_wallet');
 
             if (!currentWallet) {
-                alert("Wallet not connected!");
+                alert("Connect wallet first!");
                 window.location.replace("./index.html");
                 return;
             }
@@ -51,106 +43,63 @@
             document.getElementById('walletDisplay').textContent = 
                 currentWallet.slice(0, 6) + '...' + currentWallet.slice(-4);
 
-            // Аватар по кошельку
-            document.getElementById('avatarImg').src = 
-                `https://api.dicebear.com/7.x/identicon/svg?seed=${currentWallet}`;
-
-            // Авторизация (анонимная — достаточно для чтения/записи по правилам)
-            try {
-                await setPersistence(auth, browserSessionPersistence);
-                onAuthStateChanged(auth, async (user) => {
-                    if (!user) await signInAnonymously(auth);
-                    startRealtimeListeners();
-                });
-            } catch (err) {
-                console.error("Auth error:", err);
-                startRealtimeListeners(); // всё равно попробуем
-            }
+            // Анонимная авторизация
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) await signInAnonymously(auth);
+                loadUserData();
+                loadTransactionHistory();
+            });
         });
 
-        function startRealtimeListeners() {
-            const userRef = doc(db, "artifacts", APP_ID, "public", "data", "users", currentWallet);
+        // Загрузка основных данных пользователя
+        function loadUserData() {
+            const userRef = doc(db, "users", currentWallet);
 
-            // Основной слушатель данных пользователя
-            const unsubUser = onSnapshot(userRef, async (snap) => {
-                let data = snap.data() || {};
-
-                // Если документ не существует — создаём
+            onSnapshot(userRef, (snap) => {
                 if (!snap.exists()) {
-                    data = {
-                        wallet: currentWallet,
-                        balance: 0,
-                        name: "New Trader",
-                        avatarSeed: AVATAR_SEEDS[0],
-                        totalMined: 0,
-                        lastLogin: serverTimestamp()
-                    };
-                    await setDoc(userRef, data, { merge: true });
-                }
-
-                const balance = Number(data.balance || 0);
-                const name = data.name || "Trader";
-                const avatarSeed = data.avatarSeed || AVATAR_SEEDS[0];
-                const totalMinedBase = Number(data.totalMined || 0);
-
-                // Считаем сколько вывели
-                const totalWithdrawn = await calculateTotalWithdrawn();
-                const totalMined = totalMinedBase + balance + totalWithdrawn;
-                const totalDonated = totalMined * 0.02;
-
-                updateUI({ name, balance, avatarSeed, totalWithdrawn, totalMined, totalDonated });
-            }, (err) => {
-                console.error("User snapshot error:", err);
-                document.getElementById('balanceDisplay').textContent = "Error";
-            });
-
-            // История транзакций
-            loadTransactionHistory();
-        }
-
-        async function calculateTotalWithdrawn() {
-            const colRef = collection(db, "artifacts", APP_ID, "public", "data", "withdrawals");
-            const q = query(colRef, where("wallet", "==", currentWallet));
-            try {
-                const snapshot = await getDocs(q);
-                let sum = 0;
-                snapshot.forEach(doc => {
-                    if (doc.data().status === "completed") {
-                        sum += Number(doc.data().amount || 0);
-                    }
-                });
-                return sum;
-            } catch (e) {
-                console.error("Withdraw calc error:", e);
-                return 0;
-            }
-        }
-
-        function loadTransactionHistory() {
-            const colRef = collection(db, "artifacts", APP_ID, "public", "data", "withdrawals");
-            const list = document.getElementById('transactionsList');
-
-            onSnapshot(colRef, (snapshot) => {
-                const userTxs = [];
-                snapshot.forEach(doc => {
-                    const d = doc.data();
-                    if (d.wallet === currentWallet) userTxs.push(d);
-                });
-
-                // Сортируем по дате (новые сверху)
-                userTxs.sort((a, b) => (b.requestDate?.seconds || 0) - (a.requestDate?.seconds || 0));
-                const recent = userTxs.slice(0, 5);
-
-                list.innerHTML = '';
-                if (recent.length === 0) {
-                    list.innerHTML = '<p class="text-gray-500 text-xs text-center p-2">No recent activity</p>';
+                    document.getElementById('balanceDisplay').textContent = "0.00000000";
+                    document.getElementById('userNameDisplay').textContent = "Not found";
                     return;
                 }
 
-                recent.forEach(tx => {
-                    const date = tx.requestDate ? new Date(tx.requestDate.seconds * 1000).toLocaleDateString() : '—';
-                    const status = tx.status === 'completed' ? 'Completed' : 'Pending';
-                    const color = tx.status === 'completed' ? 'text-green-400' : 'text-yellow-400';
+                const d = snap.data();
+
+                const balance = Number(d.balance || 0);
+                const name = d.name || "Trader";
+                const avatarSeed = d.avatarId || d.name || currentWallet;
+
+                document.getElementById('balanceDisplay').textContent = balance.toFixed(8);
+                document.getElementById('userNameDisplay').textContent = name;
+                document.getElementById('avatarImg').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${avatarSeed}`;
+
+                // Заполняем модалку профиля
+                document.getElementById('profileNameInput').value = name;
+            }, (err) => {
+                console.error("Firestore error:", err);
+                document.getElementById('balanceDisplay').textContent = "Error";
+            });
+        }
+
+        // История транзакций (если у тебя есть подколлекция withdrawals внутри пользователя)
+        function loadTransactionHistory() {
+            const withdrawalsRef = collection(db, "users", currentWallet, "withdrawals");
+            const list = document.getElementById('transactionsList');
+
+            const q = query(withdrawalsRef, orderBy("timestamp", "desc"), limit(5));
+
+            onSnapshot(q, (snapshot) => {
+                list.innerHTML = '';
+                if (snapshot.empty) {
+                    list.innerHTML = '<p class="text-gray-500 text-xs text-center p-3">No withdrawals yet</p>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const t = doc.data();
+                    const date = t.timestamp?.toDate?.()?.toLocaleDateString() || "—";
+                    const amount = Number(t.amount || 0).toFixed(4);
+                    const status = t.status === "completed" ? "Completed" : "Pending";
+                    const color = t.status === "completed" ? "text-green-400" : "text-yellow-400";
 
                     list.innerHTML += `
                         <div class="flex justify-between items-center text-xs p-3 bg-black/30 rounded border border-gray-800">
@@ -159,51 +108,19 @@
                                 <span class="text-[10px] text-gray-500">${date}</span>
                             </div>
                             <div class="text-right">
-                                <span class="block text-red-400 font-mono">-${Number(tx.amount || 0).toFixed(2)} NEKO</span>
+                                <span class="block text-red-400 font-mono">-${amount} NEKO</span>
                                 <span class="${color} text-[10px] uppercase">${status}</span>
                             </div>
                         </div>`;
                 });
+            }, () => {
+                list.innerHTML = '<p class="text-gray-500 text-xs text-center p-3">History not available</p>';
             });
         }
 
-        function updateUI(d) {
-            document.getElementById('userNameDisplay').textContent = d.name;
-            document.getElementById('balanceDisplay').textContent = d.balance.toFixed(4);
-            document.getElementById('totalMinedDisplay').textContent = d.totalMined.toFixed(4);
-            document.getElementById('totalDonatedDisplay').textContent = d.totalDonated.toFixed(4);
-            document.getElementById('totalWithdrawnDisplay').textContent = d.totalWithdrawn.toFixed(2);
-
-            document.getElementById('avatarImg').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${d.avatarSeed}`;
-            document.getElementById('profileNameInput').value = d.name;
-
-            initAvatarSelector(d.avatarSeed);
-
-            if (currentWallet === ADMIN_WALLET) {
-                document.getElementById('adminBtn').classList.remove('hidden');
-            }
-        }
-
-        // === Профиль ===
+        // Редактирование профиля
         window.openProfileModal = () => document.getElementById('profileModal').classList.remove('hidden');
         window.closeProfileModal = () => document.getElementById('profileModal').classList.add('hidden');
-
-        window.initAvatarSelector = (current) => {
-            const container = document.getElementById('avatarSelector');
-            container.innerHTML = '';
-            AVATAR_SEEDS.forEach(seed => {
-                const img = document.createElement('img');
-                img.src = `https://api.dicebear.com/7.x/identicon/svg?seed=${seed}`;
-                img.className = 'w-10 h-10 rounded-full cursor-pointer border-2 border-transparent hover:border-orange-500 transition';
-                if (seed === current) img.classList.add('border-orange-500');
-                img.onclick = () => {
-                    container.querySelectorAll('img').forEach(i => i.classList.remove('border-orange-500'));
-                    img.classList.add('border-orange-500');
-                };
-                img.dataset.seed = seed;
-                container.appendChild(img);
-            });
-        };
 
         window.saveProfile = async () => {
             const name = document.getElementById('profileNameInput').value.trim();
@@ -211,28 +128,26 @@
                 document.getElementById('profileNameInput').classList.add('border-red-500');
                 return;
             }
-            const selected = document.querySelector('#avatarSelector img.border-orange-500');
-            const seed = selected ? selected.dataset.seed : undefined;
 
-            const updates = { name };
-            if (seed) updates.avatarSeed = seed;
-
-            await updateDoc(doc(db, "artifacts", APP_ID, "public", "data", "users", currentWallet), updates);
-            closeProfileModal();
+            try {
+                await updateDoc(doc(db, "users", currentWallet), { name });
+                closeProfileModal();
+            } catch (e) {
+                alert("Save failed: " + e.message);
+            }
         };
 
-        // === Логаут ===
-        window.logout = async () => {
+        // Выход
+        window.logout = () => {
             localStorage.removeItem('neko_wallet');
-            if (auth.currentUser) await signOut(auth);
-            window.location.replace('./index.html?action=logout');
+            signOut(auth);
+            window.location.replace("./index.html?action=logout");
         };
     </script>
 
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #050505; color: #fff; }
         .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .nav-link:hover { background: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -242,18 +157,14 @@
         <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <img src="https://placehold.co/32x32/ff8c00/ffffff?text=NK" alt="Logo" class="w-8 h-8 rounded">
-                <div class="hidden md:flex gap-2 text-sm">
-                    <span class="nav-link px-3 py-1 rounded text-white bg-orange-600/20 font-bold">Dashboard</span>
-                    <a href="#" class="nav-link px-3 py-1 rounded text-gray-400">Swap</a>
-                </div>
+                <span class="hidden md:block font-bold text-orange-500">NEKOTEXS</span>
             </div>
             <div class="flex items-center gap-4">
-                <a id="adminBtn" href="./admin.html" class="hidden bg-red-900/20 text-red-400 border border-red-500/50 px-3 py-1 rounded text-xs font-bold">ADMIN PANEL</a>
                 <div class="text-right hidden sm:block">
                     <div class="text-[10px] text-gray-500 uppercase">Wallet</div>
-                    <div id="walletDisplay" class="font-mono text-xs text-orange-400">Loading...</div>
+                    <div id="walletDisplay" class="font-mono text-xs text-orange-400">—</div>
                 </div>
-                <button onclick="logout()" class="text-gray-500 hover:text-white p-2 rounded-full hover:bg-gray-800">
+                <button onclick="logout()" class="text-gray-400 hover:text-white p-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                     </svg>
@@ -263,64 +174,46 @@
     </nav>
 
     <!-- MAIN -->
-    <main class="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6">
-        <div class="flex items-end mb-8 border-b border-gray-800 pb-6">
-            <img id="avatarImg" class="w-20 h-20 bg-black rounded-xl border-2 border-gray-800" src="" alt="avatar">
-            <div class="ml-4 mb-1">
-                <h1 class="text-2xl font-bold" id="userNameDisplay">Loading...</h1>
-                <button onclick="openProfileModal()" class="text-xs text-orange-500 hover:text-white">Edit Profile</button>
+    <main class="flex-1 max-w-4xl mx-auto w-full p-6">
+        <div class="flex items-end gap-6 mb-10 border-b border-gray-800 pb-8">
+            <img id="avatarImg" class="w-24 h-24 rounded-xl border-4 border-gray-800" src="" alt="avatar">
+            <div>
+                <h1 class="text-3xl font-bold" id="userNameDisplay">Loading...</h1>
+                <button onclick="openProfileModal()" class="text-sm text-orange-500 hover:text-orange-400">Edit Profile</button>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="glass p-6 rounded-xl sm:col-span-2 border-l-4 border-orange-600 bg-gray-900/40">
-                <h3 class="text-gray-500 text-xs uppercase tracking-widest mb-2">Current Balance</h3>
-                <div class="flex items-baseline gap-2">
-                    <span id="balanceDisplay" class="text-4xl font-bold text-white">0.0000</span>
-                    <span class="text-xl text-orange-500">NEKO</span>
-                </div>
-                <div class="mt-4 flex gap-3">
-                    <a href="./withdraw.html" class="bg-orange-600 hover:bg-orange-500 text-black px-4 py-2 rounded-lg font-bold text-sm shadow-lg">Withdraw Funds</a>
-                    <button class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-bold text-sm">Swap Tokens</button>
-                </div>
+        <!-- Balance Card -->
+        <div class="glass p-8 rounded-2xl text-center border-l-4 border-orange-600 mb-10">
+            <p class="text-gray-400 text-sm uppercase tracking-wider">Your Balance</p>
+            <div class="mt-4">
+                <span id="balanceDisplay" class="text-6xl font-bold text-orange-400">0.00000000</span>
+                <span class="text-3xl text-orange-500 ml-2">NEKO</span>
             </div>
-            <div class="glass p-5 rounded-xl border border-gray-800">
-                <h3 class="text-gray-500 text-xs uppercase tracking-widest mb-1">Total Mined</h3>
-                <p class="text-xl font-bold text-green-400" id="totalMinedDisplay">0.0000</p>
-            </div>
-            <div class="glass p-5 rounded-xl border border-gray-800">
-                <h3 class="text-gray-500 text-xs uppercase tracking-widest mb-1">Total Donated</h3>
-                <p class="text-xl font-bold text-pink-400" id="totalDonatedDisplay">0.0000</p>
+            <div class="mt-6 flex justify-center gap-4">
+                <a href="./withdraw.html" class="bg-orange-600 hover:bg-orange-500 text-black font-bold py-3 px-8 rounded-lg">Withdraw</a>
+                <button class="border border-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-lg">Swap</button>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="glass p-5 rounded-xl border border-gray-800 lg:col-span-2">
-                <h3 class="text-gray-300 text-sm font-bold mb-4 border-b border-gray-800 pb-2">NEKO/SOL Market Overview</h3>
-                <div class="h-64 flex items-center justify-center bg-gray-900/50 rounded-lg">
-                    <p class="text-gray-600">Chart coming soon</p>
-                </div>
-            </div>
-            <div class="glass p-5 rounded-xl border border-gray-800">
-                <h3 class="text-gray-300 text-sm font-bold mb-4 border-b border-gray-800 pb-2">Recent Activity</h3>
-                <div class="space-y-3" id="transactionsList">
-                    <p class="text-gray-600 text-xs text-center">Loading...</p>
-                </div>
+        <!-- Activity -->
+        <div class="glass p-6 rounded-2xl">
+            <h3 class="text-xl font-bold mb-4 text-orange-500">Recent Activity</h3>
+            <div id="transactionsList" class="space-y-3">
+                <p class="text-gray-500 text-center">Loading...</p>
             </div>
         </div>
     </main>
 
     <!-- Profile Modal -->
-    <div id="profileModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/90 p-4">
-        <div class="glass p-6 rounded-xl w-full max-w-sm relative shadow-2xl">
-            <h2 class="text-xl font-bold mb-4 text-orange-500">Edit Profile</h2>
-            <label class="text-sm text-gray-400 block mb-1">Display Name</label>
-            <input type="text" id="profileNameInput" class="w-full bg-black border border-gray-700 p-2 rounded mb-4 text-sm text-white focus:border-orange-500 focus:outline-none" placeholder="Your name">
-            <label class="text-sm text-gray-400 block mb-2">Avatar</label>
-            <div id="avatarSelector" class="flex flex-wrap gap-3 justify-center mb-6 p-2 bg-gray-900 rounded-lg border border-gray-800"></div>
-            <div class="flex justify-end gap-2 border-t border-gray-800 pt-4">
-                <button onclick="closeProfileModal()" class="px-3 py-2 rounded text-gray-400 text-sm hover:bg-gray-800">Cancel</button>
-                <button onclick="saveProfile()" class="bg-orange-600 px-4 py-2 rounded text-black font-bold text-sm hover:bg-orange-500">Save</button>
+    <div id="profileModal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 hidden p-4">
+        <div class="glass p-8 rounded-2xl max-w-sm w-full">
+            <h2 class="text-2xl font-bold text-orange-500 mb-6">Edit Profile</h2>
+            <label class="block text-sm text-gray-400 mb-2">Display Name</label>
+            <input type="text" id="profileNameInput" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-orange-500 focus:outline-none mb-6">
+            <div class="flex justify-end gap-3">
+                <button onclick="closeProfileModal()" class="px-6 py-3 text-gray-400 hover:text-white">Cancel</button>
+                <button onclick="saveProfile()" class="bg-orange-600 hover:bg-orange-500 text-black font-bold px-8 py-3 rounded-lg">Save</button>
             </div>
         </div>
     </div>
