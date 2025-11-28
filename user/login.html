@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Under Construction | Nekotexs</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        solana: {
+                            purple: '#9945FF',
+                            green: '#14F195',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            /* Same background gradient as the main page */
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%);
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="text-center max-w-lg">
+        <img src="../img/logo.svg" alt="Nekotexs Logo" class="h-16 w-16 mx-auto mb-6 opacity-70">
+        
+        <i class="fa-solid fa-screwdriver-wrench text-solana-purple text-5xl mb-4 animate-bounce"></i>
+
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+            Site <span class="gradient-text">Under Construction</span>
+        </h1>
+        
+        <p class="text-gray-400 text-lg mb-8">
+            We are working hard to build this feature. Please check back later!
+            Thank you for your patience and interest in Nekotexs.
+        </p>
+
+        <a href="../index.html" class="inline-flex items-center gap-2 bg-solana-green text-black px-8 py-3 rounded-full font-bold hover:bg-white transition shadow-lg shadow-solana-green/30">
+            <i class="fa-solid fa-house"></i>
+            Go back to Main Page
+        </a>
+    </div>
+
+</body>
+</html>
