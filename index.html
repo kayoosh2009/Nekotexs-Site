@@ -1,299 +1,298 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nekotexs | Main page</title>
+    <title>Nekotexs ($NKTX) | Solana Cat Charity Token</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let db, auth;
-
-        if (firebaseConfig) {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-
-            onAuthStateChanged(auth, async (user) => {
-                if (!user) {
-                    try {
-                        if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
-                        else await signInAnonymously(auth);
-                    } catch (e) { console.error("Auth init error", e); }
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        solana: {
+                            purple: '#9945FF',
+                            green: '#14F195',
+                            dark: '#1B1B1B'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
                 }
-            });
-        }
-
-        // --- AUTO-LOGIN LOGIC ---
-        document.addEventListener("DOMContentLoaded", () => {
-            const savedWallet = localStorage.getItem('neko_wallet');
-            const isLogout = new URLSearchParams(window.location.search).get('action') === 'logout';
-
-            // If wallet exists and user didn't just log out, redirect automatically
-            if (savedWallet && !isLogout) {
-                console.log("Auto-login detected for:", savedWallet);
-                // Adding a small delay for visual effect or immediate redirect
-                document.getElementById('loadingOverlay').classList.remove('hidden');
-                setTimeout(() => {
-                    window.location.href = "dash.html";
-                }, 800);
-            }
-        });
-
-        window.connectPhantom = async () => {
-            const { solana } = window;
-            if (solana && solana.isPhantom) {
-                try {
-                    const response = await solana.connect();
-                    const address = response.publicKey.toString();
-                    await finalizeLogin(address, "phantom");
-                } catch (err) {
-                    console.error(err);
-                }
-            } else {
-                alert("Phantom Wallet not found!");
-                window.open("https://phantom.app/", "_blank");
-            }
-        };
-
-        window.submitManualWallet = async () => {
-            const input = document.getElementById('manualWalletInput');
-            const address = input.value.trim();
-            if (!address) {
-                input.classList.add('border-red-500');
-                return;
-            }
-            await finalizeLogin(address, "manual");
-        };
-
-        async function finalizeLogin(address, method) {
-            try {
-                localStorage.setItem('neko_wallet', address);
-
-                if (db) {
-                    // Saving initial user data to public path for consistency
-                    await setDoc(doc(db, "artifacts", appId, "public", "data", "users", address), {
-                        wallet: address,
-                        lastLogin: serverTimestamp(),
-                        platform: "web",
-                        method: method
-                    }, { merge: true });
-                }
-
-                window.location.href = "user_dashboard_en.html";
-            } catch (e) {
-                console.error("Login error", e);
-                window.location.href = "user_dashboard_en.html"; 
             }
         }
-
-        window.openModal = () => document.getElementById('walletModal').classList.remove('hidden');
-        window.closeModal = () => document.getElementById('walletModal').classList.add('hidden');
     </script>
-
+    
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #ffffff; overflow-x: hidden; }
-        .font-pixel { font-family: 'Press Start 2P', cursive; }
-        .glow-text { text-shadow: 0 0 20px rgba(255, 140, 0, 0.6); }
-        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .btn-primary { background: linear-gradient(90deg, #ff8c00, #ff4500); transition: all 0.3s ease; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(255, 69, 0, 0.4); }
-        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .ticker-wrap { overflow: hidden; white-space: nowrap; }
-        .ticker { display: inline-block; animation: scroll 20s linear infinite; }
-        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%);
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
     </style>
 </head>
-<body class="antialiased selection:bg-orange-500 selection:text-white">
+<body class="flex flex-col min-h-screen justify-between">
 
-    <!-- Auto-Login Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-black z-[200] hidden flex items-center justify-center">
-        <div class="text-center">
-            <div class="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p class="text-orange-500 font-mono text-sm animate-pulse">RETURNING TO DASHBOARD...</p>
+    <nav class="w-full py-6 px-4 md:px-12 flex justify-between items-center max-w-7xl mx-auto relative z-50">
+        <div class="flex items-center gap-3">
+            <img src="img/logo.svg" alt="Nekotexs Logo" class="h-10 w-10 md:h-12 md:w-12">
+            <span class="text-2xl font-bold tracking-wider">Nekotexs</span>
         </div>
-    </div>
+        
+        <div class="hidden md:flex gap-8 text-sm font-semibold uppercase tracking-widest text-gray-400 items-center">
+            <a href="#about" class="hover:text-solana-green transition">About</a>
+            <a href="#mission" class="hover:text-solana-green transition">Mission</a>
+            <a href="#tokenomics" class="hover:text-solana-green transition">Tokenomics</a>
+        </div>
 
-    <!-- Navigation -->
-    <nav class="w-full fixed top-0 z-50 border-b border-gray-800 bg-black/80 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <img src="img/logo.png" alt="Nekotexs Logo" class="w-10 h-10 object-contain drop-shadow-[0_0_10px_rgba(255,140,0,0.5)]">
-                <span class="font-pixel text-xl tracking-tighter text-white"><span class="text-orange-500">NEKO</span>TEXS</span>
-            </div>
-            <div class="flex items-center gap-6">
-                <div class="hidden md:flex gap-6">
-                    <a href="#features" class="text-gray-400 hover:text-white transition text-sm font-medium">Features</a>
-                    <a href="#tokenomics" class="text-gray-400 hover:text-white transition text-sm font-medium">Tokenomics</a>
-                    <a href="#roadmap" class="text-gray-400 hover:text-white transition text-sm font-medium">Roadmap</a>
-                </div>
-                <button onclick="openModal()" class="btn-primary px-6 py-2 rounded-full font-bold text-sm tracking-wide uppercase">
-                    Connect Wallet
-                </button>
-            </div>
+        <div class="flex items-center gap-4">
+            <a href="user/login.html" class="text-white hover:text-solana-green font-semibold transition hidden sm:block">
+                Log In
+            </a>
+            <a href="user/register.html" class="bg-solana-green text-black px-6 py-2 rounded-full font-bold hover:bg-white transition hover:text-black shadow-[0_0_15px_rgba(20,241,149,0.4)]">
+                Sign Up
+            </a>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <header class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none">
-            <div class="absolute top-20 left-20 w-96 h-96 bg-orange-600/20 rounded-full blur-[120px]"></div>
-            <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-900/20 rounded-full blur-[120px]"></div>
-        </div>
-
-        <div class="max-w-7xl mx-auto px-6 relative z-10 text-center">
-            <div class="inline-block mb-4 px-3 py-1 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-400 text-xs font-bold uppercase tracking-widest animate-pulse">
-                Beta v1.0 is Live on Solana
-            </div>
-            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight mb-6">
-                Trade Crypto.<br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 glow-text">Save Cats.</span>
+    <header class="text-center pt-12 pb-32 px-4 relative overflow-hidden">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-solana-purple opacity-20 blur-[120px] rounded-full -z-10"></div>
+        
+        <div class="max-w-4xl mx-auto mt-8">
+            <span class="inline-block py-1 px-3 rounded-full bg-solana-green/10 text-solana-green text-xs font-bold uppercase tracking-widest mb-6 border border-solana-green/20">
+                Powered by Solana
+            </span>
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                Crypto for <br> <span class="gradient-text">Cat Lovers</span>
             </h1>
-            <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-light">
-                The first decentralized exchange that rewards you for trading and automatically donates 2% of every transaction to feline shelters worldwide. 
-                <br><span class="text-orange-400 font-medium">No KYC. Pure Impact. Fully On-Chain.</span>
+            <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10">
+                Nekotexs ($NKTX) is more than just a token. It's a movement to help cats around the world while building a strong community on the Solana blockchain.
             </p>
             
-            <div class="flex flex-col md:flex-row justify-center gap-4">
-                <button onclick="openModal()" class="btn-primary px-8 py-4 rounded-lg font-bold text-lg shadow-lg shadow-orange-500/20">
-                    Start Trading Now
-                </button>
-                <button class="px-8 py-4 rounded-lg border border-gray-700 hover:bg-gray-800 transition text-gray-300 font-medium">
-                    Live Chart
-                </button>
+            <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
+                <a href="user/register.html" class="px-8 py-4 bg-gradient-to-r from-solana-purple to-solana-green rounded-xl font-bold text-lg hover:opacity-90 transition shadow-lg shadow-solana-purple/25 w-full md:w-auto text-white">
+                    Join the Community
+                </a>
+                <div class="px-8 py-4 glass-card text-gray-300 w-full md:w-auto">
+                    Launch Date: <span class="text-white font-bold">01.12.2025</span>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- Ticker Strip -->
-    <div class="w-full bg-orange-600/10 border-y border-orange-500/20 py-3 ticker-wrap">
-        <div class="ticker font-pixel text-xs text-orange-400 uppercase tracking-widest">
-            $NEKO LIVE  +++  SOLANA NETWORK  +++  2% CHARITY TAX  +++  NO KYC REQUIRED  +++  EARN REWARDS  +++  SAVE THE CATS  +++  $NEKO LIVE  +++  SOLANA NETWORK  +++  2% CHARITY TAX  +++  NO KYC REQUIRED  +++  EARN REWARDS  +++  SAVE THE CATS  +++
-        </div>
-    </div>
-
-    <!-- Detailed Features Grid -->
-    <section id="features" class="py-24 bg-black border-b border-gray-800 relative">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold mb-4">How It Works</h2>
-                <p class="text-gray-400">Simple steps to start earning and helping.</p>
-            </div>
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Step 1 -->
-                <div class="glass-panel p-8 rounded-2xl hover:bg-white/5 transition group relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 text-9xl font-bold text-white/5">1</div>
-                    <div class="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center mb-6 text-2xl border border-gray-800">🔗</div>
-                    <h3 class="text-xl font-bold mb-3 text-white">Connect Wallet</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Link your Phantom or Solflare wallet. No registration, no email, no personal data required.</p>
-                </div>
-                <!-- Step 2 -->
-                <div class="glass-panel p-8 rounded-2xl hover:bg-white/5 transition group relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 text-9xl font-bold text-white/5">2</div>
-                    <div class="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center mb-6 text-2xl border border-gray-800">🔄</div>
-                    <h3 class="text-xl font-bold mb-3 text-white">Swap Tokens</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Trade SOL, USDC, and other tokens. 2% of fees go directly to our verified charity wallet.</p>
-                </div>
-                <!-- Step 3 -->
-                <div class="glass-panel p-8 rounded-2xl hover:bg-white/5 transition group relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 text-9xl font-bold text-white/5">3</div>
-                    <div class="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center mb-6 text-2xl border border-gray-800">🎁</div>
-                    <h3 class="text-xl font-bold mb-3 text-white">Earn Rewards</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Holders receive airdrops. Use our browser extension to mine $NEKO passively while surfing.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Tokenomics Section -->
-    <section id="tokenomics" class="py-24 relative overflow-hidden bg-gray-900/20">
-        <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+    <section id="about" class="py-20 bg-gray-900/50">
+        <div class="max-w-6xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
             <div>
-                <h2 class="text-4xl font-extrabold mb-6">Tokenomics</h2>
-                <p class="text-gray-400 mb-8 text-lg">Designed for sustainability. A deflationary mechanism combined with automatic liquidity generation.</p>
-                
-                <div class="space-y-6">
-                    <div>
-                        <div class="flex justify-between text-sm font-bold mb-2"><span>Liquidity Pool</span><span class="text-orange-500">45%</span></div>
-                        <div class="h-2 bg-gray-800 rounded-full overflow-hidden"><div class="h-full bg-orange-500 w-[45%]"></div></div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-sm font-bold mb-2"><span>Community Airdrop</span><span class="text-orange-400">30%</span></div>
-                        <div class="h-2 bg-gray-800 rounded-full overflow-hidden"><div class="h-full bg-orange-400 w-[30%]"></div></div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-sm font-bold mb-2"><span>Charity Fund</span><span class="text-green-500">15%</span></div>
-                        <div class="h-2 bg-gray-800 rounded-full overflow-hidden"><div class="h-full bg-green-500 w-[15%]"></div></div>
-                    </div>
+                <h2 class="text-3xl md:text-4xl font-bold mb-6">Built for the <span class="text-solana-green">Community</span>,<br>Dedicated to <span class="text-solana-purple">Cats</span>.</h2>
+                <p class="text-gray-400 mb-6 leading-relaxed">
+                    Nekotexs is a unique crypto project designed specifically for feline enthusiasts. We believe that blockchain technology can be used for good.
+                </p>
+                <p class="text-gray-400 mb-6 leading-relaxed">
+                    While you trade and grow your portfolio, you are actively contributing to the well-being of cats. No complex mechanisms, just a simple, transparent way to make a difference.
+                </p>
+                <ul class="space-y-4 mt-8">
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check text-solana-green"></i>
+                        <span>Transparent Operations</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check text-solana-green"></i>
+                        <span>Community Voting System</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check text-solana-green"></i>
+                        <span>Secure Solana Infrastructure</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="grid gap-4">
+                <div class="glass-card p-6 transform hover:-translate-y-1 transition duration-300">
+                    <i class="fa-solid fa-paw text-3xl text-solana-purple mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Charity Focused</h3>
+                    <p class="text-sm text-gray-400">Funds are accumulated and sent to cat shelters and charities.</p>
+                </div>
+                <div class="glass-card p-6 transform hover:-translate-y-1 transition duration-300">
+                    <i class="fa-solid fa-users text-3xl text-solana-green mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">DAO Voting</h3>
+                    <p class="text-sm text-gray-400">Users vote on social media to decide which charity receives the donation.</p>
                 </div>
             </div>
-            <div class="relative">
-                <div class="glass-panel p-10 rounded-3xl border-orange-500/20 relative z-10 backdrop-blur-xl">
-                    <div class="flex items-center justify-between mb-8">
-                        <div><p class="text-gray-400 text-sm">Contract Address</p><p class="font-mono text-xs text-orange-500 mt-1">Solana: 7xKX...9jLq</p></div>
-                        <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-black">N</div>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center bg-white/5 p-3 rounded-lg"><span class="text-sm">🐱 Donation Wallet</span><span class="text-xs font-mono text-green-400">Active</span></div>
-                        <div class="flex justify-between items-center bg-white/5 p-3 rounded-lg"><span class="text-sm">🔒 LP Lock</span><span class="text-xs font-mono text-green-400">100 Years</span></div>
-                        <div class="flex justify-between items-center bg-white/5 p-3 rounded-lg"><span class="text-sm">🔥 Burn Rate</span><span class="text-xs font-mono text-orange-400">1% per Tx</span></div>
+        </div>
+    </section>
+
+    <section id="mission" class="py-20 px-4 relative">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-12">The <span class="gradient-text">Nekotexs</span> Mechanism</h2>
+            
+            <div class="glass-card p-8 md:p-12 border-t-4 border-t-solana-green">
+                <div class="flex flex-col items-center justify-center">
+                    <div class="text-6xl font-bold text-white mb-2">2%</div>
+                    <div class="text-xl text-solana-green font-bold uppercase tracking-widest mb-6">Transaction Fee</div>
+                    <p class="text-gray-300 max-w-xl mx-auto text-lg">
+                        From every single transaction of $NKTX, <b>2%</b> is automatically collected into a dedicated Charity Wallet.
+                    </p>
+                    
+                    <div class="my-8 w-px h-16 bg-gray-700"></div>
+                    
+                    <div class="grid md:grid-cols-3 gap-8 w-full">
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fa-solid fa-wallet text-solana-purple"></i>
+                            </div>
+                            <h4 class="font-bold">1. Accumulate</h4>
+                            <p class="text-xs text-gray-500 mt-1">Fees gather in the safe wallet.</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fa-solid fa-bolt text-yellow-400"></i>
+                            </div>
+                            <h4 class="font-bold">2. Trigger</h4>
+                            <p class="text-xs text-gray-500 mt-1">Threshold reached.</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fa-solid fa-heart text-red-500"></i>
+                            </div>
+                            <h4 class="font-bold">3. Donate</h4>
+                            <p class="text-xs text-gray-500 mt-1">Sent to community chosen charity.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="py-12 border-t border-gray-800 bg-black text-sm">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+    <section id="launch" class="py-24 px-4 bg-gradient-to-b from-transparent to-black text-center">
+        <h2 class="text-2xl font-bold text-gray-400 uppercase tracking-widest mb-4">Official Launch Date</h2>
+        <div class="text-4xl md:text-6xl font-bold text-white mb-2">December 1st, 2025</div>
+        <div class="text-xl md:text-2xl text-solana-green mb-10">12:00 (Local Time)</div>
+
+        <div id="countdown" class="flex flex-wrap justify-center gap-4 md:gap-8 font-mono">
+            <div class="glass-card p-4 min-w-[100px]">
+                <span id="days" class="text-3xl font-bold block">--</span>
+                <span class="text-xs text-gray-400">DAYS</span>
+            </div>
+            <div class="glass-card p-4 min-w-[100px]">
+                <span id="hours" class="text-3xl font-bold block">--</span>
+                <span class="text-xs text-gray-400">HOURS</span>
+            </div>
+            <div class="glass-card p-4 min-w-[100px]">
+                <span id="minutes" class="text-3xl font-bold block">--</span>
+                <span class="text-xs text-gray-400">MINS</span>
+            </div>
+            <div class="glass-card p-4 min-w-[100px]">
+                <span id="seconds" class="text-3xl font-bold block">--</span>
+                <span class="text-xs text-gray-400">SECS</span>
+            </div>
+        </div>
+
+        <div class="mt-12">
+            <p class="text-gray-500 mb-2">Contract Address</p>
+            <div class="inline-flex items-center gap-2 bg-gray-900 px-4 py-2 rounded border border-gray-700 text-gray-400 font-mono text-sm">
+                <i class="fa-solid fa-lock"></i> Revealed at Launch
+            </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-gray-800 bg-black pt-12 pb-6 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-gray-800 rounded flex items-center justify-center font-pixel text-[10px] text-gray-400">NK</div>
-                <span class="text-gray-500">© 2025 Nekotexs Protocol.</span>
+                <img src="img/logo.svg" alt="Logo" class="h-8 w-8 grayscale opacity-50">
+                <span class="text-gray-500 font-bold">Nekotexs</span>
             </div>
-            <div class="flex gap-6">
-                <a href="#" class="text-gray-500 hover:text-white transition">Twitter</a>
-                <a href="#" class="text-gray-500 hover:text-white transition">Telegram</a>
-                <a href="#" class="text-gray-500 hover:text-white transition">Docs</a>
+
+            <div class="flex gap-6 items-center">
+                <a href="https://x.com/nekotexs_netw" target="_blank" class="text-gray-500 hover:text-white transition" title="X (Twitter)">
+                    <i class="fa-brands fa-x-twitter text-xl"></i>
+                </a>
+                <a href="https://t.me/kayoosh_onlyfans" target="_blank" class="text-gray-500 hover:text-white transition" title="Telegram">
+                    <i class="fa-brands fa-telegram text-xl"></i>
+                </a>
+                <a href="https://youtube.com/@nekotexs" target="_blank" class="text-gray-500 hover:text-white transition" title="YouTube">
+                    <i class="fa-brands fa-youtube text-xl"></i>
+                </a>
+                <a href="mailto:Nekotexs@gmx.com" class="text-gray-500 hover:text-white transition" title="Email Us">
+                    <i class="fa-solid fa-envelope text-xl"></i>
+                </a>
             </div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto mt-12 pt-6 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center text-xs text-gray-600 font-mono">
+            <p>&copy; 2025 Nekotexs Project. All rights reserved.</p>
+            <p id="server-time" class="mt-2 md:mt-0 text-solana-green/70">
+                Server Time (Loading...)
+            </p>
         </div>
     </footer>
 
-    <!-- Modal -->
-    <div id="walletModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal()"></div>
-        <div class="relative bg-[#0a0a0a] border border-orange-500/50 p-8 rounded-2xl w-full max-w-md shadow-[0_0_50px_rgba(255,140,0,0.2)] modal-enter mx-4">
-            <div class="text-center mb-6">
-                <h3 class="text-2xl font-bold text-white">Connect Wallet</h3>
-                <p class="text-gray-400 text-xs mt-2">Choose your preferred method</p>
-            </div>
-            <div class="space-y-4">
-                <button onclick="connectPhantom()" class="w-full bg-[#AB9FF2] hover:bg-[#9a8ee0] text-black font-bold py-3 rounded-lg flex items-center justify-center gap-3 transition hover:scale-[1.02]">
-                    <img src="https://cryptologos.cc/logos/phantom-phantom-logo.png" class="w-6 h-6" alt="Phantom">
-                    Connect Phantom
-                </button>
-                <div class="text-center text-gray-600 text-xs">- OR -</div>
-                <div>
-                    <input type="text" id="manualWalletInput" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-orange-500 focus:outline-none font-mono text-sm text-center placeholder-gray-600 mb-2" placeholder="Enter Address Manually (7xKX...)">
-                    <button onclick="submitManualWallet()" class="w-full border border-orange-500/30 text-orange-500 hover:bg-orange-500/10 font-bold py-3 rounded-lg transition uppercase tracking-wider text-sm">Enter Address</button>
-                </div>
-            </div>
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">✕</button>
-        </div>
-    </div>
+    <script>
+        // 1. COUNTDOWN LOGIC (Target: Dec 1, 2025, 12:00)
+        const targetDate = new Date('December 1, 2025 12:00:00').getTime();
+
+        const timer = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerText = days;
+            document.getElementById("hours").innerText = hours;
+            document.getElementById("minutes").innerText = minutes;
+            document.getElementById("seconds").innerText = seconds;
+
+            if (distance < 0) {
+                clearInterval(timer);
+                document.getElementById("countdown").innerHTML = "<div class='text-solana-green text-2xl font-bold'>TOKEN LAUNCHED!</div>";
+            }
+        }, 1000);
+
+        // 2. SERVER TIME LOGIC (Jerusalem +3)
+        function updateServerTime() {
+            const options = {
+                timeZone: 'Asia/Jerusalem',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric'
+            };
+            
+            const formatter = new Intl.DateTimeFormat([], options);
+            const timeString = formatter.format(new Date());
+
+            document.getElementById('server-time').innerText = `Server Time (Jerusalem +3): ${timeString}`;
+        }
+
+        updateServerTime();
+        setInterval(updateServerTime, 1000);
+    </script>
 </body>
 </html>
