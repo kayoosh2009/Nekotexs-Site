@@ -7,14 +7,6 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
     <script>
         tailwind.config = {
             theme: {
@@ -22,6 +14,7 @@
                     fontFamily: {
                         sans: ['Space Grotesk', 'sans-serif'],
                     },
+                    // ГАРАНТИЯ КОРРЕКТНОСТИ ЦВЕТОВ
                     colors: {
                         solana: {
                             purple: '#9945FF',
@@ -31,7 +24,17 @@
                 }
             }
         }
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
         // 1. Firebase Configuration (Ваша конфигурация)
         const firebaseConfig = {
             apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
@@ -68,7 +71,22 @@
             border-radius: 1rem;
         }
         .input-field {
-            @apply w-full p-3 bg-gray-800/50 border border-gray-700 rounded-lg placeholder-gray-500 focus:ring-solana-green focus:border-solana-green transition;
+            width: 100%;
+            padding: 0.75rem;
+            background-color: rgba(31, 41, 55, 0.5);
+            border: 1px solid rgb(55, 65, 81);
+            border-radius: 0.5rem;
+            color: white;
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #14F195;
+            box-shadow: 0 0 0 1px #14F195;
+        }
+        /* Убедитесь, что логотип Фантома не имеет слишком большую высоту */
+        .phantom-logo {
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
         }
     </style>
 </head>
@@ -102,15 +120,17 @@
 
                 <div class="pt-4 border-t border-gray-700/50">
                     <input type="text" id="walletAddress" placeholder="Solana Wallet Address" required readonly class="input-field cursor-default text-gray-400">
-                    <button type="button" id="phantomConnectBtn" class="w-full mt-2 inline-flex items-center justify-center gap-2 bg-solana-purple text-white px-6 py-3 rounded-lg font-bold hover:bg-solana-purple/80 transition shadow-lg shadow-solana-purple/20">
-                        <i class="fa-brands fa-ethereum text-xl"></i> Connect Phantom Wallet
+                    
+                    <button type="button" id="phantomConnectBtn" class="w-full mt-2 inline-flex items-center justify-center gap-2 bg-solana-purple text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition shadow-lg shadow-solana-purple/30">
+                        <img src="../img/phantom.svg" alt="Phantom Logo" class="h-6 w-6 phantom-logo"> Connect Phantom Wallet
                     </button>
+
                     <p class="text-xs text-gray-500 mt-2 text-left">
                         Wallet address is required for $NKTX distributions.
                     </p>
                 </div>
                 
-                <button type="submit" id="registerBtn" class="w-full mt-6 bg-solana-green text-black px-6 py-3 rounded-lg font-bold hover:bg-white transition shadow-[0_0_15px_rgba(20,241,149,0.4)] disabled:opacity-50" disabled>
+                <button type="submit" id="registerBtn" class="w-full mt-6 bg-solana-green text-black px-6 py-3 rounded-lg font-bold hover:bg-white transition shadow-[0_0_15px_rgba(20,241,149,0.5)] disabled:opacity-50" disabled>
                     Register and Join Nekotexs
                 </button>
             </form>
@@ -154,11 +174,9 @@
             }
 
             try {
-                // Request connection to the wallet
                 const resp = await window.solana.connect();
                 const publicKey = resp.publicKey.toString();
                 
-                // Update the input field and enable registration button
                 walletInput.value = publicKey;
                 registerBtn.disabled = false;
                 showMessage("Wallet connected successfully!", false);
@@ -195,11 +213,9 @@
             }
 
             try {
-                // 1. Firebase Authentication: Create user with Email and Password
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
 
-                // 2. Firestore: Save wallet address linked to the user's UID
                 await db.collection('users').doc(user.uid).set({
                     email: email,
                     walletAddress: wallet,
@@ -208,7 +224,6 @@
 
                 showMessage("Registration successful! Redirecting to login...", false);
                 
-                // Optional: Redirect to login page after successful registration
                 setTimeout(() => {
                     window.location.href = 'login.html';
                 }, 2000);
