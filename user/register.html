@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Under Construction | Nekotexs</title>
+    <title>Register | Nekotexs</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
         tailwind.config = {
@@ -27,13 +31,29 @@
                 }
             }
         }
+
+        // 1. Firebase Configuration (Ваша конфигурация)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+            authDomain: "nekotexs.firebaseapp.com",
+            databaseURL: "https://nekotexs-default-rtdb.firebaseio.com",
+            projectId: "nekotexs",
+            storageBucket: "nekotexs.firebasestorage.app",
+            messagingSenderId: "596436176972",
+            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
     </script>
     
     <style>
         body {
             background-color: #0f172a;
             color: #ffffff;
-            /* Same background gradient as the main page */
             background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%);
         }
         .gradient-text {
@@ -41,32 +61,174 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+        .input-field {
+            @apply w-full p-3 bg-gray-800/50 border border-gray-700 rounded-lg placeholder-gray-500 focus:ring-solana-green focus:border-solana-green transition;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="text-center max-w-lg">
+    <div class="text-center max-w-lg w-full">
         
-        <div class="w-20 h-20 mx-auto mb-6 bg-white rounded-full flex items-center justify-center p-2 opacity-90">
-            <img src="../img/logo.svg" alt="Nekotexs Logo" class="h-14 w-14">
+        <a href="../index.html" class="flex items-center justify-center mb-6">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center p-2 opacity-90">
+                <img src="../img/logo.svg" alt="Nekotexs Logo" class="h-12 w-12">
+            </div>
+        </a>
+
+        <h1 class="text-3xl md:text-4xl font-bold mb-8">
+            <span class="gradient-text">Register</span> Your Account
+        </h1>
+
+        <div class="glass-card p-6 sm:p-8 w-full">
+
+            <div id="message" class="hidden p-3 mb-4 text-sm rounded-lg text-left" role="alert"></div>
+
+            <form id="registerForm" class="space-y-4">
+                
+                <div>
+                    <input type="email" id="email" placeholder="Email Address" required class="input-field">
+                </div>
+                
+                <div>
+                    <input type="password" id="password" placeholder="Password (min 6 characters)" required class="input-field">
+                </div>
+
+                <div class="pt-4 border-t border-gray-700/50">
+                    <input type="text" id="walletAddress" placeholder="Solana Wallet Address" required readonly class="input-field cursor-default text-gray-400">
+                    <button type="button" id="phantomConnectBtn" class="w-full mt-2 inline-flex items-center justify-center gap-2 bg-solana-purple text-white px-6 py-3 rounded-lg font-bold hover:bg-solana-purple/80 transition shadow-lg shadow-solana-purple/20">
+                        <i class="fa-brands fa-ethereum text-xl"></i> Connect Phantom Wallet
+                    </button>
+                    <p class="text-xs text-gray-500 mt-2 text-left">
+                        Wallet address is required for $NKTX distributions.
+                    </p>
+                </div>
+                
+                <button type="submit" id="registerBtn" class="w-full mt-6 bg-solana-green text-black px-6 py-3 rounded-lg font-bold hover:bg-white transition shadow-[0_0_15px_rgba(20,241,149,0.4)] disabled:opacity-50" disabled>
+                    Register and Join Nekotexs
+                </button>
+            </form>
+
+            <p class="text-gray-500 text-sm mt-4">
+                Already have an account? 
+                <a href="login.html" class="text-solana-green hover:underline font-semibold">Log In</a>
+            </p>
         </div>
         
-        <i class="fa-solid fa-screwdriver-wrench text-solana-purple text-5xl mb-4 animate-bounce"></i>
-
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">
-            Site <span class="gradient-text">Under Construction</span>
-        </h1>
-        
-        <p class="text-gray-400 text-lg mb-8">
-            We are working hard to build this feature. Please check back later!
-            Thank you for your patience and interest in Nekotexs.
-        </p>
-
-        <a href="../index.html" class="inline-flex items-center gap-2 bg-solana-green text-black px-8 py-3 rounded-full font-bold hover:bg-white transition shadow-lg shadow-solana-green/30">
-            <i class="fa-solid fa-house"></i>
-            Go back to Main Page
-        </a>
     </div>
 
+    <script>
+        const form = document.getElementById('registerForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const walletInput = document.getElementById('walletAddress');
+        const registerBtn = document.getElementById('registerBtn');
+        const phantomConnectBtn = document.getElementById('phantomConnectBtn');
+        const messageDiv = document.getElementById('message');
+
+        // --- Utility Functions ---
+
+        function showMessage(text, isError = false) {
+            messageDiv.innerText = text;
+            messageDiv.className = `p-3 mb-4 text-sm rounded-lg text-left ${isError ? 'bg-red-900/50 text-red-300' : 'bg-solana-green/50 text-black font-semibold'}`;
+            messageDiv.style.display = 'block';
+        }
+
+        function toggleLoading(isLoading) {
+            registerBtn.disabled = isLoading || !walletInput.value;
+            registerBtn.innerText = isLoading ? 'Processing...' : 'Register and Join Nekotexs';
+        }
+
+        // --- Phantom Wallet Connection Logic ---
+
+        phantomConnectBtn.addEventListener('click', async () => {
+            if (!window.solana || !window.solana.isPhantom) {
+                showMessage("Phantom wallet not found. Please install the extension.", true);
+                return;
+            }
+
+            try {
+                // Request connection to the wallet
+                const resp = await window.solana.connect();
+                const publicKey = resp.publicKey.toString();
+                
+                // Update the input field and enable registration button
+                walletInput.value = publicKey;
+                registerBtn.disabled = false;
+                showMessage("Wallet connected successfully!", false);
+
+            } catch (err) {
+                console.error(err);
+                showMessage("Failed to connect wallet: " + err.message, true);
+                walletInput.value = '';
+                registerBtn.disabled = true;
+            }
+        });
+
+        // --- Form Submission / Firebase Registration ---
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            toggleLoading(true);
+            messageDiv.style.display = 'none';
+
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            const wallet = walletInput.value;
+
+            if (password.length < 6) {
+                showMessage("Password must be at least 6 characters long.", true);
+                toggleLoading(false);
+                return;
+            }
+
+            if (!wallet) {
+                showMessage("Please connect your Solana wallet before registering.", true);
+                toggleLoading(false);
+                return;
+            }
+
+            try {
+                // 1. Firebase Authentication: Create user with Email and Password
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // 2. Firestore: Save wallet address linked to the user's UID
+                await db.collection('users').doc(user.uid).set({
+                    email: email,
+                    walletAddress: wallet,
+                    registeredAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showMessage("Registration successful! Redirecting to login...", false);
+                
+                // Optional: Redirect to login page after successful registration
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+
+            } catch (error) {
+                console.error("Firebase Error:", error.code, error.message);
+                
+                let errorMessage = "Registration failed. Please try again.";
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = "This email is already registered.";
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = "The email address is invalid.";
+                } else {
+                    errorMessage = `Error: ${error.message}`;
+                }
+
+                showMessage(errorMessage, true);
+            }
+            toggleLoading(false);
+        });
+    </script>
 </body>
 </html>
