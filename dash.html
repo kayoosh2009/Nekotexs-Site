@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Nekotexs ($NKTX)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Space Grotesk', 'sans-serif'] },
+                    colors: {
+                        solana: { purple: '#9945FF', green: '#14F195', dark: '#1B1B1B' }
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 80%);
+            min-height: 100vh;
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="w-full py-6 px-4 md:px-12 flex justify-between items-center max-w-7xl mx-auto relative z-50">
+        <div class="flex items-center gap-3">
+            <a href="index.html" class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1">
+                    <img src="img/logo.svg" alt="Nekotexs" class="h-8 w-8">
+                </div>
+                <span class="text-2xl font-bold tracking-wider">Nekotexs</span>
+            </a>
+        </div>
+        <button id="disconnectBtn" class="bg-gray-800 border border-gray-600 text-white px-4 py-2 rounded-full text-sm hover:bg-red-900/50 transition">
+            Disconnect
+        </button>
+    </nav>
+    
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <header class="mb-10 flex flex-col md:flex-row justify-between items-end gap-4">
+            <div>
+                <h1 class="text-4xl md:text-5xl font-bold mb-2">
+                    <span class="gradient-text">Dashboard</span>
+                </h1>
+                <p id="welcomeMessage" class="text-gray-400">Loading user data...</p>
+            </div>
+            
+            <a href="trade.html" class="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-solana-purple to-solana-green rounded-xl font-bold text-xl text-white shadow-lg shadow-solana-green/20 hover:scale-105 transition transform flex items-center justify-center gap-3">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i> TRADE $NKTX
+            </a>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            
+            <div class="glass-card p-6 border-l-4 border-l-solana-purple relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                    <i class="fa-brands fa-phantom text-8xl"></i>
+                </div>
+                <h2 class="text-gray-400 font-bold uppercase tracking-widest text-sm mb-1">Wallet Balance</h2>
+                <p class="text-xs text-gray-500 mb-4">Held in Phantom Wallet</p>
+                <div class="flex items-end gap-2">
+                    <span id="walletBalance" class="text-4xl font-bold text-white">0.00</span>
+                    <span class="text-solana-purple font-bold mb-1">$NKTX</span>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 border-l-4 border-l-solana-green relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                    <i class="fa-solid fa-robot text-8xl"></i>
+                </div>
+                <h2 class="text-gray-400 font-bold uppercase tracking-widest text-sm mb-1">Earned Balance</h2>
+                <p class="text-xs text-gray-500 mb-4">Mining via Extension</p>
+                <div class="flex items-end gap-2">
+                    <span id="earnedBalance" class="text-4xl font-bold text-solana-green">0.0000</span>
+                    <span class="text-solana-green font-bold mb-1">$NKTX</span>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 border-l-4 border-l-yellow-400 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-gray-400 font-bold uppercase tracking-widest text-sm mb-4">Monthly Activity</h2>
+                    <div class="flex justify-between items-center mb-2">
+                        <span>Logins this Month:</span>
+                        <span id="monthLogins" class="text-2xl font-bold text-yellow-400">0</span>
+                    </div>
+                    <div class="w-full bg-gray-700 h-1.5 rounded-full">
+                        <div class="bg-yellow-400 h-1.5 rounded-full" style="width: 20%"></div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-700 text-xs text-gray-500 flex justify-between">
+                    <span>Last Login:</span>
+                    <span id="lastLoginTime" class="text-white">...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <div class="glass-card p-8">
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-wallet text-solana-purple"></i> Your Wallet Address
+                </h3>
+                <p class="text-gray-400 text-sm mb-4">Use this address to receive deposits.</p>
+                
+                <div class="flex items-center gap-2 bg-black/40 p-3 rounded-lg border border-gray-700 group cursor-pointer hover:border-solana-purple transition" onclick="copyToClipboard('walletAddressVal')">
+                    <input type="text" id="walletAddressVal" readonly class="bg-transparent border-none outline-none w-full text-gray-300 font-mono text-sm truncate" value="Loading...">
+                    <button class="text-gray-500 group-hover:text-white transition px-2">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-card p-8">
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-plug text-solana-green"></i> Connect Extension
+                </h3>
+                <p class="text-gray-400 text-sm mb-4">Paste this code into the browser extension to link account.</p>
+                
+                <div class="flex items-center gap-2 bg-black/40 p-3 rounded-lg border border-gray-700">
+                    <input type="password" id="extensionCode" readonly class="bg-transparent border-none outline-none w-full text-solana-green font-mono font-bold tracking-widest" value="...">
+                    
+                    <button onclick="toggleCode()" class="text-gray-500 hover:text-white transition px-2" title="Show/Hide">
+                        <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                    </button>
+                    <div class="w-px h-6 bg-gray-700 mx-1"></div>
+                    <button onclick="copyToClipboard('extensionCode')" class="text-gray-500 hover:text-solana-green transition px-2" title="Copy Code">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+            authDomain: "nekotexs.firebaseapp.com",
+            projectId: "nekotexs",
+            storageBucket: "nekotexs.appspot.com",
+            messagingSenderId: "596436176972",
+            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const storedAddress = localStorage.getItem('nekotexs_wallet');
+
+        // Elements
+        const walletBalEl = document.getElementById('walletBalance');
+        const earnedBalEl = document.getElementById('earnedBalance');
+        const walletAddrInput = document.getElementById('walletAddressVal');
+        const extensionCodeInput = document.getElementById('extensionCode');
+        const welcomeMsg = document.getElementById('welcomeMessage');
+        const monthLoginsEl = document.getElementById('monthLogins');
+        const lastLoginTimeEl = document.getElementById('lastLoginTime');
+
+        async function initDashboard() {
+            if (!storedAddress) {
+                window.location.href = "user/login.html";
+                return;
+            }
+
+            // 1. Установка адреса в UI
+            walletAddrInput.value = storedAddress;
+            welcomeMsg.textContent = `Wallet: ${storedAddress.slice(0,4)}...${storedAddress.slice(-4)}`;
+
+            // 2. Генерация "Кода подключения" (используем ID пользователя или специальное поле)
+            // Для простоты пока берем адрес кошелька, но можно создать хеш
+            extensionCodeInput.value = storedAddress; 
+
+            // 3. Загрузка данных из Firebase
+            try {
+                const docRef = doc(db, "users", storedAddress);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+
+                    // Баланс 1: Кошелек (купленные) - берем из базы или ставим 0
+                    walletBalEl.textContent = (data.walletBalance || 0).toFixed(2);
+
+                    // Баланс 2: Заработанные (расширение)
+                    earnedBalEl.textContent = (data.earnedBalance || 0).toFixed(4);
+
+                    // Активность за месяц (нужна логика в login.html, см. ниже)
+                    monthLoginsEl.textContent = data.monthlyLoginCount || 1;
+
+                    // Время последнего входа
+                    if (data.lastLogin && data.lastLogin.toDate) {
+                        lastLoginTimeEl.textContent = data.lastLogin.toDate().toLocaleDateString() + ' ' + data.lastLogin.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading data:", e);
+            }
+        }
+
+        // --- Утилиты --- //
+
+        // Копирование
+        window.copyToClipboard = (elementId) => {
+            const copyText = document.getElementById(elementId);
+            // Для input полей используем select(), для текста textContent
+            if(copyText.select) {
+                copyText.select();
+                copyText.setSelectionRange(0, 99999); // Для мобильных
+                navigator.clipboard.writeText(copyText.value);
+            } else {
+                navigator.clipboard.writeText(copyText.textContent);
+            }
+            
+            // Визуальный эффект (опционально можно добавить toast)
+            const icon = event.currentTarget.querySelector('i');
+            if(icon) {
+                icon.className = "fa-solid fa-check text-green-500";
+                setTimeout(() => icon.className = "fa-regular fa-copy", 1500);
+            }
+        };
+
+        // Показать/Скрыть код
+        window.toggleCode = () => {
+            const input = document.getElementById('extensionCode');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === "password") {
+                input.type = "text";
+                icon.className = "fa-solid fa-eye-slash";
+            } else {
+                input.type = "password";
+                icon.className = "fa-solid fa-eye";
+            }
+        };
+
+        // Logout
+        document.getElementById('disconnectBtn').addEventListener('click', () => {
+            localStorage.removeItem('nekotexs_wallet');
+            window.location.href = "index.html";
+        });
+
+        initDashboard();
+    </script>
+</body>
+</html>
