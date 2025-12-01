@@ -103,6 +103,9 @@
 
                 const resp = await window.solana.connect();
                 const walletAddress = resp.publicKey.toString();
+                
+                // === КРИТИЧЕСКАЯ СТРОКА: Сохраняем адрес для дашборда ===
+                localStorage.setItem('nekotexs_wallet', walletAddress); 
 
                 const userRef = doc(db, "users", walletAddress);
                 const userSnap = await getDoc(userRef);
@@ -119,7 +122,8 @@
 
                 showMessage("Success! Welcome back", false);
                 setTimeout(() => {
-                    window.location.href = "../dash.html";
+                    // === ПЕРЕНАПРАВЛЕНИЕ НА DASH.HTML ===
+                    window.location.href = "../dash.html"; 
                 }, 1200);
 
             } catch (err) {
