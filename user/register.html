@@ -10,21 +10,18 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Space Grotesk', 'sans-serif'] },
-                    colors: {
-                        solana: { purple: '#9945FF', green: '#14F195' }
-                    }
+                    colors: { solana: { purple: '#9945FF', green: '#14F195' } }
                 }
             }
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         body {
             background-color: #0f172a;
-            color: #ffffff;
             background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%);
             min-height: 100vh;
+            color: #ffffff;
         }
         .gradient-text {
             background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
@@ -37,6 +34,7 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
         }
         .input-field {
             width: 100%;
@@ -46,29 +44,26 @@
             border-radius: 0.5rem;
             color: white;
             font-size: 1rem;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
         }
+        .input-field::placeholder { color: #9ca3af; }
         .input-field:focus {
             outline: none;
             border-color: #14F195;
             box-shadow: 0 0 0 3px rgba(20, 241, 149, 0.3);
         }
-        .phantom-logo {
-            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
-        }
         .separator {
             display: flex;
             align-items: center;
-            text-align: center;
             gap: 1rem;
             color: #9ca3af;
             font-size: 0.875rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            margin: 2rem 0;
         }
-        .separator::before,
-        .separator::after {
+        .separator::before, .separator::after {
             content: '';
             flex: 1;
             height: 1px;
@@ -77,13 +72,15 @@
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
+
     <div class="text-center max-w-lg w-full">
-        <a href="../index.html" class="inline-block mb-8">
+        <a href="../index.html" class="inline-block mb-10">
             <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto shadow-2xl">
-                <img src="../img/logo.svg" alt="Nekotexs Logo" class="h-14 w-14">
+                <img src="../img/logo.svg" alt="Nekotexs" class="h-14 w-14">
             </div>
         </a>
-        <h1 class="text-4xl md:text-5xl font-bold mb-10">
+
+        <h1 class="text-5xl font-bold mb-10 text-white">
             <span class="gradient-text">Register</span> Account
         </h1>
 
@@ -91,16 +88,18 @@
             <div id="message" class="hidden p-4 mb-6 text-sm rounded-lg text-left" role="alert"></div>
 
             <form id="registerForm" class="space-y-6">
-                <input type="email" id="email" placeholder="Email Address" required class="input-field">
-                <input type="password" id="password" placeholder="Password (min 6 characters)" required minlength="6" class="input-field">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="email" id="email" placeholder="Email Address" required class="input-field">
+                    <input type="password" id="password" placeholder="Password (min 6 characters)" required minlength="6" class="input-field">
+                </div>
 
                 <div class="separator"><span>Solana Wallet Address</span></div>
 
                 <div class="space-y-4">
-                    <input type="text" id="walletAddress" placeholder="Click button below to connect" required class="input-field" readonly>
+                    <input type="text" id="walletAddress" placeholder="Click button to connect" required class="input-field" readonly>
 
-                    <button type="button" id="phantomConnectBtn" class="w-full flex items-center justify-center gap-3 bg-[#9945FF] hover:bg-[#7c3aed] text-white font-bold py-4 rounded-lg transition shadow-lg">
-                        <img src="../img/phantom.png" alt="Phantom" class="h-7 w-7 phantom-logo">
+                    <button type="button" id="phantomConnectBtn" class="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[#9945FF] to-[#7c3aed] hover:from-[#7c3aed] hover:to-[#6d28d9] text-white font-bold py-4 rounded-lg transition-all shadow-lg">
+                        <img src="../img/phantom.png" alt="Phantom" class="h-8 w-8">
                         <span id="phantomText">Connect Phantom Wallet</span>
                     </button>
 
@@ -109,23 +108,22 @@
                     </p>
                 </div>
 
-                <button type="submit" id="registerBtn" disabled
-                    class="w-full bg-[#14F195] hover:bg-[#0fd68a] text-black font-bold py-4 rounded-lg transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                <button type="submit" id="registerBtn" disabled class="w-full bg-[#14F195] hover:bg-[#0fd68a] text-black font-bold py-4 rounded-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
                     Register and Join Nekotexs
                 </button>
             </form>
 
             <p class="mt-8 text-gray-400 text-sm">
-                Already have an account? <a href="login.html" class="text-[#14F195] hover:underline font-bold">Log In</a>
+                Already have an account? 
+                <a href="login.html" class="text-[#14F195] hover:underline font-bold">Log In</a>
             </p>
         </div>
     </div>
 
-    <!-- Firebase + Phantom Logic -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
@@ -141,7 +139,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const form = document.getElementById('registerForm');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const walletInput = document.getElementById('walletAddress');
@@ -150,99 +147,69 @@
         const phantomText = document.getElementById('phantomText');
         const messageDiv = document.getElementById('message');
 
-        // Показ сообщения
         const showMessage = (text, isError = false) => {
             messageDiv.textContent = text;
-            messageDiv.className = `p-4 mb-6 text-sm rounded-lg text-left ${isError ? 'bg-red-900/70 text-red-200' : 'bg-green-900/70 text-green-200 font-semibold'}`;
+            messageDiv.className = `p-4 mb-6 text-sm rounded-lg ${isError ? 'bg-red-900/70 text-red-200' : 'bg-green-900/70 text-green-200 font-semibold'}`;
             messageDiv.classList.remove('hidden');
             setTimeout(() => messageDiv.classList.add('hidden'), 8000);
         };
 
-        // Проверка валидности формы
         const checkForm = () => {
-            const valid = emailInput.value.trim() && 
-                          passwordInput.value.length >= 6 && 
-                          walletInput.value.trim();
+            const valid = emailInput.value.trim() && passwordInput.value.length >= 6 && walletInput.value.trim();
             registerBtn.disabled = !valid;
         };
-        [emailInput, passwordInput].forEach(el => el.addEventListener('input', checkForm));
 
-        // Если пользователь уже авторизован в Firebase — сразу в дашборд
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.location.href = "../dash.html";
-            }
+        [emailInput, passwordInput, walletInput].forEach(el => {
+            el.addEventListener('input', checkForm);
+            el.addEventListener('change', checkForm);
         });
 
-        // Phantom Connect
+        onAuthStateChanged(auth, user => { if (user) location.href = "../dash.html"; });
+
         phantomBtn.addEventListener('click', async () => {
-            if (!window.solana?.isPhantom) {
-                showMessage("Phantom Wallet not detected. Install the extension: https://phantom.app", true);
-                return;
-            }
+            if (!window.solana?.isPhantom) return showMessage("Phantom not found. Install: phantom.app", true);
 
             try {
                 phantomBtn.disabled = true;
                 phantomText.textContent = "Connecting...";
-
                 const resp = await window.solana.connect();
                 const address = resp.publicKey.toString();
 
                 walletInput.value = address;
-                phantomText.textContent = "Connected ✓";
-                phantomBtn.classList.remove('bg-[#9945FF]', 'hover:bg-[#7c3aed]');
-                phantomBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                phantomText.textContent = "Connected";
+                phantomBtn.classList.replace('from-[#9945FF]', 'from-green-600');
+                phantomBtn.classList.replace('to-[#7c3aed]', 'to-green-700');
 
-                showMessage("Phantom wallet connected: " + address.slice(0, 8) + "...", false);
+                showMessage(`Connected: ${address.slice(0,4)}...${address.slice(-4)}`, false);
                 checkForm();
-
-                // Сразу перенаправляем в дашборд, если уже есть аккаунт в Firebase
-                // (или можно оставить регистрацию — решай сам)
-                // Сейчас сделаем: если пользователь уже залогинен — сразу в даш
-                if (auth.currentUser) {
-                    setTimeout(() => window.location.href = "../dash.html", 1200);
-                }
-
             } catch (err) {
-                console.error(err);
-                showMessage("Connection rejected or failed.", true);
+                showMessage("Connection cancelled", true);
                 phantomText.textContent = "Connect Phantom Wallet";
             } finally {
                 phantomBtn.disabled = false;
             }
         });
 
-        // Регистрация
-        form.addEventListener('submit', async (e) => {
+        document.getElementById('registerForm').addEventListener('submit', async e => {
             e.preventDefault();
             registerBtn.disabled = true;
             registerBtn.textContent = "Creating account...";
 
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
-            const wallet = walletInput.value.trim();
-
             try {
-                const { user } = await createUserWithEmailAndPassword(auth, email, password);
-
+                const { user } = await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
                 await setDoc(doc(db, "users", user.uid), {
-                    email: email,
-                    walletAddress: wallet,
-                    registeredAt: serverTimestamp(),
-                    uid: user.uid
+                    email: user.email,
+                    walletAddress: walletInput.value.trim(),
+                    uid: user.uid,
+                    registeredAt: serverTimestamp()
                 });
-
-                showMessage("Success! Welcome to Nekotexs 🎉", false);
-                setTimeout(() => {
-                    window.location.href = "../dash.html";
-                }, 1500);
-
+                showMessage("Welcome to Nekotexs!", false);
+                setTimeout(() => location.href = "../dash.html", 1500);
             } catch (error) {
                 console.error(error);
-                let msg = "Registration failed.";
-                if (error.code === 'auth/email-already-in-use') msg = "This email is already registered.";
-                if (error.code === 'auth/weak-password') msg = "Password too weak (min 6 characters).";
-                if (error.code === 'auth/invalid-email') msg = "Invalid email address.";
+                const msg = error.code.includes('email-already') ? 'Email already registered' :
+                           error.code.includes('weak-password') ? 'Password too weak' :
+                           error.code.includes('invalid-email') ? 'Invalid email' : 'Registration failed';
                 showMessage(msg, true);
             } finally {
                 registerBtn.disabled = false;
@@ -250,7 +217,6 @@
             }
         });
 
-        // Начальная проверка
         checkForm();
     </script>
 </body>
