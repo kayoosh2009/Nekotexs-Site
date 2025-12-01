@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register | Nekotexs</title>
+    <title>Login with Phantom | Nekotexs</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -15,13 +15,13 @@
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             background-color: #0f172a;
             background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%);
             min-height: 100vh;
-            color: #ffffff;
+            color: white;
         }
         .gradient-text {
             background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
@@ -29,106 +29,49 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .glass-card {
+        .glass {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 1rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
-        }
-        .input-field {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            background-color: rgba(31, 41, 55, 0.6);
-            border: 1px solid rgb(55, 65, 81);
-            border-radius: 0.5rem;
-            color: white;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        .input-field::placeholder { color: #9ca3af; }
-        .input-field:focus {
-            outline: none;
-            border-color: #14F195;
-            box-shadow: 0 0 0 3px rgba(20, 241, 149, 0.3);
-        }
-        .separator {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            color: #9ca3af;
-            font-size: 0.875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin: 2rem 0;
-        }
-        .separator::before, .separator::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: rgba(75, 85, 99, 0.5);
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="flex items-center justify-center min-h-screen p-6">
 
-    <div class="text-center max-w-lg w-full">
+    <div class="text-center max-w-md w-full">
         <a href="../index.html" class="inline-block mb-10">
             <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto shadow-2xl">
                 <img src="../img/logo.svg" alt="Nekotexs" class="h-14 w-14">
             </div>
         </a>
 
-        <h1 class="text-5xl font-bold mb-10 text-white">
-            <span class="gradient-text">Register</span> Account
+        <h1 class="text-5xl font-bold mb-4">
+            <span class="gradient-text">Welcome</span> Back
         </h1>
+        <p class="text-gray-400 mb-12">Connect your Phantom wallet to continue</p>
 
-        <div class="glass-card p-8 md:p-10">
-            <div id="message" class="hidden p-4 mb-6 text-sm rounded-lg text-left" role="alert"></div>
+        <div class="glass p-10">
+            <div id="message" class="hidden p-4 mb-6 text-sm rounded-lg text-left"></div>
 
-            <form id="registerForm" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="email" id="email" placeholder="Email Address" required class="input-field">
-                    <input type="password" id="password" placeholder="Password (min 6 characters)" required minlength="6" class="input-field">
-                </div>
+            <button id="phantomBtn" class="w-full flex items-center justify-center gap-4 bg-gradient-to-r from-[#9945FF] to-[#7c3aed] hover:from-[#7c3aed] hover:to-[#6d28d9] text-white font-bold text-lg py-5 rounded-xl transition-all shadow-xl">
+                <img src="../img/phantom.png" alt="Phantom" class="h-10 w-10">
+                <span id="btnText">Connect Phantom Wallet</span>
+            </button>
 
-                <div class="separator"><span>Solana Wallet Address</span></div>
-
-                <div class="space-y-4">
-                    <input type="text" id="walletAddress" placeholder="Click button to connect" required class="input-field" readonly>
-
-                    <button type="button" id="phantomConnectBtn" class="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[#9945FF] to-[#7c3aed] hover:from-[#7c3aed] hover:to-[#6d28d9] text-white font-bold py-4 rounded-lg transition-all shadow-lg">
-                        <img src="../img/phantom.png" alt="Phantom" class="h-8 w-8">
-                        <span id="phantomText">Connect Phantom Wallet</span>
-                    </button>
-
-                    <p class="text-xs text-gray-400 text-left">
-                        Wallet is required to receive $NKTX airdrops and rewards.
-                    </p>
-                </div>
-
-                <button type="submit" id="registerBtn" disabled class="w-full bg-[#14F195] hover:bg-[#0fd68a] text-black font-bold py-4 rounded-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                    Register and Join Nekotexs
-                </button>
-            </form>
-
-            <p class="mt-8 text-gray-400 text-sm">
-                Already have an account? 
-                <a href="login.html" class="text-[#14F195] hover:underline font-bold">Log In</a>
+            <p class="mt-6 text-xs text-gray-500">
+                By connecting you agree to our Terms and Privacy Policy
             </p>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
             authDomain: "nekotexs.firebaseapp.com",
-            databaseURL: "https://nekotexs-default-rtdb.firebaseio.com",
             projectId: "nekotexs",
             storageBucket: "nekotexs.appspot.com",
             messagingSenderId: "596436176972",
@@ -136,88 +79,57 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const walletInput = document.getElementById('walletAddress');
-        const registerBtn = document.getElementById('registerBtn');
-        const phantomBtn = document.getElementById('phantomConnectBtn');
-        const phantomText = document.getElementById('phantomText');
+        const phantomBtn = document.getElementById('phantomBtn');
+        const btnText = document.getElementById('btnText');
         const messageDiv = document.getElementById('message');
 
-        const showMessage = (text, isError = false) => {
+        const showMessage = (text, error = false) => {
             messageDiv.textContent = text;
-            messageDiv.className = `p-4 mb-6 text-sm rounded-lg ${isError ? 'bg-red-900/70 text-red-200' : 'bg-green-900/70 text-green-200 font-semibold'}`;
+            messageDiv.className = `p-4 mb-6 text-sm rounded-lg ${error ? 'bg-red-900/70 text-red-200' : 'bg-green-900/70 text-green-200 font-bold'}`;
             messageDiv.classList.remove('hidden');
-            setTimeout(() => messageDiv.classList.add('hidden'), 8000);
         };
-
-        const checkForm = () => {
-            const valid = emailInput.value.trim() && passwordInput.value.length >= 6 && walletInput.value.trim();
-            registerBtn.disabled = !valid;
-        };
-
-        [emailInput, passwordInput, walletInput].forEach(el => {
-            el.addEventListener('input', checkForm);
-            el.addEventListener('change', checkForm);
-        });
-
-        onAuthStateChanged(auth, user => { if (user) location.href = "../dash.html"; });
 
         phantomBtn.addEventListener('click', async () => {
-            if (!window.solana?.isPhantom) return showMessage("Phantom not found. Install: phantom.app", true);
+            if (!window.solana?.isPhantom) {
+                showMessage("Phantom wallet not detected. Install from phantom.app", true);
+                return;
+            }
 
             try {
                 phantomBtn.disabled = true;
-                phantomText.textContent = "Connecting...";
+                btnText.textContent = "Connecting...";
+
                 const resp = await window.solana.connect();
-                const address = resp.publicKey.toString();
+                const walletAddress = resp.publicKey.toString();
 
-                walletInput.value = address;
-                phantomText.textContent = "Connected";
-                phantomBtn.classList.replace('from-[#9945FF]', 'from-green-600');
-                phantomBtn.classList.replace('to-[#7c3aed]', 'to-green-700');
+                const userRef = doc(db, "users", walletAddress);
+                const userSnap = await getDoc(userRef);
 
-                showMessage(`Connected: ${address.slice(0,4)}...${address.slice(-4)}`, false);
-                checkForm();
+                const userData = {
+                    walletAddress,
+                    lastLogin: serverTimestamp(),
+                    nkTxBalance: userSnap.exists() ? (userSnap.data().nkTxBalance || 0) : 0,
+                    loginCount: userSnap.exists() ? (userSnap.data().loginCount || 0) + 1 : 1
+                };
+
+                // Сохраняем/обновляем пользователя по адресу кошелька
+                await setDoc(userRef, userData, { merge: true });
+
+                showMessage("Success! Welcome back", false);
+                setTimeout(() => {
+                    window.location.href = "../dash.html";
+                }, 1200);
+
             } catch (err) {
-                showMessage("Connection cancelled", true);
-                phantomText.textContent = "Connect Phantom Wallet";
+                console.error(err);
+                showMessage("Connection failed or cancelled", true);
+                btnText.textContent = "Connect Phantom Wallet";
             } finally {
                 phantomBtn.disabled = false;
             }
         });
-
-        document.getElementById('registerForm').addEventListener('submit', async e => {
-            e.preventDefault();
-            registerBtn.disabled = true;
-            registerBtn.textContent = "Creating account...";
-
-            try {
-                const { user } = await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
-                await setDoc(doc(db, "users", user.uid), {
-                    email: user.email,
-                    walletAddress: walletInput.value.trim(),
-                    uid: user.uid,
-                    registeredAt: serverTimestamp()
-                });
-                showMessage("Welcome to Nekotexs!", false);
-                setTimeout(() => location.href = "../dash.html", 1500);
-            } catch (error) {
-                console.error(error);
-                const msg = error.code.includes('email-already') ? 'Email already registered' :
-                           error.code.includes('weak-password') ? 'Password too weak' :
-                           error.code.includes('invalid-email') ? 'Invalid email' : 'Registration failed';
-                showMessage(msg, true);
-            } finally {
-                registerBtn.disabled = false;
-                registerBtn.textContent = "Register and Join Nekotexs";
-            }
-        });
-
-        checkForm();
     </script>
 </body>
 </html>
