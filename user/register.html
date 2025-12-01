@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | Nekotexs</title>
     
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Tailwind Configuration -->
     <script>
         tailwind.config = {
             theme: {
@@ -14,7 +16,6 @@
                     fontFamily: {
                         sans: ['Space Grotesk', 'sans-serif'],
                     },
-                    // ГАРАНТИЯ КОРРЕКТНОСТИ ЦВЕТОВ
                     colors: {
                         solana: {
                             purple: '#9945FF',
@@ -27,15 +28,15 @@
     </script>
     
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        // 1. Firebase Configuration (Ваша конфигурация)
+        // 1. Firebase Configuration 
         const firebaseConfig = {
             apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
             authDomain: "nekotexs.firebaseapp.com",
@@ -84,9 +85,27 @@
             border-color: #14F195;
             box-shadow: 0 0 0 1px #14F195;
         }
-        /* Убедитесь, что логотип Фантома не имеет слишком большую высоту */
         .phantom-logo {
             filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+        }
+        /* Стили для разделителя */
+        .separator {
+            display: flex;
+            align-items: center;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        .separator::before,
+        .separator::after {
+            content: '';
+            flex-grow: 1;
+            border-top: 1px solid rgba(75, 85, 99, 0.5); /* border-gray-600/50 */
+        }
+        .separator::before {
+            margin-right: 0.75rem;
+        }
+        .separator::after {
+            margin-left: 0.75rem;
         }
     </style>
 </head>
@@ -110,6 +129,7 @@
 
             <form id="registerForm" class="space-y-4">
                 
+                <!-- 1. Email и Пароль -->
                 <div>
                     <input type="email" id="email" placeholder="Email Address" required class="input-field">
                 </div>
@@ -118,18 +138,25 @@
                     <input type="password" id="password" placeholder="Password (min 6 characters)" required class="input-field">
                 </div>
 
-                <div class="pt-4 border-t border-gray-700/50">
-                    <input type="text" id="walletAddress" placeholder="Solana Wallet Address" required readonly class="input-field cursor-default text-gray-400">
+                <!-- 2. РАЗДЕЛИТЕЛЬ -->
+                <div class="separator text-gray-400 text-sm font-semibold">
+                    SOLANA WALLET ADDRESS
+                </div>
+
+                <!-- 3. Поле Кошелька и Phantom -->
+                <div class="space-y-3">
+                    <input type="text" id="walletAddress" placeholder="Solana Wallet Address (Required)" required class="input-field">
                     
-                    <button type="button" id="phantomConnectBtn" class="w-full mt-2 inline-flex items-center justify-center gap-2 bg-solana-purple text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition shadow-lg shadow-solana-purple/30">
-                        <img src="../img/phantom.png" alt="Phantom Logo" class="h-6 w-6 phantom-logo"> Connect Phantom Wallet
+                    <button type="button" id="phantomConnectBtn" class="w-full inline-flex items-center justify-center gap-2 bg-solana-purple text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition shadow-lg shadow-solana-purple/30">
+                        <img src="../img/phantom.svg" alt="Phantom Logo" class="h-6 w-6 phantom-logo"> Connect Phantom Wallet
                     </button>
 
-                    <p class="text-xs text-gray-500 mt-2 text-left">
+                    <p class="text-xs text-gray-500 text-left">
                         Wallet address is required for $NKTX distributions.
                     </p>
                 </div>
                 
+                <!-- 4. Кнопка Регистрации -->
                 <button type="submit" id="registerBtn" class="w-full mt-6 bg-solana-green text-black px-6 py-3 rounded-lg font-bold hover:bg-white transition shadow-[0_0_15px_rgba(20,241,149,0.5)] disabled:opacity-50" disabled>
                     Register and Join Nekotexs
                 </button>
@@ -160,10 +187,20 @@
             messageDiv.style.display = 'block';
         }
 
+        function isFormValid() {
+            // Проверяем, что все 3 обязательных поля заполнены
+            return emailInput.value && passwordInput.value.length >= 6 && walletInput.value;
+        }
+
         function toggleLoading(isLoading) {
-            registerBtn.disabled = isLoading || !walletInput.value;
+            registerBtn.disabled = isLoading || !isFormValid();
             registerBtn.innerText = isLoading ? 'Processing...' : 'Register and Join Nekotexs';
         }
+        
+        // Отслеживание изменений для активации/деактивации кнопки
+        [emailInput, passwordInput, walletInput].forEach(input => {
+            input.addEventListener('input', () => toggleLoading(false));
+        });
 
         // --- Phantom Wallet Connection Logic ---
 
@@ -172,27 +209,32 @@
                 showMessage("Phantom wallet not found. Please install the extension.", true);
                 return;
             }
+            toggleLoading(true);
 
             try {
                 const resp = await window.solana.connect();
                 const publicKey = resp.publicKey.toString();
                 
                 walletInput.value = publicKey;
-                registerBtn.disabled = false;
-                showMessage("Wallet connected successfully!", false);
+                showMessage("Wallet connected successfully! Ready to register.", false);
 
             } catch (err) {
                 console.error(err);
                 showMessage("Failed to connect wallet: " + err.message, true);
-                walletInput.value = '';
-                registerBtn.disabled = true;
             }
+            toggleLoading(false);
         });
 
         // --- Form Submission / Firebase Registration ---
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            if (!isFormValid()) {
+                 showMessage("Please fill in all required fields (Email, Password >= 6 chars, and Wallet Address).", true);
+                 return;
+            }
+            
             toggleLoading(true);
             messageDiv.style.display = 'none';
 
@@ -200,22 +242,12 @@
             const password = passwordInput.value;
             const wallet = walletInput.value;
 
-            if (password.length < 6) {
-                showMessage("Password must be at least 6 characters long.", true);
-                toggleLoading(false);
-                return;
-            }
-
-            if (!wallet) {
-                showMessage("Please connect your Solana wallet before registering.", true);
-                toggleLoading(false);
-                return;
-            }
-
             try {
+                // 1. Firebase Authentication: Create user
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
 
+                // 2. Firestore: Save wallet address
                 await db.collection('users').doc(user.uid).set({
                     email: email,
                     walletAddress: wallet,
@@ -224,9 +256,10 @@
 
                 showMessage("Registration successful! Redirecting to login...", false);
                 
+                // Перенаправление на login.html после регистрации
                 setTimeout(() => {
                     window.location.href = 'login.html';
-                }, 2000);
+                }, 1500);
 
             } catch (error) {
                 console.error("Firebase Error:", error.code, error.message);
@@ -241,9 +274,12 @@
                 }
 
                 showMessage(errorMessage, true);
+                toggleLoading(false); // Снимаем загрузку только при ошибке
             }
-            toggleLoading(false);
         });
+        
+        // Первоначальная проверка состояния кнопки при загрузке
+        toggleLoading(false);
     </script>
 </body>
 </html>
