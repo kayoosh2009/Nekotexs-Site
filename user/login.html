@@ -5,14 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log In | Nekotexs</title>
     
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <!-- Tailwind Configuration -->
     <script>
         tailwind.config = {
             theme: {
@@ -29,8 +25,19 @@
                 }
             }
         }
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        // 1. Firebase Configuration (Ваша конфигурация)
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <!-- Добавлен Firestore для поиска пользователя по адресу кошелька -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script> 
+
+    <script>
+        // 1. Firebase Configuration 
         const firebaseConfig = {
             apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
             authDomain: "nekotexs.firebaseapp.com",
@@ -43,8 +50,8 @@
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-
         const auth = firebase.auth();
+        const db = firebase.firestore(); // Инициализация Firestore
     </script>
     
     <style>
@@ -65,7 +72,40 @@
             border-radius: 1rem;
         }
         .input-field {
-            @apply w-full p-3 bg-gray-800/50 border border-gray-700 rounded-lg placeholder-gray-500 focus:ring-solana-green focus:border-solana-green transition;
+            width: 100%;
+            padding: 0.75rem;
+            background-color: rgba(31, 41, 55, 0.5);
+            border: 1px solid rgb(55, 65, 81);
+            border-radius: 0.5rem;
+            color: white;
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #14F195;
+            box-shadow: 0 0 0 1px #14F195;
+        }
+        .phantom-logo {
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+        }
+        /* Стили для разделителя */
+        .separator {
+            display: flex;
+            align-items: center;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        .separator::before,
+        .separator::after {
+            content: '';
+            flex-grow: 1;
+            border-top: 1px solid rgba(75, 85, 99, 0.5); /* border-gray-600/50 */
+        }
+        .separator::before {
+            margin-right: 0.75rem;
+        }
+        .separator::after {
+            margin-left: 0.75rem;
         }
     </style>
 </head>
@@ -97,12 +137,24 @@
                     <input type="password" id="password" placeholder="Password" required class="input-field">
                 </div>
                 
-                <button type="submit" id="loginBtn" class="w-full mt-6 bg-solana-green text-black px-6 py-3 rounded-lg font-bold hover:bg-white transition shadow-[0_0_15px_rgba(20,241,149,0.4)]">
-                    Log In
+                <!-- Кнопка Входа по Email/Password -->
+                <button type="submit" id="loginBtn" class="w-full mt-6 bg-solana-green text-black px-6 py-3 rounded-lg font-bold hover:bg-white transition shadow-[0_0_15px_rgba(20,241,149,0.5)]">
+                    Log In with Email
                 </button>
             </form>
 
-            <p class="text-gray-500 text-sm mt-4">
+            <!-- 2. РАЗДЕЛИТЕЛЬ -->
+            <div class="separator text-gray-400 text-sm font-semibold mt-6">
+                OR LOG IN WITH WALLET
+            </div>
+
+            <!-- Кнопка Phantom -->
+            <button type="button" id="phantomConnectBtn" class="w-full mt-4 inline-flex items-center justify-center gap-2 bg-solana-purple text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition shadow-lg shadow-solana-purple/30">
+                <img src="../img/phantom.svg" alt="Phantom Logo" class="h-6 w-6 phantom-logo"> Log In with Phantom Wallet
+            </button>
+
+
+            <p class="text-gray-500 text-sm mt-6">
                 Don't have an account? 
                 <a href="register.html" class="text-solana-green hover:underline font-semibold">Sign Up</a>
             </p>
@@ -115,6 +167,7 @@
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const loginBtn = document.getElementById('loginBtn');
+        const phantomConnectBtn = document.getElementById('phantomConnectBtn');
         const messageDiv = document.getElementById('message');
 
         // --- Utility Functions ---
@@ -125,16 +178,65 @@
             messageDiv.style.display = 'block';
         }
 
-        function toggleLoading(isLoading) {
-            loginBtn.disabled = isLoading;
-            loginBtn.innerText = isLoading ? 'Logging in...' : 'Log In';
+        function toggleLoading(isLoading, isPhantom = false) {
+            if (isPhantom) {
+                phantomConnectBtn.disabled = isLoading;
+                phantomConnectBtn.innerHTML = isLoading 
+                    ? 'Processing...' 
+                    : '<img src="../img/phantom.svg" alt="Phantom Logo" class="h-6 w-6 phantom-logo"> Log In with Phantom Wallet';
+            } else {
+                loginBtn.disabled = isLoading;
+                loginBtn.innerText = isLoading ? 'Logging in...' : 'Log In with Email';
+            }
         }
 
-        // --- Form Submission / Firebase Login ---
+        // --- Phantom Wallet Login Logic ---
+
+        phantomConnectBtn.addEventListener('click', async () => {
+            if (!window.solana || !window.solana.isPhantom) {
+                showMessage("Phantom wallet not found. Please install the extension.", true);
+                return;
+            }
+            toggleLoading(true, true); // Включаем загрузку для Phantom кнопки
+            messageDiv.style.display = 'none';
+
+            try {
+                // 1. Connect to Wallet and get public key
+                const resp = await window.solana.connect();
+                const publicKey = resp.publicKey.toString();
+
+                // 2. Lookup user in Firestore using the wallet address
+                const usersRef = db.collection('users');
+                const snapshot = await usersRef.where('walletAddress', '==', publicKey).get();
+
+                if (snapshot.empty) {
+                    showMessage("Wallet address not found in our records. Please register first with Email/Password.", true);
+                } else {
+                    // Wallet found. Log in successful (for this client-side example)
+                    showMessage(`Wallet verified! Redirecting to dashboard...`, false);
+
+                    // Redirect to dash.html in the root folder
+                    setTimeout(() => {
+                        window.location.href = '../dash.html';
+                    }, 1500);
+                    // Не снимаем загрузку, так как происходит редирект
+                    return; 
+                }
+
+            } catch (err) {
+                console.error("Phantom Error:", err);
+                showMessage("Failed to connect or verify wallet: " + err.message, true);
+            }
+            // Снимаем загрузку только при ошибке
+            toggleLoading(false, true);
+        });
+
+
+        // --- Email/Password Login Logic ---
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            toggleLoading(true);
+            toggleLoading(true, false);
             messageDiv.style.display = 'none';
 
             const email = emailInput.value;
@@ -144,14 +246,14 @@
                 // Firebase Authentication: Sign in user with Email and Password
                 await auth.signInWithEmailAndPassword(email, password);
 
-                showMessage("Login successful! Welcome back.", false);
+                showMessage("Login successful! Redirecting...", false);
                 
-                // *** PLACEHOLDER for User Dashboard Redirect ***
-                // В реальном приложении здесь нужно перенаправить пользователя на его панель управления (Dashboard)
+                // Перенаправление на dash.html в корневой папке
                 setTimeout(() => {
-                    // window.location.href = '../dashboard.html'; // Пример
-                    console.log("Login successful! User is now authenticated.");
-                }, 1000);
+                    window.location.href = '../dash.html'; 
+                }, 1500);
+                // Не снимаем загрузку, так как происходит редирект
+                return;
 
             } catch (error) {
                 console.error("Firebase Error:", error.code, error.message);
@@ -162,11 +264,14 @@
                     errorMessage = "Invalid email or password.";
                 } else if (error.code === 'auth/invalid-email') {
                     errorMessage = "The email address is invalid.";
+                } else {
+                    errorMessage = `Error: ${error.message}`;
                 }
 
                 showMessage(errorMessage, true);
             }
-            toggleLoading(false);
+            // Снимаем загрузку только при ошибке
+            toggleLoading(false, false);
         });
     </script>
 </body>
