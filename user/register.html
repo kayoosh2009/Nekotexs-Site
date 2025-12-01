@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | Nekotexs</title>
-    
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Tailwind Configuration -->
+
+    <!-- Tailwind + Custom Config -->
     <script>
         tailwind.config = {
             theme: {
@@ -26,260 +26,251 @@
             }
         }
     </script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    <script>
-        // 1. Firebase Configuration 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
-            authDomain: "nekotexs.firebaseapp.com",
-            databaseURL: "https://nekotexs-default-rtdb.firebaseio.com",
-            projectId: "nekotexs",
-            storageBucket: "nekotexs.firebasestorage.app",
-            messagingSenderId: "596436176972",
-            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-    </script>
-    
     <style>
         body {
             background-color: #0f172a;
             color: #ffffff;
             background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%);
+            min-height: 100vh;
         }
         .gradient-text {
             background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         .glass-card {
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 1rem;
         }
         .input-field {
             width: 100%;
-            padding: 0.75rem;
-            background-color: rgba(31, 41, 55, 0.5);
+            padding: 0.875rem 1rem;
+            background-color: rgba(31, 41, 55, 0.6);
             border: 1px solid rgb(55, 65, 81);
             border-radius: 0.5rem;
             color: white;
-            transition: all 0.2s;
+            font-size: 1rem;
+            transition: all 0.3s;
         }
         .input-field:focus {
             outline: none;
             border-color: #14F195;
-            box-shadow: 0 0 0 1px #14F195;
+            box-shadow: 0 0 0 3px rgba(20, 241, 149, 0.3);
         }
         .phantom-logo {
-            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
         }
-        /* Стили для разделителя */
         .separator {
             display: flex;
             align-items: center;
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+            text-align: center;
+            gap: 1rem;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         .separator::before,
         .separator::after {
             content: '';
-            flex-grow: 1;
-            border-top: 1px solid rgba(75, 85, 99, 0.5); /* border-gray-600/50 */
-        }
-        .separator::before {
-            margin-right: 0.75rem;
-        }
-        .separator::after {
-            margin-left: 0.75rem;
+            flex: 1;
+            height: 1px;
+            background: rgba(75, 85, 99, 0.5);
         }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
     <div class="text-center max-w-lg w-full">
-        
-        <a href="../index.html" class="flex items-center justify-center mb-6">
-            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center p-2 opacity-90">
-                <img src="../img/logo.svg" alt="Nekotexs Logo" class="h-12 w-12">
+        <a href="../index.html" class="inline-block mb-8">
+            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto shadow-2xl">
+                <img src="../img/logo.svg" alt="Nekotexs Logo" class="h-14 w-14">
             </div>
         </a>
 
-        <h1 class="text-3xl md:text-4xl font-bold mb-8">
-            <span class="gradient-text">Register</span> Your Account
+        <h1 class="text-4xl md:text-5xl font-bold mb-10">
+            <span class="gradient-text">Register</span> Account
         </h1>
 
-        <div class="glass-card p-6 sm:p-8 w-full">
+        <div class="glass-card p-8 md:p-10">
 
-            <div id="message" class="hidden p-3 mb-4 text-sm rounded-lg text-left" role="alert"></div>
+            <div id="message" class="hidden p-4 mb-6 text-sm rounded-lg text-left" role="alert"></div>
 
-            <form id="registerForm" class="space-y-4">
+            <form id="registerForm" class="space-y-6">
+
+                <!-- Email & Password -->
+                <input type="email" id="email" placeholder="Email Address" required class="input-field">
                 
-                <!-- 1. Email и Пароль -->
-                <div>
-                    <input type="email" id="email" placeholder="Email Address" required class="input-field">
-                </div>
-                
-                <div>
-                    <input type="password" id="password" placeholder="Password (min 6 characters)" required class="input-field">
+                <input type="password" id="password" placeholder="Password (min 6 characters)" required minlength="6" class="input-field">
+
+                <!-- Separator -->
+                <div class="separator">
+                    <span>Solana Wallet Address</span>
                 </div>
 
-                <!-- 2. РАЗДЕЛИТЕЛЬ -->
-                <div class="separator text-gray-400 text-sm font-semibold">
-                    SOLANA WALLET ADDRESS
-                </div>
+                <!-- Wallet Input + Phantom Button -->
+                <div class="space-y-4">
+                    <input type="text" id="walletAddress" placeholder="Solana Wallet Address (required)" required class="input-field" readonly>
 
-                <!-- 3. Поле Кошелька и Phantom -->
-                <div class="space-y-3">
-                    <input type="text" id="walletAddress" placeholder="Solana Wallet Address (Required)" required class="input-field">
-                    
-                    <button type="button" id="phantomConnectBtn" class="w-full inline-flex items-center justify-center gap-2 bg-solana-purple text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition shadow-lg shadow-solana-purple/30">
-                        <img src="../img/phantom.svg" alt="Phantom Logo" class="h-6 w-6 phantom-logo"> Connect Phantom Wallet
+                    <button type="button" id="phantomConnectBtn" class="w-full flex items-center justify-center gap-3 bg-[#9945FF] hover:bg-[#7c3aed] text-white font-bold py-4 rounded-lg transition shadow-lg">
+                        <img src="../img/phantom.svg" alt="Phantom" class="h-7 w-7 phantom-logo">
+                        Connect Phantom Wallet
                     </button>
 
-                    <p class="text-xs text-gray-500 text-left">
-                        Wallet address is required for $NKTX distributions.
+                    <p class="text-xs text-gray-400 text-left">
+                        Wallet is required to receive $NKTX airdrops and rewards.
                     </p>
                 </div>
-                
-                <!-- 4. Кнопка Регистрации -->
-                <button type="submit" id="registerBtn" class="w-full mt-6 bg-solana-green text-black px-6 py-3 rounded-lg font-bold hover:bg-white transition shadow-[0_0_15px_rgba(20,241,149,0.5)] disabled:opacity-50" disabled>
+
+                <!-- Register Button -->
+                <button type="submit" id="registerBtn" disabled
+                    class="w-full bg-[#14F195] hover:bg-[#0fd68a] text-black font-bold py-4 rounded-lg transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
                     Register and Join Nekotexs
                 </button>
             </form>
 
-            <p class="text-gray-500 text-sm mt-4">
-                Already have an account? 
-                <a href="login.html" class="text-solana-green hover:underline font-semibold">Log In</a>
+            <p class="mt-8 text-gray-400 text-sm">
+                Already have an account?
+                <a href="login.html" class="text-[#14F195] hover:underline font-bold">Log In</a>
             </p>
         </div>
-        
     </div>
 
-    <script>
+    <!-- Firebase 10.x + Registration Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+            authDomain: "nekotexs.firebaseapp.com",
+            databaseURL: "https://nekotexs-default-rtdb.firebaseio.com",
+            projectId: "nekotexs",
+            storageBucket: "nekotexs.appspot.com",
+            messagingSenderId: "596436176972",
+            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Elements
         const form = document.getElementById('registerForm');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const walletInput = document.getElementById('walletAddress');
         const registerBtn = document.getElementById('registerBtn');
-        const phantomConnectBtn = document.getElementById('phantomConnectBtn');
+        const phantomBtn = document.getElementById('phantomConnectBtn');
         const messageDiv = document.getElementById('message');
 
-        // --- Utility Functions ---
+        // Utility: show message
+        const showMessage = (text, isError = false) => {
+            messageDiv.textContent = text;
+            messageDiv.className = `p-4 mb-6 text-sm rounded-lg text-left ${isError 
+                ? 'bg-red-900/70 text-red-200' 
+                : 'bg-green-900/70 text-green-200 font-semibold'}`;
+            messageDiv.classList.remove('hidden');
+            setTimeout(() => messageDiv.classList.add('hidden'), 8000);
+        };
 
-        function showMessage(text, isError = false) {
-            messageDiv.innerText = text;
-            messageDiv.className = `p-3 mb-4 text-sm rounded-lg text-left ${isError ? 'bg-red-900/50 text-red-300' : 'bg-solana-green/50 text-black font-semibold'}`;
-            messageDiv.style.display = 'block';
-        }
+        // Check if form is valid → enable button
+        const checkForm = () => {
+            const valid = emailInput.value.trim() &&
+                          &&
+                          passwordInput.value.length >= 6                       &&
+                          walletInput.value.trim();
+            registerBtn.disabled = !valid;
+        };
 
-        function isFormValid() {
-            // Проверяем, что все 3 обязательных поля заполнены
-            return emailInput.value && passwordInput.value.length >= 6 && walletInput.value;
-        }
+        [emailInput, passwordInput, walletInput].forEach(el => 
+            el.addEventListener('input', checkForm)
+        );
 
-        function toggleLoading(isLoading) {
-            registerBtn.disabled = isLoading || !isFormValid();
-            registerBtn.innerText = isLoading ? 'Processing...' : 'Register and Join Nekotexs';
-        }
-        
-        // Отслеживание изменений для активации/деактивации кнопки
-        [emailInput, passwordInput, walletInput].forEach(input => {
-            input.addEventListener('input', () => toggleLoading(false));
-        });
-
-        // --- Phantom Wallet Connection Logic ---
-
-        phantomConnectBtn.addEventListener('click', async () => {
-            if (!window.solana || !window.solana.isPhantom) {
-                showMessage("Phantom wallet not found. Please install the extension.", true);
+        // Phantom Wallet Connect
+        phantomBtn.addEventListener('click', async () => {
+            if (!window.solana?.isPhantom) {
+                showMessage("Phantom Wallet not detected. Please install the browser extension.", true);
                 return;
             }
-            toggleLoading(true);
 
             try {
+                phantomBtn.disabled = true;
+                phantomBtn.innerHTML = `<span class="animate-pulse">Connecting...</span>`;
+
                 const resp = await window.solana.connect();
-                const publicKey = resp.publicKey.toString();
-                
-                walletInput.value = publicKey;
-                showMessage("Wallet connected successfully! Ready to register.", false);
+                const address = resp.publicKey.toString();
+
+                walletInput.value = address;
+                showMessage("Phantom wallet connected successfully!", false);
+                checkForm();
 
             } catch (err) {
                 console.error(err);
-                showMessage("Failed to connect wallet: " + err.message, true);
+                showMessage("Connection failed: " + (err.message || "Unknown error"), true);
+            } finally {
+                phantomBtn.disabled = false;
+                phantomBtn.innerHTML = `
+                    <img src="../img/phantom.svg" alt="Phantom" class="h-7 w-7 phantom-logo">
+                    Connect Phantom Wallet
+                `;
             }
-            toggleLoading(false);
         });
 
-        // --- Form Submission / Firebase Registration ---
-
+        // Registration
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (!isFormValid()) {
-                 showMessage("Please fill in all required fields (Email, Password >= 6 chars, and Wallet Address).", true);
-                 return;
-            }
-            
-            toggleLoading(true);
-            messageDiv.style.display = 'none';
+            registerBtn.disabled = true;
+            registerBtn.textContent = "Creating account...";
 
-            const email = emailInput.value;
+            const email = emailInput.value.trim();
             const password = passwordInput.value;
-            const wallet = walletInput.value;
+            const wallet = walletInput.value.trim();
 
             try {
-                // 1. Firebase Authentication: Create user
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
+                // Create user in Firebase Auth
+                const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
-                // 2. Firestore: Save wallet address
-                await db.collection('users').doc(user.uid).set({
+                // Save wallet to Firestore
+                await setDoc(doc(db, "users", user.uid), {
                     email: email,
                     walletAddress: wallet,
-                    registeredAt: firebase.firestore.FieldValue.serverTimestamp()
+                    registeredAt: serverTimestamp(),
+                    uid: user.uid
                 });
 
-                showMessage("Registration successful! Redirecting to login...", false);
-                
-                // Перенаправление на login.html после регистрации
+                showMessage("Registration successful! Redirecting...", false);
                 setTimeout(() => {
-                    window.location.href = 'login.html';
+                    window.location.href = "login.html";
                 }, 1500);
 
             } catch (error) {
-                console.error("Firebase Error:", error.code, error.message);
-                
-                let errorMessage = "Registration failed. Please try again.";
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = "This email is already registered.";
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = "The email address is invalid.";
-                } else {
-                    errorMessage = `Error: ${error.message}`;
-                }
+                console.error(error);
+                let msg = "Registration failed. Try again.";
 
-                showMessage(errorMessage, true);
-                toggleLoading(false); // Снимаем загрузку только при ошибке
+                if (error.code === 'auth/email-already-in-use') msg = "This email is already registered.";
+                else if (error.code === 'auth/invalid-email') msg = "Invalid email address.";
+                else if (error.code === 'auth/weak-password') msg = "Password too weak (min 6 characters).";
+
+                showMessage(msg, true);
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.textContent = "Register and Join Nekotexs";
             }
         });
-        
-        // Первоначальная проверка состояния кнопки при загрузке
-        toggleLoading(false);
+
+        // Initial check
+        checkForm();
     </script>
 </body>
 </html>
