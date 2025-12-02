@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Nekotexs ($NKTX)</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Nekotexs — Dashboard</title>
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -12,72 +16,65 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Space Grotesk', 'sans-serif'] },
+                    fontFamily: { sans: ['Space Grotesk','sans-serif'] },
                     colors: {
                         solana: { purple: '#9945FF', green: '#14F195', dark: '#1B1B1B' }
                     },
-                    animation: {
-                        'fade-in-up': 'fadeInUp 0.5s ease-out',
-                    },
+                    animation: { 'fade-in-up': 'fadeInUp .45s ease-out' },
                     keyframes: {
                         fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(10px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                            '0%': { opacity: '0', transform: 'translateY(8px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
                         }
                     }
                 }
             }
         }
     </script>
-    
+
     <style>
+        html,body { height:100%; }
         body {
+            font-family: 'Space Grotesk', sans-serif;
             background-color: #0f172a;
-            color: #ffffff;
-            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 80%);
-            min-height: 100vh;
+            color: #fff;
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%);
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
         }
         .gradient-text {
             background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            background-clip:text;
         }
         .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.06);
             border-radius: 1rem;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
-        /* Скроллбар для таблицы */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-        /* Toast уведомление */
-        #toast-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 100;
-        }
+        ::-webkit-scrollbar { width:8px; height:8px; }
+        ::-webkit-scrollbar-thumb { background:#334155; border-radius:6px; }
+        /* small helpers */
+        .glow { box-shadow: 0 6px 30px rgba(153,69,255,0.12), 0 2px 10px rgba(20,241,149,0.06); }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
+    <!-- NAV (копия стиля главной) -->
     <nav class="w-full py-5 px-4 md:px-12 flex justify-between items-center max-w-7xl mx-auto relative z-50">
         <div class="flex items-center gap-3">
             <a href="index.html" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1 transition-transform group-hover:rotate-12">
-                    <img src="img/logo.svg" alt="Nekotexs" class="h-7 w-7">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 transition-transform group-hover:rotate-12">
+                    <img src="img/logo.svg" alt="Nekotexs" class="h-8 w-8">
                 </div>
                 <span class="text-xl font-bold tracking-wider group-hover:text-solana-green transition">Nekotexs</span>
             </a>
         </div>
+
         <div class="flex items-center gap-4">
-            <button onclick="claimBonus()" id="dailyBonusBtn" class="hidden md:flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded-full hover:bg-yellow-500 hover:text-black transition">
+            <button id="dailyBonusBtn" onclick="claimBonus()" class="hidden md:flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded-full hover:bg-yellow-500 hover:text-black transition">
                 <i class="fa-solid fa-gift"></i> Daily Bonus
             </button>
             <button id="disconnectBtn" class="text-gray-400 hover:text-white text-sm transition font-semibold">
@@ -85,9 +82,11 @@
             </button>
         </div>
     </nav>
-    
-    <main class="max-w-7xl mx-auto px-4 py-6 pb-20 animate-fade-in-up">
-        
+
+    <!-- MAIN -->
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-1 animate-fade-in-up">
+
+        <!-- Header -->
         <header class="mb-8 flex flex-col md:flex-row justify-between items-end gap-6 border-b border-gray-800 pb-8">
             <div>
                 <div class="flex items-center gap-2 mb-1">
@@ -99,18 +98,19 @@
                 </h1>
                 <p id="welcomeMessage" class="text-gray-400 text-sm md:text-base font-mono">Loading data...</p>
             </div>
-            
-            <a href="trade.html" class="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-solana-purple to-solana-green rounded-xl font-bold text-lg text-white shadow-[0_0_20px_rgba(20,241,149,0.3)] hover:shadow-[0_0_30px_rgba(153,69,255,0.5)] hover:scale-105 transition transform flex items-center justify-center gap-3 group">
-                <i class="fa-solid fa-arrow-right-arrow-left group-hover:rotate-180 transition-transform duration-500"></i> 
+
+            <a href="trade.html" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-solana-purple to-solana-green rounded-xl font-bold text-white shadow-[0_0_20px_rgba(20,241,149,0.12)] hover:shadow-[0_0_30px_rgba(153,69,255,0.18)] transition transform flex items-center justify-center gap-3 group">
+                <i class="fa-solid fa-arrow-right-arrow-left group-hover:rotate-180 transition-transform duration-500"></i>
                 <span>TRADE $NKTX</span>
             </a>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-            
-            <div class="glass-card p-6 relative overflow-hidden group hover:border-solana-purple/50 transition duration-300">
-                <div class="absolute right-[-10px] top-[-10px] p-4 opacity-5 group-hover:opacity-10 transition">
-                    <i class="fa-brands fa-phantom text-9xl transform rotate-12"></i>
+        <!-- Top cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+
+            <div class="glass-card p-6 relative overflow-hidden group hover:border-solana-purple/40 transition duration-300 glow">
+                <div class="absolute right-[-16px] top-[-16px] p-4 opacity-5 group-hover:opacity-10 transition">
+                    <img src="img/phantom.png" class="w-28 opacity-20 rotate-12" alt="">
                 </div>
                 <div class="flex justify-between items-start mb-4">
                     <div>
@@ -127,9 +127,9 @@
                 </div>
             </div>
 
-            <div class="glass-card p-6 relative overflow-hidden group hover:border-solana-green/50 transition duration-300">
-                <div class="absolute right-[-10px] top-[-10px] p-4 opacity-5 group-hover:opacity-10 transition">
-                    <i class="fa-solid fa-robot text-9xl transform -rotate-12"></i>
+            <div class="glass-card p-6 relative overflow-hidden group hover:border-solana-green/40 transition duration-300 glow">
+                <div class="absolute right-[-10px] top-[-8px] p-4 opacity-5 group-hover:opacity-10 transition">
+                    <i class="fa-solid fa-robot text-9xl transform -rotate-6 opacity-10"></i>
                 </div>
                 <div class="flex justify-between items-start mb-4">
                     <div>
@@ -146,7 +146,7 @@
                 </div>
             </div>
 
-            <div class="glass-card p-6 flex flex-col justify-between hover:border-yellow-400/50 transition duration-300">
+            <div class="glass-card p-6 flex flex-col justify-between hover:border-yellow-400/50 transition duration-300 glow">
                 <div class="flex justify-between items-start">
                     <h2 class="text-gray-400 font-bold uppercase text-xs tracking-widest">Monthly Activity</h2>
                     <div class="bg-yellow-400/20 p-2 rounded-lg text-yellow-400">
@@ -155,57 +155,31 @@
                 </div>
                 <div class="mt-2">
                     <div class="flex justify-between items-end mb-2">
-                        <span class="text-3xl font-bold text-white" id="monthLogins">0</span>
+                        <span id="monthLogins" class="text-3xl font-bold text-white">0</span>
                         <span class="text-xs text-gray-500 mb-1">logins</span>
                     </div>
                     <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                        <div class="bg-gradient-to-r from-yellow-600 to-yellow-400 h-1.5 rounded-full" style="width: 35%"></div>
+                        <div id="activityBar" class="bg-gradient-to-r from-yellow-600 to-yellow-400 h-1.5 rounded-full" style="width: 35%"></div>
                     </div>
                     <p class="text-xs text-gray-500 mt-3 flex items-center gap-1">
                         <i class="fa-regular fa-clock"></i> Last: <span id="lastLoginTime">...</span>
                     </p>
                 </div>
             </div>
+
         </div>
 
-        <div class="glass-card p-1 bg-gradient-to-r from-solana-purple/20 via-transparent to-solana-green/20 mb-8">
-            <div class="bg-[#0f172a]/90 backdrop-blur-xl p-6 md:p-8 rounded-[0.9rem] flex flex-col md:flex-row items-center justify-between gap-8">
-                <div class="flex-1">
-                    <h3 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-users text-solana-green"></i> Invite Friends
-                    </h3>
-                    <p class="text-gray-400 text-sm mb-6">Earn <span class="text-solana-green font-bold">5%</span> of your friends' mining rewards forever! Share your unique link below.</p>
-                    
-                    <div class="flex items-center gap-2 bg-black/50 p-2 pl-4 rounded-lg border border-gray-700 w-full max-w-lg">
-                        <input type="text" id="referralLink" readonly class="bg-transparent border-none outline-none w-full text-gray-300 font-mono text-sm" value="Loading...">
-                        <button onclick="copyToClipboard('referralLink', 'Referral Link Copied!')" class="bg-solana-purple hover:bg-white hover:text-black text-white px-4 py-2 rounded-md font-bold text-sm transition shadow-lg">
-                            Copy
-                        </button>
-                    </div>
-                </div>
-                <div class="flex gap-8 text-center border-l border-gray-700 pl-8 hidden md:flex">
-                    <div>
-                        <div class="text-3xl font-bold text-white">0</div>
-                        <div class="text-xs text-gray-500 uppercase tracking-widest mt-1">Referrals</div>
-                    </div>
-                    <div>
-                        <div class="text-3xl font-bold text-solana-green">0.00</div>
-                        <div class="text-xs text-gray-500 uppercase tracking-widest mt-1">Earned</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Invite + Tx -->
+        <div class="grid lg:grid-cols-3 gap-8 mb-8">
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            <div class="lg:col-span-2 glass-card p-6">
+            <div class="lg:col-span-2 glass-card p-6 glow">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-bold flex items-center gap-2">
                         <i class="fa-solid fa-list-ul text-gray-400"></i> Recent Transactions
                     </h3>
-                    <button class="text-xs text-solana-purple hover:underline">View All</button>
+                    <button class="text-xs text-solana-purple hover:underline" id="viewAllTx">View All</button>
                 </div>
-                
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -226,8 +200,7 @@
             </div>
 
             <div class="flex flex-col gap-6">
-                
-                <div class="glass-card p-6 border-t-2 border-solana-green">
+                <div class="glass-card p-6 border-t-2 border-solana-green glow">
                     <h3 class="text-sm font-bold uppercase text-gray-400 mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-plug"></i> Connect Extension
                     </h3>
@@ -235,39 +208,73 @@
                         <input type="password" id="extensionCode" readonly class="bg-transparent w-full text-solana-green font-mono font-bold tracking-widest text-sm outline-none" value="...">
                         <div class="flex gap-2">
                             <button onclick="toggleCode()" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-eye" id="eyeIcon"></i></button>
-                            <button onclick="copyToClipboard('extensionCode', 'Code Copied!')" class="text-gray-500 hover:text-solana-green transition"><i class="fa-solid fa-copy"></i></button>
+                            <button onclick="copyToClipboard('extensionCode','Code Copied!')" class="text-gray-500 hover:text-solana-green transition"><i class="fa-solid fa-copy"></i></button>
                         </div>
                     </div>
                     <p class="text-xs text-gray-600">Paste this secret code into the Nekotexs Browser Extension settings.</p>
                 </div>
 
-                <div class="glass-card p-6">
+                <div class="glass-card p-6 glow">
                     <h3 class="text-sm font-bold uppercase text-gray-400 mb-2">My Address</h3>
-                    <div class="flex items-center gap-2 cursor-pointer group" onclick="copyToClipboard('walletAddressVal', 'Address Copied!')">
+                    <div class="flex items-center gap-2 cursor-pointer group" onclick="copyToClipboard('walletAddressVal','Address Copied!')">
                         <input type="text" id="walletAddressVal" readonly class="bg-transparent border-none outline-none w-full text-gray-300 font-mono text-xs truncate group-hover:text-white transition" value="...">
                         <i class="fa-regular fa-copy text-gray-500 group-hover:text-solana-purple"></i>
                     </div>
                 </div>
 
-                <div class="glass-card p-6 bg-blue-900/10">
+                <div class="glass-card p-6 bg-blue-900/10 glow">
                     <h3 class="text-sm font-bold text-white mb-3">📢 Latest Update</h3>
                     <p class="text-xs text-gray-400 leading-relaxed mb-3">
                         Listing on Raydium is confirmed for <span class="text-white font-bold">Dec 15</span>. Prepare your wallets!
                     </p>
                     <a href="https://x.com/nekotexs_netw" target="_blank" class="text-xs text-solana-green hover:underline">Read on X (Twitter) &rarr;</a>
                 </div>
-
             </div>
+
         </div>
 
     </main>
 
-    <div id="toast-container"></div>
+    <!-- Toast container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50"></div>
 
+    <!-- FOOTER (как на сайте) -->
+    <footer class="border-t border-gray-800 bg-black pt-8 pb-6 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1">
+                    <img src="img/logo.svg" alt="Logo" class="h-6 w-6 grayscale opacity-50">
+                </div>
+                <span class="text-gray-500 font-bold">Nekotexs</span>
+            </div>
+
+            <div class="flex gap-6 items-center">
+                <a href="https://x.com/nekotexs_netw" target="_blank" class="text-gray-500 hover:text-white transition" title="X (Twitter)">
+                    <i class="fa-brands fa-x-twitter text-xl"></i>
+                </a>
+                <a href="#" class="text-gray-500 hover:text-white transition" title="Telegram">
+                    <i class="fa-brands fa-telegram text-xl"></i>
+                </a>
+                <a href="mailto:Nekotexs@gmx.com" class="text-gray-500 hover:text-white transition" title="Email Us">
+                    <i class="fa-solid fa-envelope text-xl"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto mt-8 pt-6 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center text-xs text-gray-600 font-mono">
+            <p>&copy; 2025 Nekotexs Project. All rights reserved.</p>
+            <p id="server-time" class="mt-2 md:mt-0 text-solana-green/70">Server Time (Loading...)</p>
+        </div>
+    </footer>
+
+    <!-- Firebase + Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import {
+            getFirestore, doc, getDoc, onSnapshot, collection, query, where, getDocs, orderBy, limit
+        } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
+        // === FIREBASE CONFIG (оставь свой или используй текущий) ===
         const firebaseConfig = {
             apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
             authDomain: "nekotexs.firebaseapp.com",
@@ -276,72 +283,201 @@
             messagingSenderId: "596436176972",
             appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const storedAddress = localStorage.getItem('nekotexs_wallet');
-
-        // Elements
+        // UI elements
         const walletBalEl = document.getElementById('walletBalance');
         const earnedBalEl = document.getElementById('earnedBalance');
         const walletAddrInput = document.getElementById('walletAddressVal');
         const extensionCodeInput = document.getElementById('extensionCode');
-        const referralLinkInput = document.getElementById('referralLink');
+        const referralLinkInput = document.getElementById('referralLink') || { value: '' };
         const welcomeMsg = document.getElementById('welcomeMessage');
         const monthLoginsEl = document.getElementById('monthLogins');
         const lastLoginTimeEl = document.getElementById('lastLoginTime');
         const txTableBody = document.getElementById('txTableBody');
+        const activityBar = document.getElementById('activityBar');
 
-        async function initDashboard() {
-            if (!storedAddress) {
-                window.location.href = "user/login.html";
-                return;
-            }
+        // wallet in localStorage key — пробуем оба (nekotexs_wallet и address)
+        const storedAddress = localStorage.getItem('nekotexs_wallet') || localStorage.getItem('address');
 
-            // 1. Basic UI Setup
-            walletAddrInput.value = storedAddress;
-            extensionCodeInput.value = storedAddress;
-            referralLinkInput.value = `https://nekotexs.com/register?ref=${storedAddress.slice(0,8)}`; // Генерация реф. ссылки
-            welcomeMsg.textContent = `Wallet Connected: ${storedAddress.slice(0,4)}...${storedAddress.slice(-4)}`;
-
-            // 2. Fetch Data
-            try {
-                const docRef = doc(db, "users", storedAddress);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    walletBalEl.textContent = (data.walletBalance || 0).toFixed(2);
-                    earnedBalEl.textContent = (data.earnedBalance || 0).toFixed(4);
-                    monthLoginsEl.textContent = data.monthlyLoginCount || 1;
-
-                    if (data.lastLogin && data.lastLogin.toDate) {
-                        lastLoginTimeEl.textContent = data.lastLogin.toDate().toLocaleDateString();
-                    }
-                }
-            } catch (e) {
-                console.error("Error loading data:", e);
-            }
-
-            // 3. Render Fake Transactions (пока нет реальной истории)
-            renderFakeTransactions();
+        if (!storedAddress) {
+            // нет адреса — перенаправляем на логин
+            window.location.href = "user/login.html";
         }
 
-        function renderFakeTransactions() {
-            // Эмуляция данных для красоты
-            const txs = [
-                { type: 'Mining Reward', status: 'Completed', date: 'Just now', amount: '+0.0042 NKTX', color: 'text-solana-green', icon: 'fa-hammer' },
-                { type: 'Daily Login', status: 'Completed', date: 'Today, 10:23', amount: '+1.0000 NKTX', color: 'text-yellow-400', icon: 'fa-gift' },
-                { type: 'Purchase', status: 'Pending', date: 'Yesterday', amount: '+500.00 NKTX', color: 'text-white', icon: 'fa-cart-shopping' },
-            ];
+        // fill some UI
+        walletAddrInput.value = storedAddress;
+        extensionCodeInput.value = storedAddress;
+        if (referralLinkInput) referralLinkInput.value = `https://nekotexs.com/register?ref=${storedAddress.slice(0,8)}`;
+        welcomeMsg.textContent = `Wallet Connected: ${storedAddress.slice(0,4)}...${storedAddress.slice(-4)}`;
 
+        // Utility: format date safely
+        function formatDateField(v) {
+            if (!v) return "—";
+            if (v.toDate) {
+                return v.toDate().toLocaleString();
+            }
+            // if Firestore stored as ISO string or plain string
+            try { return new Date(v).toLocaleString(); } catch(e) { return String(v); }
+        }
+
+        // Try: 1) onSnapshot of doc(users/<wallet>)  2) if not found -> query where walletAddress == storedAddress
+        (async function connectUserLive() {
+            const userDocRef = doc(db, "users", storedAddress);
+
+            // first, check direct doc
+            try {
+                const snap = await getDoc(userDocRef);
+                if (snap.exists()) {
+                    // listen live
+                    onSnapshot(userDocRef, uSnap => {
+                        if (!uSnap.exists()) return;
+                        const data = uSnap.data();
+                        applyUserData(data);
+                    });
+                } else {
+                    // fallback: search by field walletAddress
+                    const usersCol = collection(db, "users");
+                    const q = query(usersCol, where("walletAddress", "==", storedAddress), limit(1));
+                    const qSnap = await getDocs(q);
+                    if (qSnap.empty) {
+                        console.warn("User document not found by ID or by walletAddress. Using defaults.");
+                        renderFakeTransactions();
+                        return;
+                    }
+                    const docRefFound = qSnap.docs[0].ref;
+                    // listen live on found reference
+                    onSnapshot(docRefFound, uSnap => {
+                        if (!uSnap.exists()) return;
+                        const data = uSnap.data();
+                        applyUserData(data);
+                    });
+                }
+            } catch (err) {
+                console.error("Firestore user load error:", err);
+                renderFakeTransactions();
+            }
+        })();
+
+        // Apply user data to UI
+        function applyUserData(data) {
+            // handle several possible field names (nkTxBalance, walletBalance, earnedBalance)
+            const walletBalance = data.walletBalance ?? data.nkTxBalance ?? 0;
+            const earned = data.earnedBalance ?? data.miningBalance ?? 0;
+            const loginCount = data.loginCount ?? data.loginCountMonthly ?? data.loginCount || data.loginCount === 0 ? data.loginCount : (data.loginCountMonthly || data.loginCount || 0);
+
+            walletBalEl.textContent = Number(walletBalance || 0).toFixed(2);
+            earnedBalEl.textContent = Number(earned || 0).toFixed(4);
+            monthLoginsEl.textContent = loginCount || 0;
+
+            // lastLogin may be timestamp or string
+            lastLoginTimeEl.textContent = formatDateField(data.lastLogin);
+
+            // activity bar width (simple heuristic)
+            const pct = Math.min(100, (loginCount || 0) * 3);
+            activityBar.style.width = pct + "%";
+
+            // extension & referral fields
+            if (data.extensionCode) extensionCodeInput.value = data.extensionCode;
+            if (data.walletAddress) walletAddrInput.value = data.walletAddress;
+            if (data.referralCode && referralLinkInput) referralLinkInput.value = `https://nekotexs.com/register?ref=${data.referralCode}`;
+        }
+
+        // Transactions listener (if exists)
+        (async function connectTxLive() {
+            try {
+                // Try direct subcollection (users/<wallet>/transactions)
+                const directTxCol = collection(db, "users", storedAddress, "transactions");
+                // We'll try a query and subscribe with onSnapshot if the collection exists server-side.
+                // Firestore doesn't error on non-existing collections, but onSnapshot works when there are docs.
+                const txQ = query(directTxCol, orderBy("createdAt", "desc"), limit(12));
+                onSnapshot(txQ, snap => {
+                    if (!snap.empty) {
+                        renderTxFromSnap(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+                    } else {
+                        // fallback: global /transactions where owner == storedAddress
+                        fallbackTxQuery();
+                    }
+                }, err => {
+                    console.warn("tx onSnapshot error, fallback:", err);
+                    fallbackTxQuery();
+                });
+            } catch (e) {
+                console.warn("connectTxLive error:", e);
+                fallbackTxQuery();
+            }
+        })();
+
+        async function fallbackTxQuery() {
+            try {
+                const allTxCol = collection(db, "transactions");
+                const q = query(allTxCol, where("owner", "==", storedAddress), orderBy("createdAt", "desc"), limit(12));
+                const snap = await getDocs(q);
+                if (!snap.empty) {
+                    renderTxFromSnap(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+                    // also set up onSnapshot
+                    onSnapshot(q, s => {
+                        renderTxFromSnap(s.docs.map(d => ({ id: d.id, ...d.data() })));
+                    });
+                } else {
+                    // no txs found -> fake
+                    renderFakeTransactions();
+                }
+            } catch (e) {
+                console.error("fallbackTxQuery error:", e);
+                renderFakeTransactions();
+            }
+        }
+
+        function renderTxFromSnap(items) {
+            if (!items || items.length === 0) {
+                txTableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-gray-500">No transactions yet</td></tr>`;
+                return;
+            }
+            let html = "";
+            items.forEach(tx => {
+                const date = tx.createdAt ? (tx.createdAt.toDate ? tx.createdAt.toDate().toLocaleString() : new Date(tx.createdAt).toLocaleString()) : (tx.date || '—');
+                const amount = tx.amount ?? tx.value ?? 0;
+                const positive = Number(amount) > 0;
+                html += `
+                    <tr class="border-b border-gray-800/50 hover:bg-white/5 transition">
+                        <td class="py-4 flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs ${positive ? 'text-solana-green' : 'text-red-400'}">
+                                <i class="fa-solid fa-${tx.type && tx.type.toLowerCase().includes('min') ? 'hammer' : (tx.type && tx.type.toLowerCase().includes('gift') ? 'gift' : 'circle') }"></i>
+                            </div>
+                            <span>${tx.type || 'Transaction'}</span>
+                        </td>
+                        <td class="py-4">
+                            <span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${tx.status === 'Completed' ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}">
+                                ${tx.status || 'Pending'}
+                            </span>
+                        </td>
+                        <td class="py-4 text-gray-500">${date}</td>
+                        <td class="py-4 text-right font-mono font-bold ${positive ? 'text-solana-green' : 'text-red-400'}">
+                            ${positive ? '+' : ''}${amount} NKTX
+                        </td>
+                    </tr>
+                `;
+            });
+            txTableBody.innerHTML = html;
+        }
+
+        // Render some fake txs when nothing exists (keeps UI pretty)
+        function renderFakeTransactions() {
+            const txs = [
+                { type: 'Mining Reward', status: 'Completed', date: 'Just now', amount: '+0.0042 NKTX' },
+                { type: 'Daily Login', status: 'Completed', date: 'Today, 10:23', amount: '+1.0000 NKTX' },
+                { type: 'Purchase', status: 'Pending', date: 'Yesterday', amount: '+500.00 NKTX' },
+            ];
             let html = '';
             txs.forEach(tx => {
                 html += `
                     <tr class="border-b border-gray-800/50 hover:bg-white/5 transition">
                         <td class="py-4 flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs ${tx.color}">
-                                <i class="fa-solid ${tx.icon}"></i>
+                            <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs text-white">
+                                <i class="fa-solid fa-circle"></i>
                             </div>
                             <span>${tx.type}</span>
                         </td>
@@ -351,39 +487,39 @@
                             </span>
                         </td>
                         <td class="py-4 text-gray-500">${tx.date}</td>
-                        <td class="py-4 text-right font-mono font-bold ${tx.color}">${tx.amount}</td>
+                        <td class="py-4 text-right font-mono font-bold text-solana-green">${tx.amount}</td>
                     </tr>
                 `;
             });
             txTableBody.innerHTML = html;
         }
 
-        // --- Утилиты ---
-
-        // Копирование с Toast уведомлением
-        window.copyToClipboard = (elementId, msg = 'Copied to clipboard!') => {
-            const el = document.getElementById(elementId);
-            if(el.select) { el.select(); el.setSelectionRange(0,99999); navigator.clipboard.writeText(el.value); }
-            else { navigator.clipboard.writeText(el.textContent); }
-            
-            showToast(msg);
+        // Copy utils
+        window.copyToClipboard = (elementId, msg = 'Copied!') => {
+            try {
+                const el = document.getElementById(elementId);
+                const text = el?.value ?? el?.textContent ?? '';
+                navigator.clipboard.writeText(text);
+                showToast(msg);
+            } catch (e) {
+                console.error('copy failed', e);
+                showToast('Copy failed');
+            }
         };
 
-        // Тоаст уведомление (Popup)
         function showToast(message) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = "mb-3 bg-gray-900 border border-solana-green/50 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 animate-fade-in-up";
             toast.innerHTML = `<i class="fa-solid fa-circle-check text-solana-green"></i> <span>${message}</span>`;
-            
             container.appendChild(toast);
             setTimeout(() => {
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 500);
-            }, 3000);
+            }, 2500);
         }
 
-        // Показать/Скрыть код
+        // toggle code show/hide
         window.toggleCode = () => {
             const input = document.getElementById('extensionCode');
             const icon = document.getElementById('eyeIcon');
@@ -391,22 +527,30 @@
             else { input.type = "password"; icon.className = "fa-solid fa-eye"; }
         };
 
-        // Daily Bonus (Заглушка)
+        // daily bonus stub (safe: demonstrates update + toast)
         window.claimBonus = () => {
             const btn = document.getElementById('dailyBonusBtn');
             btn.innerHTML = '<i class="fa-solid fa-check"></i> Claimed!';
             btn.classList.add('bg-green-500', 'text-black', 'border-transparent');
             btn.classList.remove('text-yellow-400');
             showToast("Daily Bonus +1.0 NKTX added!");
+            // (Реальное обновление в БД добавляй через cloud function / secure endpoint)
         };
 
-        // Logout
+        // logout
         document.getElementById('disconnectBtn').addEventListener('click', () => {
             localStorage.removeItem('nekotexs_wallet');
+            localStorage.removeItem('address');
             window.location.href = "index.html";
         });
 
-        initDashboard();
+        // Server time
+        function updateServerTime() {
+            const options = { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, year: 'numeric', month: 'numeric', day: 'numeric' };
+            const formatter = new Intl.DateTimeFormat([], options);
+            document.getElementById('server-time').innerText = `Server Time (Jerusalem +3): ${formatter.format(new Date())}`;
+        }
+        updateServerTime(); setInterval(updateServerTime, 1000);
     </script>
 </body>
 </html>
