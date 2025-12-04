@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login with Phantom | Nekotexs</title>
+    <title>Login | Nekotexs</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -38,28 +38,50 @@
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
-
     <div class="text-center max-w-md w-full">
         <a href="../index.html" class="inline-block mb-10">
             <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto shadow-2xl">
                 <img src="../img/logo.svg" alt="Nekotexs" class="h-14 w-14">
             </div>
         </a>
-
         <h1 class="text-5xl font-bold mb-4">
             <span class="gradient-text">Welcome</span> Back
         </h1>
-        <p class="text-gray-400 mb-12">Connect your Phantom wallet to continue</p>
+        <p class="text-gray-400 mb-12">Connect your wallet or enter address manually</p>
 
         <div class="glass p-10">
             <div id="message" class="hidden p-4 mb-6 text-sm rounded-lg text-left"></div>
 
-            <button id="phantomBtn" class="w-full flex items-center justify-center gap-4 bg-gradient-to-r from-[#9945FF] to-[#7c3aed] hover:from-[#7c3aed] hover:to-[#6d28d9] text-white font-bold text-lg py-5 rounded-xl transition-all shadow-xl">
+            <!-- Phantom Connect Button -->
+            <button id="phantomBtn" class="w-full flex items-center justify-center gap-4 bg-gradient-to-r from-[#9945FF] to-[#7c3aed] hover:from-[#7c3aed] hover:to-[#6d28d9] text-white font-bold text-lg py-5 rounded-xl transition-all shadow-xl mb-6">
                 <img src="../img/phantom.png" alt="Phantom" class="h-10 w-10">
                 <span id="btnText">Connect Phantom Wallet</span>
             </button>
 
-            <p class="mt-6 text-xs text-gray-500">
+            <!-- Divider -->
+            <div class="relative my-8">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-700"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-4 bg-[#0f172a] text-gray-500">Or</span>
+                </div>
+            </div>
+
+            <!-- Manual Address Input -->
+            <div class="space-y-4">
+                <input 
+                    type="text" 
+                    id="manualAddress" 
+                    placeholder="Enter your Solana address (base58)" 
+                    class="w-full px-5 py-4 bg-white/5 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-500 text-white"
+                />
+                <button id="manualBtn" class="w-full bg-gradient-to-r from-[#14F195] to-[#00d1b2] hover:from-[#00d1b2] hover:to-[#00b89f] text-black font-bold text-lg py-5 rounded-xl transition-all shadow-xl">
+                    Continue with Address
+                </button>
+            </div>
+
+            <p class="mt-8 text-xs text-gray-500">
                 By connecting you agree to our Terms and Privacy Policy
             </p>
         </div>
@@ -83,14 +105,39 @@
 
         const phantomBtn = document.getElementById('phantomBtn');
         const btnText = document.getElementById('btnText');
+        const manualAddressInput = document.getElementById('manualAddress');
+        const manualBtn = document.getElementById('manualBtn');
         const messageDiv = document.getElementById('message');
 
         const showMessage = (text, error = false) => {
             messageDiv.textContent = text;
             messageDiv.className = `p-4 mb-6 text-sm rounded-lg ${error ? 'bg-red-900/70 text-red-200' : 'bg-green-900/70 text-green-200 font-bold'}`;
             messageDiv.classList.remove('hidden');
+            setTimeout(() => messageDiv.classList.add('hidden'), 5000);
         };
 
+        // Функция обработки успешного входа (общая для обоих методов)
+        const handleSuccessfulLogin = async (walletAddress) => {
+            localStorage.setItem('nekotexs_wallet', walletAddress);
+
+            const userRef = doc(db, "users", walletAddress);
+            const userSnap = await getDoc(userRef);
+
+            const userData = {
+                walletAddress,
+                lastLogin: serverTimestamp(),
+                nkTxBalance: userSnap.exists() ? (userSnap.data().nkTxBalance || 0) : 0,
+                loginCount: userSnap.exists() ? (userSnap.data().loginCount || 0) + 1 : 1
+            };
+
+            await setDoc(userRef, userData, { merge: true });
+            showMessage("Success! Welcome back");
+            setTimeout(() => {
+                window.location.href = "../dash.html";
+            }, 1200);
+        };
+
+        // 1. Подключение через Phantom
         phantomBtn.addEventListener('click', async () => {
             if (!window.solana?.isPhantom) {
                 showMessage("Phantom wallet not detected. Install from phantom.app", true);
@@ -100,38 +147,52 @@
             try {
                 phantomBtn.disabled = true;
                 btnText.textContent = "Connecting...";
-
                 const resp = await window.solana.connect();
                 const walletAddress = resp.publicKey.toString();
-                
-                // === КРИТИЧЕСКАЯ СТРОКА: Сохраняем адрес для дашборда ===
-                localStorage.setItem('nekotexs_wallet', walletAddress); 
-
-                const userRef = doc(db, "users", walletAddress);
-                const userSnap = await getDoc(userRef);
-
-                const userData = {
-                    walletAddress,
-                    lastLogin: serverTimestamp(),
-                    nkTxBalance: userSnap.exists() ? (userSnap.data().nkTxBalance || 0) : 0,
-                    loginCount: userSnap.exists() ? (userSnap.data().loginCount || 0) + 1 : 1
-                };
-
-                // Сохраняем/обновляем пользователя по адресу кошелька
-                await setDoc(userRef, userData, { merge: true });
-
-                showMessage("Success! Welcome back", false);
-                setTimeout(() => {
-                    // === ПЕРЕНАПРАВЛЕНИЕ НА DASH.HTML ===
-                    window.location.href = "../dash.html"; 
-                }, 1200);
-
+                await handleSuccessfulLogin(walletAddress);
             } catch (err) {
                 console.error(err);
-                showMessage("Connection failed or cancelled", true);
+                showMessage("Connection cancelled or failed", true);
                 btnText.textContent = "Connect Phantom Wallet";
             } finally {
                 phantomBtn.disabled = false;
+            }
+        });
+
+        // 2. Ручной ввод адреса
+        manualBtn.addEventListener('click', async () => {
+            let address = manualAddressInput.value.trim();
+
+            if (!address) {
+                showMessage("Please enter your Solana address", true);
+                return;
+            }
+
+            // Базовая валидация base58 адреса Solana (длина 32-44 символа, только base58 символы)
+            const base58Regex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+            if (!base58Regex.test(address)) {
+                showMessage("Invalid Solana address. Please check and try again.", true);
+                return;
+            }
+
+            manualBtn.disabled = true;
+            manualBtn.textContent = "Verifying...";
+
+            try {
+                await handleSuccessfulLogin(address);
+            } catch (err) {
+                console.error(err);
+                showMessage("Something went wrong. Try again.", true);
+            } finally {
+                manualBtn.disabled = false;
+                manualBtn.textContent = "Continue with Address";
+            }
+        });
+
+        // Позволяем нажать Enter в поле ввода
+        manualAddressInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                manualBtn.click();
             }
         });
     </script>
