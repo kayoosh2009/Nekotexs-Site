@@ -1,3 +1,4 @@
+<!-- Rewritten clean version of the Dashboard page -->
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -12,117 +13,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import {
-    getFirestore, doc, getDoc, onSnapshot, collection,
-    query, where, orderBy, limit, getDocs
-} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
-    authDomain: "nekotexs.firebaseapp.com",
-    projectId: "nekotexs",
-    storageBucket: "nekotexs.firebasestorage.app",
-    messagingSenderId: "596436176972",
-    appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// UI elements
-const walletBalEl = document.getElementById('walletBalance');
-const earnedBalEl = document.getElementById('earnedBalance');
-const walletAddrInput = document.getElementById('walletAddressVal');
-const extensionCodeInput = document.getElementById('extensionCode');
-const welcomeMsg = document.getElementById('welcomeMessage');
-const monthLoginsEl = document.getElementById('monthLogins');
-const lastLoginTimeEl = document.getElementById('lastLoginTime');
-const txTableBody = document.getElementById('txTableBody');
-const activityBar = document.getElementById('activityBar');
-
-// wallet from login
-const storedAddress = localStorage.getItem('nekotexs_wallet');
-if (!storedAddress) {
-    window.location.href = "user/login.html";
-}
-
-// fill UI
-walletAddrInput.value = storedAddress;
-extensionCodeInput.value = storedAddress;
-welcomeMsg.textContent = `Wallet Connected: ${storedAddress.slice(0,4)}...${storedAddress.slice(-4)}`;
-
-// Format timestamp
-function fDate(v) {
-    if (!v) return "—";
-    if (v.toDate) return v.toDate().toLocaleString();
-    return new Date(v).toLocaleString();
-}
-
-// Load USER document live
-const ref = doc(db, "users", storedAddress);
-onSnapshot(ref, snap => {
-    if (!snap.exists()) return;
-    const d = snap.data();
-
-    walletBalEl.textContent = Number(d.nkTxBalance || 0).toFixed(2);
-    earnedBalEl.textContent = Number(d.earnedBalance || 0).toFixed(4);
-    monthLoginsEl.textContent = d.loginCount || 0;
-
-    lastLoginTimeEl.textContent = fDate(d.lastLogin);
-
-    activityBar.style.width = `${Math.min(100, (d.loginCount || 0) * 3)}%`;
-
-    if (d.extensionCode) extensionCodeInput.value = d.extensionCode;
-});
-
-// Load transactions
-const txQuery = query(
-    collection(db, "transactions"),
-    where("owner", "==", storedAddress),
-    orderBy("createdAt", "desc"),
-    limit(12)
-);
-
-onSnapshot(txQuery, snap => {
-    if (snap.empty) {
-        txTableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-gray-500">No transactions</td></tr>`;
-        return;
-    }
-
-    let html = "";
-    snap.forEach(doc => {
-        const tx = doc.data();
-        const amount = tx.amount || 0;
-        const isPlus = amount > 0;
-
-        html += `
-            <tr class="border-b border-gray-800/50 hover:bg-white/5 transition">
-                <td class="py-4 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs ${isPlus ? 'text-solana-green' : 'text-red-400'}">
-                        <i class="fa-solid fa-${tx.type?.includes('min') ? 'hammer' : 'circle'}"></i>
-                    </div>
-                    <span>${tx.type || 'Transaction'}</span>
-                </td>
-                <td class="py-4">
-                    <span class="px-2 py-1 rounded text-[10px] font-bold tracking-wider ${tx.status === 'Completed' ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}">
-                        ${tx.status || 'Pending'}
-                    </span>
-                </td>
-                <td class="py-4 text-gray-500">${fDate(tx.createdAt)}</td>
-                <td class="py-4 text-right font-mono font-bold ${isPlus ? 'text-solana-green' : 'text-red-400'}">
-                    ${isPlus ? '+' : ''}${amount} NKTX
-                </td>
-            </tr>
-        `;
-    });
-
-    txTableBody.innerHTML = html;
-});
-</script>
-
-
     <style>
         html,body { height:100%; }
         body {
@@ -130,14 +20,12 @@ onSnapshot(txQuery, snap => {
             background-color: #0f172a;
             color: #fff;
             background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%);
-            -webkit-font-smoothing:antialiased;
-            -moz-osx-font-smoothing:grayscale;
         }
         .gradient-text {
             background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
-            -webkit-background-clip:text;
-            -webkit-text-fill-color:transparent;
-            background-clip:text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         .glass-card {
             background: rgba(255,255,255,0.03);
@@ -147,13 +35,12 @@ onSnapshot(txQuery, snap => {
         }
         ::-webkit-scrollbar { width:8px; height:8px; }
         ::-webkit-scrollbar-thumb { background:#334155; border-radius:6px; }
-        /* small helpers */
         .glow { box-shadow: 0 6px 30px rgba(153,69,255,0.12), 0 2px 10px rgba(20,241,149,0.06); }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- NAV (копия стиля главной) -->
+    <!-- NAVBAR -->
     <nav class="w-full py-5 px-4 md:px-12 flex justify-between items-center max-w-7xl mx-auto relative z-50">
         <div class="flex items-center gap-3">
             <a href="index.html" class="flex items-center gap-3 group">
@@ -165,7 +52,7 @@ onSnapshot(txQuery, snap => {
         </div>
 
         <div class="flex items-center gap-4">
-            <button id="dailyBonusBtn" onclick="claimBonus()" class="hidden md:flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded-full hover:bg-yellow-500 hover:text-black transition">
+            <button id="dailyBonusBtn" class="hidden md:flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded-full hover:bg-yellow-500 hover:text-black transition">
                 <i class="fa-solid fa-gift"></i> Daily Bonus
             </button>
             <button id="disconnectBtn" class="text-gray-400 hover:text-white text-sm transition font-semibold">
@@ -174,10 +61,11 @@ onSnapshot(txQuery, snap => {
         </div>
     </nav>
 
-    <!-- MAIN -->
-    <main class="max-w-7xl mx-auto px-4 py-8 flex-1 animate-fade-in-up">
 
-        <!-- Header -->
+    <!-- MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-1">
+
+        <!-- HEADER -->
         <header class="mb-8 flex flex-col md:flex-row justify-between items-end gap-6 border-b border-gray-800 pb-8">
             <div>
                 <div class="flex items-center gap-2 mb-1">
@@ -190,18 +78,20 @@ onSnapshot(txQuery, snap => {
                 <p id="welcomeMessage" class="text-gray-400 text-sm md:text-base font-mono">Loading data...</p>
             </div>
 
-            <a href="trade.html" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-solana-purple to-solana-green rounded-xl font-bold text-white shadow-[0_0_20px_rgba(20,241,149,0.12)] hover:shadow-[0_0_30px_rgba(153,69,255,0.18)] transition transform flex items-center justify-center gap-3 group">
+            <a href="trade.html" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-solana-purple to-solana-green rounded-xl font-bold text-white shadow-lg hover:shadow-xl transition flex items-center justify-center gap-3 group">
                 <i class="fa-solid fa-arrow-right-arrow-left group-hover:rotate-180 transition-transform duration-500"></i>
                 <span>TRADE $NKTX</span>
             </a>
         </header>
 
-        <!-- Top cards -->
+
+        <!-- TOP CARDS -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
 
-            <div class="glass-card p-6 relative overflow-hidden group hover:border-solana-purple/40 transition duration-300 glow">
-                <div class="absolute right-[-16px] top-[-16px] p-4 opacity-5 group-hover:opacity-10 transition">
-                    <img src="img/phantom.png" class="w-28 opacity-20 rotate-12" alt="">
+            <!-- Wallet Card -->
+            <div class="glass-card p-6 relative glow">
+                <div class="absolute right-[-16px] top-[-16px] opacity-10">
+                    <img src="img/phantom.png" class="w-28 rotate-12" alt="">
                 </div>
                 <div class="flex justify-between items-start mb-4">
                     <div>
@@ -218,9 +108,10 @@ onSnapshot(txQuery, snap => {
                 </div>
             </div>
 
-            <div class="glass-card p-6 relative overflow-hidden group hover:border-solana-green/40 transition duration-300 glow">
-                <div class="absolute right-[-10px] top-[-8px] p-4 opacity-5 group-hover:opacity-10 transition">
-                    <i class="fa-solid fa-robot text-9xl transform -rotate-6 opacity-10"></i>
+            <!-- Mining Card -->
+            <div class="glass-card p-6 relative glow">
+                <div class="absolute right-[-10px] top-[-8px] opacity-10 text-white text-7xl">
+                    <i class="fa-solid fa-robot"></i>
                 </div>
                 <div class="flex justify-between items-start mb-4">
                     <div>
@@ -237,7 +128,8 @@ onSnapshot(txQuery, snap => {
                 </div>
             </div>
 
-            <div class="glass-card p-6 flex flex-col justify-between hover:border-yellow-400/50 transition duration-300 glow">
+            <!-- Activity Card -->
+            <div class="glass-card p-6 glow">
                 <div class="flex justify-between items-start">
                     <h2 class="text-gray-400 font-bold uppercase text-xs tracking-widest">Monthly Activity</h2>
                     <div class="bg-yellow-400/20 p-2 rounded-lg text-yellow-400">
@@ -250,7 +142,7 @@ onSnapshot(txQuery, snap => {
                         <span class="text-xs text-gray-500 mb-1">logins</span>
                     </div>
                     <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                        <div id="activityBar" class="bg-gradient-to-r from-yellow-600 to-yellow-400 h-1.5 rounded-full" style="width: 35%"></div>
+                        <div id="activityBar" class="bg-gradient-to-r from-yellow-600 to-yellow-400 h-1.5 rounded-full" style="width: 0%"></div>
                     </div>
                     <p class="text-xs text-gray-500 mt-3 flex items-center gap-1">
                         <i class="fa-regular fa-clock"></i> Last: <span id="lastLoginTime">...</span>
@@ -260,9 +152,11 @@ onSnapshot(txQuery, snap => {
 
         </div>
 
-        <!-- Invite + Tx -->
+
+        <!-- TRANSACTIONS + SIDE WIDGETS -->
         <div class="grid lg:grid-cols-3 gap-8 mb-8">
 
+            <!-- Recent Transactions -->
             <div class="lg:col-span-2 glass-card p-6 glow">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-bold flex items-center gap-2">
@@ -290,46 +184,52 @@ onSnapshot(txQuery, snap => {
                 </div>
             </div>
 
+            <!-- Right Side Widgets -->
             <div class="flex flex-col gap-6">
+
+                <!-- Extension Code -->
                 <div class="glass-card p-6 border-t-2 border-solana-green glow">
                     <h3 class="text-sm font-bold uppercase text-gray-400 mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-plug"></i> Connect Extension
                     </h3>
                     <div class="bg-black/40 p-3 rounded-lg border border-gray-700 flex items-center justify-between mb-2">
-                        <input type="password" id="extensionCode" readonly class="bg-transparent w-full text-solana-green font-mono font-bold tracking-widest text-sm outline-none" value="...">
+                        <input type="password" id="extensionCode" readonly class="bg-transparent w-full text-solana-green font-mono tracking-widest text-sm outline-none">
                         <div class="flex gap-2">
                             <button onclick="toggleCode()" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-eye" id="eyeIcon"></i></button>
-                            <button onclick="copyToClipboard('extensionCode','Code Copied!')" class="text-gray-500 hover:text-solana-green transition"><i class="fa-solid fa-copy"></i></button>
+                            <button onclick="copyToClipboard('extensionCode')" class="text-gray-500 hover:text-solana-green transition"><i class="fa-solid fa-copy"></i></button>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-600">Paste this secret code into the Nekotexs Browser Extension settings.</p>
+                    <p class="text-xs text-gray-600">Paste this secret code into the browser extension settings.</p>
                 </div>
 
+                <!-- Wallet Address -->
                 <div class="glass-card p-6 glow">
                     <h3 class="text-sm font-bold uppercase text-gray-400 mb-2">My Address</h3>
-                    <div class="flex items-center gap-2 cursor-pointer group" onclick="copyToClipboard('walletAddressVal','Address Copied!')">
-                        <input type="text" id="walletAddressVal" readonly class="bg-transparent border-none outline-none w-full text-gray-300 font-mono text-xs truncate group-hover:text-white transition" value="...">
+                    <div class="flex items-center gap-2 cursor-pointer group" onclick="copyToClipboard('walletAddressVal')">
+                        <input type="text" id="walletAddressVal" readonly class="bg-transparent w-full text-gray-300 font-mono text-xs truncate group-hover:text-white transition">
                         <i class="fa-regular fa-copy text-gray-500 group-hover:text-solana-purple"></i>
                     </div>
                 </div>
 
+                <!-- Latest Update -->
                 <div class="glass-card p-6 bg-blue-900/10 glow">
                     <h3 class="text-sm font-bold text-white mb-3">📢 Latest Update</h3>
                     <p class="text-xs text-gray-400 leading-relaxed mb-3">
-                        Listing on Raydium is confirmed for <span class="text-white font-bold">Dec 15</span>. Prepare your wallets!
+                        Listing on Raydium is confirmed for <span class="text-white font-bold">Dec 15</span>.
                     </p>
-                    <a href="https://x.com/nekotexs_netw" target="_blank" class="text-xs text-solana-green hover:underline">Read on X (Twitter) &rarr;</a>
+                    <a href="https://x.com/nekotexs_netw" target="_blank" class="text-xs text-solana-green hover:underline">Read on X →</a>
                 </div>
-            </div>
 
+            </div>
         </div>
 
     </main>
 
-    <!-- Toast container -->
+    <!-- TOAST CONTAINER -->
     <div id="toast-container" class="fixed bottom-6 right-6 z-50"></div>
 
-    <!-- FOOTER (как на сайте) -->
+
+    <!-- FOOTER -->
     <footer class="border-t border-gray-800 bg-black pt-8 pb-6 px-4">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
             <div class="flex items-center gap-3">
@@ -340,308 +240,18 @@ onSnapshot(txQuery, snap => {
             </div>
 
             <div class="flex gap-6 items-center">
-                <a href="https://x.com/nekotexs_netw" target="_blank" class="text-gray-500 hover:text-white transition" title="X (Twitter)">
-                    <i class="fa-brands fa-x-twitter text-xl"></i>
-                </a>
-                <a href="#" class="text-gray-500 hover:text-white transition" title="Telegram">
-                    <i class="fa-brands fa-telegram text-xl"></i>
-                </a>
-                <a href="mailto:Nekotexs@gmx.com" class="text-gray-500 hover:text-white transition" title="Email Us">
-                    <i class="fa-solid fa-envelope text-xl"></i>
-                </a>
+                <a href="https://x.com/nekotexs_netw" target="_blank" class="text-gray-500 hover:text-white transition"><i class="fa-brands fa-x-twitter text-xl"></i></a>
+                <a href="#" class="text-gray-500 hover:text-white transition"><i class="fa-brands fa-telegram text-xl"></i></a>
+                <a href="mailto:Nekotexs@gmx.com" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-envelope text-xl"></i></a>
             </div>
         </div>
 
         <div class="max-w-7xl mx-auto mt-8 pt-6 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center text-xs text-gray-600 font-mono">
-            <p>&copy; 2025 Nekotexs Project. All rights reserved.</p>
+            <p>© 2025 Nekotexs Project</p>
             <p id="server-time" class="mt-2 md:mt-0 text-solana-green/70">Server Time (Loading...)</p>
         </div>
     </footer>
 
-    <!-- Firebase + Logic -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-        import {
-            getFirestore, doc, getDoc, onSnapshot, collection, query, where, getDocs, orderBy, limit
-        } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-        // === FIREBASE CONFIG (оставь свой или используй текущий) ===
-        const firebaseConfig = {
-            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
-            authDomain: "nekotexs.firebaseapp.com",
-            projectId: "nekotexs",
-            storageBucket: "nekotexs.appspot.com",
-            messagingSenderId: "596436176972",
-            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // UI elements
-        const walletBalEl = document.getElementById('walletBalance');
-        const earnedBalEl = document.getElementById('earnedBalance');
-        const walletAddrInput = document.getElementById('walletAddressVal');
-        const extensionCodeInput = document.getElementById('extensionCode');
-        const referralLinkInput = document.getElementById('referralLink') || { value: '' };
-        const welcomeMsg = document.getElementById('welcomeMessage');
-        const monthLoginsEl = document.getElementById('monthLogins');
-        const lastLoginTimeEl = document.getElementById('lastLoginTime');
-        const txTableBody = document.getElementById('txTableBody');
-        const activityBar = document.getElementById('activityBar');
-
-        // wallet in localStorage key — пробуем оба (nekotexs_wallet и address)
-        const storedAddress = localStorage.getItem('nekotexs_wallet') || localStorage.getItem('address');
-
-        if (!storedAddress) {
-            // нет адреса — перенаправляем на логин
-            window.location.href = "user/login.html";
-        }
-
-        // fill some UI
-        walletAddrInput.value = storedAddress;
-        extensionCodeInput.value = storedAddress;
-        if (referralLinkInput) referralLinkInput.value = `https://nekotexs.com/register?ref=${storedAddress.slice(0,8)}`;
-        welcomeMsg.textContent = `Wallet Connected: ${storedAddress.slice(0,4)}...${storedAddress.slice(-4)}`;
-
-        // Utility: format date safely
-        function formatDateField(v) {
-            if (!v) return "—";
-            if (v.toDate) {
-                return v.toDate().toLocaleString();
-            }
-            // if Firestore stored as ISO string or plain string
-            try { return new Date(v).toLocaleString(); } catch(e) { return String(v); }
-        }
-
-        // Try: 1) onSnapshot of doc(users/<wallet>)  2) if not found -> query where walletAddress == storedAddress
-        (async function connectUserLive() {
-            const userDocRef = doc(db, "users", storedAddress);
-
-            // first, check direct doc
-            try {
-                const snap = await getDoc(userDocRef);
-                if (snap.exists()) {
-                    // listen live
-                    onSnapshot(userDocRef, uSnap => {
-                        if (!uSnap.exists()) return;
-                        const data = uSnap.data();
-                        applyUserData(data);
-                    });
-                } else {
-                    // fallback: search by field walletAddress
-                    const usersCol = collection(db, "users");
-                    const q = query(usersCol, where("walletAddress", "==", storedAddress), limit(1));
-                    const qSnap = await getDocs(q);
-                    if (qSnap.empty) {
-                        console.warn("User document not found by ID or by walletAddress. Using defaults.");
-                        renderFakeTransactions();
-                        return;
-                    }
-                    const docRefFound = qSnap.docs[0].ref;
-                    // listen live on found reference
-                    onSnapshot(docRefFound, uSnap => {
-                        if (!uSnap.exists()) return;
-                        const data = uSnap.data();
-                        applyUserData(data);
-                    });
-                }
-            } catch (err) {
-                console.error("Firestore user load error:", err);
-                renderFakeTransactions();
-            }
-        })();
-
-        // Apply user data to UI
-        function applyUserData(data) {
-            // handle several possible field names (nkTxBalance, walletBalance, earnedBalance)
-            const walletBalance = data.walletBalance ?? data.nkTxBalance ?? 0;
-            const earned = data.earnedBalance ?? data.miningBalance ?? 0;
-            const loginCount = data.loginCount ?? data.loginCountMonthly ?? data.loginCount || data.loginCount === 0 ? data.loginCount : (data.loginCountMonthly || data.loginCount || 0);
-
-            walletBalEl.textContent = Number(walletBalance || 0).toFixed(2);
-            earnedBalEl.textContent = Number(earned || 0).toFixed(4);
-            monthLoginsEl.textContent = loginCount || 0;
-
-            // lastLogin may be timestamp or string
-            lastLoginTimeEl.textContent = formatDateField(data.lastLogin);
-
-            // activity bar width (simple heuristic)
-            const pct = Math.min(100, (loginCount || 0) * 3);
-            activityBar.style.width = pct + "%";
-
-            // extension & referral fields
-            if (data.extensionCode) extensionCodeInput.value = data.extensionCode;
-            if (data.walletAddress) walletAddrInput.value = data.walletAddress;
-            if (data.referralCode && referralLinkInput) referralLinkInput.value = `https://nekotexs.com/register?ref=${data.referralCode}`;
-        }
-
-        // Transactions listener (if exists)
-        (async function connectTxLive() {
-            try {
-                // Try direct subcollection (users/<wallet>/transactions)
-                const directTxCol = collection(db, "users", storedAddress, "transactions");
-                // We'll try a query and subscribe with onSnapshot if the collection exists server-side.
-                // Firestore doesn't error on non-existing collections, but onSnapshot works when there are docs.
-                const txQ = query(directTxCol, orderBy("createdAt", "desc"), limit(12));
-                onSnapshot(txQ, snap => {
-                    if (!snap.empty) {
-                        renderTxFromSnap(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-                    } else {
-                        // fallback: global /transactions where owner == storedAddress
-                        fallbackTxQuery();
-                    }
-                }, err => {
-                    console.warn("tx onSnapshot error, fallback:", err);
-                    fallbackTxQuery();
-                });
-            } catch (e) {
-                console.warn("connectTxLive error:", e);
-                fallbackTxQuery();
-            }
-        })();
-
-        async function fallbackTxQuery() {
-            try {
-                const allTxCol = collection(db, "transactions");
-                const q = query(allTxCol, where("owner", "==", storedAddress), orderBy("createdAt", "desc"), limit(12));
-                const snap = await getDocs(q);
-                if (!snap.empty) {
-                    renderTxFromSnap(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-                    // also set up onSnapshot
-                    onSnapshot(q, s => {
-                        renderTxFromSnap(s.docs.map(d => ({ id: d.id, ...d.data() })));
-                    });
-                } else {
-                    // no txs found -> fake
-                    renderFakeTransactions();
-                }
-            } catch (e) {
-                console.error("fallbackTxQuery error:", e);
-                renderFakeTransactions();
-            }
-        }
-
-        function renderTxFromSnap(items) {
-            if (!items || items.length === 0) {
-                txTableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-gray-500">No transactions yet</td></tr>`;
-                return;
-            }
-            let html = "";
-            items.forEach(tx => {
-                const date = tx.createdAt ? (tx.createdAt.toDate ? tx.createdAt.toDate().toLocaleString() : new Date(tx.createdAt).toLocaleString()) : (tx.date || '—');
-                const amount = tx.amount ?? tx.value ?? 0;
-                const positive = Number(amount) > 0;
-                html += `
-                    <tr class="border-b border-gray-800/50 hover:bg-white/5 transition">
-                        <td class="py-4 flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs ${positive ? 'text-solana-green' : 'text-red-400'}">
-                                <i class="fa-solid fa-${tx.type && tx.type.toLowerCase().includes('min') ? 'hammer' : (tx.type && tx.type.toLowerCase().includes('gift') ? 'gift' : 'circle') }"></i>
-                            </div>
-                            <span>${tx.type || 'Transaction'}</span>
-                        </td>
-                        <td class="py-4">
-                            <span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${tx.status === 'Completed' ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}">
-                                ${tx.status || 'Pending'}
-                            </span>
-                        </td>
-                        <td class="py-4 text-gray-500">${date}</td>
-                        <td class="py-4 text-right font-mono font-bold ${positive ? 'text-solana-green' : 'text-red-400'}">
-                            ${positive ? '+' : ''}${amount} NKTX
-                        </td>
-                    </tr>
-                `;
-            });
-            txTableBody.innerHTML = html;
-        }
-
-        // Render some fake txs when nothing exists (keeps UI pretty)
-        function renderFakeTransactions() {
-            const txs = [
-                { type: 'Mining Reward', status: 'Completed', date: 'Just now', amount: '+0.0042 NKTX' },
-                { type: 'Daily Login', status: 'Completed', date: 'Today, 10:23', amount: '+1.0000 NKTX' },
-                { type: 'Purchase', status: 'Pending', date: 'Yesterday', amount: '+500.00 NKTX' },
-            ];
-            let html = '';
-            txs.forEach(tx => {
-                html += `
-                    <tr class="border-b border-gray-800/50 hover:bg-white/5 transition">
-                        <td class="py-4 flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs text-white">
-                                <i class="fa-solid fa-circle"></i>
-                            </div>
-                            <span>${tx.type}</span>
-                        </td>
-                        <td class="py-4">
-                            <span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${tx.status === 'Completed' ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}">
-                                ${tx.status}
-                            </span>
-                        </td>
-                        <td class="py-4 text-gray-500">${tx.date}</td>
-                        <td class="py-4 text-right font-mono font-bold text-solana-green">${tx.amount}</td>
-                    </tr>
-                `;
-            });
-            txTableBody.innerHTML = html;
-        }
-
-        // Copy utils
-        window.copyToClipboard = (elementId, msg = 'Copied!') => {
-            try {
-                const el = document.getElementById(elementId);
-                const text = el?.value ?? el?.textContent ?? '';
-                navigator.clipboard.writeText(text);
-                showToast(msg);
-            } catch (e) {
-                console.error('copy failed', e);
-                showToast('Copy failed');
-            }
-        };
-
-        function showToast(message) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = "mb-3 bg-gray-900 border border-solana-green/50 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 animate-fade-in-up";
-            toast.innerHTML = `<i class="fa-solid fa-circle-check text-solana-green"></i> <span>${message}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 500);
-            }, 2500);
-        }
-
-        // toggle code show/hide
-        window.toggleCode = () => {
-            const input = document.getElementById('extensionCode');
-            const icon = document.getElementById('eyeIcon');
-            if (input.type === "password") { input.type = "text"; icon.className = "fa-solid fa-eye-slash"; }
-            else { input.type = "password"; icon.className = "fa-solid fa-eye"; }
-        };
-
-        // daily bonus stub (safe: demonstrates update + toast)
-        window.claimBonus = () => {
-            const btn = document.getElementById('dailyBonusBtn');
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> Claimed!';
-            btn.classList.add('bg-green-500', 'text-black', 'border-transparent');
-            btn.classList.remove('text-yellow-400');
-            showToast("Daily Bonus +1.0 NKTX added!");
-            // (Реальное обновление в БД добавляй через cloud function / secure endpoint)
-        };
-
-        // logout
-        document.getElementById('disconnectBtn').addEventListener('click', () => {
-            localStorage.removeItem('nekotexs_wallet');
-            localStorage.removeItem('address');
-            window.location.href = "index.html";
-        });
-
-        // Server time
-        function updateServerTime() {
-            const options = { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, year: 'numeric', month: 'numeric', day: 'numeric' };
-            const formatter = new Intl.DateTimeFormat([], options);
-            document.getElementById('server-time').innerText = `Server Time (Jerusalem +3): ${formatter.format(new Date())}`;
-        }
-        updateServerTime(); setInterval(updateServerTime, 1000);
-    </script>
 </body>
 </html>
