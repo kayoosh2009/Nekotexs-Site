@@ -1,257 +1,204 @@
-<!-- Rewritten clean version of the Dashboard page -->
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Nekotexs — Dashboard</title>
-
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        html,body { height:100%; }
-        body {
-            font-family: 'Space Grotesk', sans-serif;
-            background-color: #0f172a;
-            color: #fff;
-            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%);
-        }
-        .gradient-text {
-            background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .glass-card {
-            background: rgba(255,255,255,0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 1rem;
-        }
-        ::-webkit-scrollbar { width:8px; height:8px; }
-        ::-webkit-scrollbar-thumb { background:#334155; border-radius:6px; }
-        .glow { box-shadow: 0 6px 30px rgba(153,69,255,0.12), 0 2px 10px rgba(20,241,149,0.06); }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nekotexs Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{background:#0f172a;font-family:'Space Grotesk',sans-serif;color:white;}
+.gradient-text{background:linear-gradient(90deg,#9945FF 0%,#14F195 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.glass{background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;}
+</style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen">
 
-    <!-- NAVBAR -->
-    <nav class="w-full py-5 px-4 md:px-12 flex justify-between items-center max-w-7xl mx-auto relative z-50">
-        <div class="flex items-center gap-3">
-            <a href="index.html" class="flex items-center gap-3 group">
-                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 transition-transform group-hover:rotate-12">
-                    <img src="img/logo.svg" alt="Nekotexs" class="h-8 w-8">
-                </div>
-                <span class="text-xl font-bold tracking-wider group-hover:text-solana-green transition">Nekotexs</span>
-            </a>
-        </div>
+<!-- NAVBAR -->
+<nav class="max-w-7xl mx-auto py-5 px-4 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+        <img src="img/logo.svg" class="w-12 h-12 bg-white rounded-full p-1" />
+        <span class="text-xl font-bold tracking-wider">Nekotexs</span>
+    </div>
+    <button id="logoutBtn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+</nav>
 
-        <div class="flex items-center gap-4">
-            <button id="dailyBonusBtn" class="hidden md:flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded-full hover:bg-yellow-500 hover:text-black transition">
-                <i class="fa-solid fa-gift"></i> Daily Bonus
-            </button>
-            <button id="disconnectBtn" class="text-gray-400 hover:text-white text-sm transition font-semibold">
-                <i class="fa-solid fa-right-from-bracket"></i> Logout
-            </button>
-        </div>
-    </nav>
+<!-- CONTENT -->
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <h1 class="text-4xl font-bold mb-1"><span class="gradient-text">Dashboard</span></h1>
+    <p id="welcomeUser" class="text-gray-400 font-mono mb-6">Loading...</p>
 
-
-    <!-- MAIN CONTENT -->
-    <main class="max-w-7xl mx-auto px-4 py-8 flex-1">
-
-        <!-- HEADER -->
-        <header class="mb-8 flex flex-col md:flex-row justify-between items-end gap-6 border-b border-gray-800 pb-8">
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="inline-block w-2 h-2 rounded-full bg-solana-green animate-pulse"></span>
-                    <span class="text-xs text-solana-green font-mono uppercase">System Online</span>
-                </div>
-                <h1 class="text-3xl md:text-5xl font-bold mb-2">
-                    <span class="gradient-text">Dashboard</span> Area
-                </h1>
-                <p id="welcomeMessage" class="text-gray-400 text-sm md:text-base font-mono">Loading data...</p>
-            </div>
-
-            <a href="trade.html" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-solana-purple to-solana-green rounded-xl font-bold text-white shadow-lg hover:shadow-xl transition flex items-center justify-center gap-3 group">
-                <i class="fa-solid fa-arrow-right-arrow-left group-hover:rotate-180 transition-transform duration-500"></i>
-                <span>TRADE $NKTX</span>
-            </a>
-        </header>
-
-
-        <!-- TOP CARDS -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-
-            <!-- Wallet Card -->
-            <div class="glass-card p-6 relative glow">
-                <div class="absolute right-[-16px] top-[-16px] opacity-10">
-                    <img src="img/phantom.png" class="w-28 rotate-12" alt="">
-                </div>
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <h2 class="text-gray-400 font-bold uppercase text-xs tracking-widest mb-1">Wallet Balance</h2>
-                        <span class="text-[10px] bg-gray-800 text-gray-400 px-2 py-0.5 rounded">Purchased</span>
-                    </div>
-                    <div class="bg-solana-purple/20 p-2 rounded-lg text-solana-purple">
-                        <i class="fa-solid fa-wallet"></i>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <span id="walletBalance" class="text-3xl md:text-4xl font-bold text-white">0.00</span>
-                    <span class="text-sm text-gray-500 font-bold">$NKTX</span>
-                </div>
-            </div>
-
-            <!-- Mining Card -->
-            <div class="glass-card p-6 relative glow">
-                <div class="absolute right-[-10px] top-[-8px] opacity-10 text-white text-7xl">
-                    <i class="fa-solid fa-robot"></i>
-                </div>
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <h2 class="text-gray-400 font-bold uppercase text-xs tracking-widest mb-1">Mining Balance</h2>
-                        <span class="text-[10px] bg-gray-800 text-gray-400 px-2 py-0.5 rounded">Extension</span>
-                    </div>
-                    <div class="bg-solana-green/20 p-2 rounded-lg text-solana-green">
-                        <i class="fa-solid fa-hammer"></i>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <span id="earnedBalance" class="text-3xl md:text-4xl font-bold text-solana-green">0.0000</span>
-                    <span class="text-sm text-gray-500 font-bold">$NKTX</span>
-                </div>
-            </div>
-
-            <!-- Activity Card -->
-            <div class="glass-card p-6 glow">
-                <div class="flex justify-between items-start">
-                    <h2 class="text-gray-400 font-bold uppercase text-xs tracking-widest">Monthly Activity</h2>
-                    <div class="bg-yellow-400/20 p-2 rounded-lg text-yellow-400">
-                        <i class="fa-solid fa-chart-line"></i>
-                    </div>
-                </div>
-                <div class="mt-2">
-                    <div class="flex justify-between items-end mb-2">
-                        <span id="monthLogins" class="text-3xl font-bold text-white">0</span>
-                        <span class="text-xs text-gray-500 mb-1">logins</span>
-                    </div>
-                    <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                        <div id="activityBar" class="bg-gradient-to-r from-yellow-600 to-yellow-400 h-1.5 rounded-full" style="width: 0%"></div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-3 flex items-center gap-1">
-                        <i class="fa-regular fa-clock"></i> Last: <span id="lastLoginTime">...</span>
-                    </p>
-                </div>
-            </div>
-
-        </div>
-
-
-        <!-- TRANSACTIONS + SIDE WIDGETS -->
-        <div class="grid lg:grid-cols-3 gap-8 mb-8">
-
-            <!-- Recent Transactions -->
-            <div class="lg:col-span-2 glass-card p-6 glow">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-list-ul text-gray-400"></i> Recent Transactions
-                    </h3>
-                    <button class="text-xs text-solana-purple hover:underline" id="viewAllTx">View All</button>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-xs text-gray-500 border-b border-gray-800 uppercase tracking-wider">
-                                <th class="py-3 font-medium">Type</th>
-                                <th class="py-3 font-medium">Status</th>
-                                <th class="py-3 font-medium">Date</th>
-                                <th class="py-3 font-medium text-right">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm text-gray-300" id="txTableBody">
-                            <tr>
-                                <td colspan="4" class="py-4 text-center text-gray-500">Loading history...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Right Side Widgets -->
-            <div class="flex flex-col gap-6">
-
-                <!-- Extension Code -->
-                <div class="glass-card p-6 border-t-2 border-solana-green glow">
-                    <h3 class="text-sm font-bold uppercase text-gray-400 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-plug"></i> Connect Extension
-                    </h3>
-                    <div class="bg-black/40 p-3 rounded-lg border border-gray-700 flex items-center justify-between mb-2">
-                        <input type="password" id="extensionCode" readonly class="bg-transparent w-full text-solana-green font-mono tracking-widest text-sm outline-none">
-                        <div class="flex gap-2">
-                            <button onclick="toggleCode()" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-eye" id="eyeIcon"></i></button>
-                            <button onclick="copyToClipboard('extensionCode')" class="text-gray-500 hover:text-solana-green transition"><i class="fa-solid fa-copy"></i></button>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-600">Paste this secret code into the browser extension settings.</p>
-                </div>
-
-                <!-- Wallet Address -->
-                <div class="glass-card p-6 glow">
-                    <h3 class="text-sm font-bold uppercase text-gray-400 mb-2">My Address</h3>
-                    <div class="flex items-center gap-2 cursor-pointer group" onclick="copyToClipboard('walletAddressVal')">
-                        <input type="text" id="walletAddressVal" readonly class="bg-transparent w-full text-gray-300 font-mono text-xs truncate group-hover:text-white transition">
-                        <i class="fa-regular fa-copy text-gray-500 group-hover:text-solana-purple"></i>
-                    </div>
-                </div>
-
-                <!-- Latest Update -->
-                <div class="glass-card p-6 bg-blue-900/10 glow">
-                    <h3 class="text-sm font-bold text-white mb-3">📢 Latest Update</h3>
-                    <p class="text-xs text-gray-400 leading-relaxed mb-3">
-                        Listing on Raydium is confirmed for <span class="text-white font-bold">Dec 15</span>.
-                    </p>
-                    <a href="https://x.com/nekotexs_netw" target="_blank" class="text-xs text-solana-green hover:underline">Read on X →</a>
-                </div>
-
+    <!-- TOP CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Wallet Balance -->
+        <div class="glass p-6">
+            <h3 class="text-xs uppercase text-gray-400 font-bold">Wallet Balance</h3>
+            <div class="flex items-end gap-2 mt-3">
+                <span id="walletBalance" class="text-4xl font-bold">0</span>
+                <span class="text-gray-500 font-bold">$NKTX</span>
             </div>
         </div>
 
-    </main>
-
-    <!-- TOAST CONTAINER -->
-    <div id="toast-container" class="fixed bottom-6 right-6 z-50"></div>
-
-
-    <!-- FOOTER -->
-    <footer class="border-t border-gray-800 bg-black pt-8 pb-6 px-4">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1">
-                    <img src="img/logo.svg" alt="Logo" class="h-6 w-6 grayscale opacity-50">
-                </div>
-                <span class="text-gray-500 font-bold">Nekotexs</span>
-            </div>
-
-            <div class="flex gap-6 items-center">
-                <a href="https://x.com/nekotexs_netw" target="_blank" class="text-gray-500 hover:text-white transition"><i class="fa-brands fa-x-twitter text-xl"></i></a>
-                <a href="#" class="text-gray-500 hover:text-white transition"><i class="fa-brands fa-telegram text-xl"></i></a>
-                <a href="mailto:Nekotexs@gmx.com" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-envelope text-xl"></i></a>
+        <!-- Mining/Earned Balance -->
+        <div class="glass p-6">
+            <h3 class="text-xs uppercase text-gray-400 font-bold">Mining Balance (Locked)</h3>
+            <div class="flex items-end gap-2 mt-3 text-solana-green">
+                <span id="miningBalance" class="text-4xl font-bold">0.0000</span>
+                <span class="text-gray-500 font-bold">$NKTX</span>
             </div>
         </div>
 
-        <div class="max-w-7xl mx-auto mt-8 pt-6 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center text-xs text-gray-600 font-mono">
-            <p>© 2025 Nekotexs Project</p>
-            <p id="server-time" class="mt-2 md:mt-0 text-solana-green/70">Server Time (Loading...)</p>
+        <!-- Daily Reward Series -->
+        <div class="glass p-6">
+            <h3 class="text-xs uppercase text-gray-400 font-bold">Daily Reward</h3>
+            <p class="text-sm text-gray-400 mt-2">Day <span id="dailyDay">0</span> / 30</p>
+            <button id="claimBtn" class="mt-4 px-4 py-2 bg-gradient-to-r from-purple-600 to-green-400 rounded-lg font-bold">Claim Reward</button>
+            <p id="claimStatus" class="text-xs text-gray-500 mt-2"></p>
         </div>
-    </footer>
+    </div>
 
+    <!-- EXTENSION + ADDRESS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="glass p-6">
+            <h3 class="text-xs uppercase text-gray-400 font-bold mb-2">My Wallet Address</h3>
+            <div class="flex items-center gap-2">
+                <input id="walletAddress" readonly class="bg-transparent w-full font-mono text-sm" />
+                <button onclick="copyVal('walletAddress')"><i class="fa-regular fa-copy text-gray-400 hover:text-white"></i></button>
+            </div>
+        </div>
+
+        <div class="glass p-6">
+            <h3 class="text-xs uppercase text-gray-400 font-bold mb-2">Extension Code</h3>
+            <div class="flex items-center gap-2">
+                <input id="extensionCode" readonly type="password" class="bg-transparent w-full font-mono text-sm" />
+                <button onclick="toggleCode()"><i id="eyeIcon" class="fa-solid fa-eye text-gray-400 hover:text-white"></i></button>
+                <button onclick="copyVal('extensionCode')"><i class="fa-regular fa-copy text-gray-400 hover:text-white"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="glass p-6">
+        <h3 class="text-lg font-bold mb-4">Recent Transactions</h3>
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-gray-500 text-xs uppercase">
+                    <th class="py-2">Type</th>
+                    <th class="py-2">Status</th>
+                    <th class="py-2">Date</th>
+                    <th class="py-2 text-right">Amount</th>
+                </tr>
+            </thead>
+            <tbody id="txList" class="text-sm"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- FIREBASE + LOGIC -->
+<script type="module">
+/* IMPORTS */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+    getFirestore, doc, getDoc, updateDoc, setDoc,
+    onSnapshot, collection, query, where, orderBy, limit, addDoc
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+/* FIREBASE CONFIG */
+const firebaseConfig = {
+    apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+    authDomain: "nekotexs.firebaseapp.com",
+    projectId: "nekotexs",
+    storageBucket: "nekotexs.firebasestorage.app",
+    messagingSenderId: "596436176972",
+    appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* LOCAL WALLET */
+const userAddress = localStorage.getItem("nekotexs_wallet");
+if (!userAddress) location.href = "login.html";
+document.getElementById("walletAddress").value = userAddress;
+document.getElementById("welcomeUser").innerText = `Wallet: ${userAddress.slice(0,4)}...${userAddress.slice(-4)}`;
+
+/* LOAD USER */
+const userRef = doc(db, "users", userAddress);
+onSnapshot(userRef, snap => {
+    if (!snap.exists()) return;
+    const d = snap.data();
+
+    document.getElementById("walletBalance").innerText = (d.nkTxBalance || 0).toFixed(2);
+    document.getElementById("miningBalance").innerText = (d.earnedBalance || 0).toFixed(4);
+    document.getElementById("extensionCode").value = d.extensionCode || userAddress;
+
+    document.getElementById("dailyDay").innerText = d.dailyDay || 0;
+});
+
+/* TRANSACTIONS */
+const txRef = query(
+    collection(db, "transactions"),
+    where("owner", "==", userAddress),
+    orderBy("createdAt", "desc"),
+    limit(10)
+);
+onSnapshot(txRef, snap => {
+    let html = "";
+    snap.forEach(doc => {
+        const t = doc.data();
+        html += `
+            <tr>
+                <td class='py-2'>${t.type}</td>
+                <td class='py-2 text-gray-400'>${t.status}</td>
+                <td class='py-2 text-gray-400'>${new Date(t.createdAt).toLocaleString()}</td>
+                <td class='py-2 text-right ${t.amount>0?'text-green-400':'text-red-400'}'>${t.amount} NKTX</td>
+            </tr>`;
+    });
+    document.getElementById("txList").innerHTML = html || "<tr><td colspan='4' class='text-center py-4 text-gray-500'>No transactions</td></tr>";
+});
+
+/* DAILY CLAIM SYSTEM */
+document.getElementById("claimBtn").onclick = async () => {
+    const snap = await getDoc(userRef);
+    const d = snap.data();
+
+    const lastClaim = d.lastClaim || 0;
+    const now = Date.now();
+    const oneDay = 24*60*60*1000;
+
+    if (now - lastClaim < oneDay) {
+        document.getElementById("claimStatus").innerText = "You already claimed today.";
+        return;
+    }
+
+    let day = d.dailyDay || 0;
+    day = Math.min(day + 1, 30);
+
+    const reward = day < 30 ? day : 30;
+
+    await updateDoc(userRef, {
+        dailyDay: day,
+        lastClaim: now,
+        earnedBalance: (d.earnedBalance || 0) + reward
+    });
+
+    await addDoc(collection(db, "transactions"), {
+        owner: userAddress,
+        type: "Daily Reward",
+        amount: reward,
+        status: "Completed",
+        createdAt: now
+    });
+
+    document.getElementById("claimStatus").innerText = `Reward +${reward} NKTX added to mining balance.`;
+};
+
+/* HELPERS */
+function copyVal(id){navigator.clipboard.writeText(document.getElementById(id).value);} 
+function toggleCode(){ const f=document.getElementById('extensionCode'); f.type=f.type==='password'?'text':'password'; }
+
+document.getElementById("logoutBtn").onclick = () => { localStorage.removeItem("nekotexs_wallet"); location.href="login.html"; };
+</script>
 
 </body>
 </html>
