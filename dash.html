@@ -12,25 +12,116 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Space Grotesk','sans-serif'] },
-                    colors: {
-                        solana: { purple: '#9945FF', green: '#14F195', dark: '#1B1B1B' }
-                    },
-                    animation: { 'fade-in-up': 'fadeInUp .45s ease-out' },
-                    keyframes: {
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(8px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+    getFirestore, doc, getDoc, onSnapshot, collection,
+    query, where, orderBy, limit, getDocs
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+    authDomain: "nekotexs.firebaseapp.com",
+    projectId: "nekotexs",
+    storageBucket: "nekotexs.firebasestorage.app",
+    messagingSenderId: "596436176972",
+    appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// UI elements
+const walletBalEl = document.getElementById('walletBalance');
+const earnedBalEl = document.getElementById('earnedBalance');
+const walletAddrInput = document.getElementById('walletAddressVal');
+const extensionCodeInput = document.getElementById('extensionCode');
+const welcomeMsg = document.getElementById('welcomeMessage');
+const monthLoginsEl = document.getElementById('monthLogins');
+const lastLoginTimeEl = document.getElementById('lastLoginTime');
+const txTableBody = document.getElementById('txTableBody');
+const activityBar = document.getElementById('activityBar');
+
+// wallet from login
+const storedAddress = localStorage.getItem('nekotexs_wallet');
+if (!storedAddress) {
+    window.location.href = "user/login.html";
+}
+
+// fill UI
+walletAddrInput.value = storedAddress;
+extensionCodeInput.value = storedAddress;
+welcomeMsg.textContent = `Wallet Connected: ${storedAddress.slice(0,4)}...${storedAddress.slice(-4)}`;
+
+// Format timestamp
+function fDate(v) {
+    if (!v) return "—";
+    if (v.toDate) return v.toDate().toLocaleString();
+    return new Date(v).toLocaleString();
+}
+
+// Load USER document live
+const ref = doc(db, "users", storedAddress);
+onSnapshot(ref, snap => {
+    if (!snap.exists()) return;
+    const d = snap.data();
+
+    walletBalEl.textContent = Number(d.nkTxBalance || 0).toFixed(2);
+    earnedBalEl.textContent = Number(d.earnedBalance || 0).toFixed(4);
+    monthLoginsEl.textContent = d.loginCount || 0;
+
+    lastLoginTimeEl.textContent = fDate(d.lastLogin);
+
+    activityBar.style.width = `${Math.min(100, (d.loginCount || 0) * 3)}%`;
+
+    if (d.extensionCode) extensionCodeInput.value = d.extensionCode;
+});
+
+// Load transactions
+const txQuery = query(
+    collection(db, "transactions"),
+    where("owner", "==", storedAddress),
+    orderBy("createdAt", "desc"),
+    limit(12)
+);
+
+onSnapshot(txQuery, snap => {
+    if (snap.empty) {
+        txTableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-gray-500">No transactions</td></tr>`;
+        return;
+    }
+
+    let html = "";
+    snap.forEach(doc => {
+        const tx = doc.data();
+        const amount = tx.amount || 0;
+        const isPlus = amount > 0;
+
+        html += `
+            <tr class="border-b border-gray-800/50 hover:bg-white/5 transition">
+                <td class="py-4 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs ${isPlus ? 'text-solana-green' : 'text-red-400'}">
+                        <i class="fa-solid fa-${tx.type?.includes('min') ? 'hammer' : 'circle'}"></i>
+                    </div>
+                    <span>${tx.type || 'Transaction'}</span>
+                </td>
+                <td class="py-4">
+                    <span class="px-2 py-1 rounded text-[10px] font-bold tracking-wider ${tx.status === 'Completed' ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}">
+                        ${tx.status || 'Pending'}
+                    </span>
+                </td>
+                <td class="py-4 text-gray-500">${fDate(tx.createdAt)}</td>
+                <td class="py-4 text-right font-mono font-bold ${isPlus ? 'text-solana-green' : 'text-red-400'}">
+                    ${isPlus ? '+' : ''}${amount} NKTX
+                </td>
+            </tr>
+        `;
+    });
+
+    txTableBody.innerHTML = html;
+});
+</script>
+
 
     <style>
         html,body { height:100%; }
