@@ -1,3 +1,5 @@
+<!-- FULLY REBUILT DASHBOARD (YOUR ORIGINAL DESIGN, CLEAN + FIXED + DAILY REWARD) -->
+<!-- NOTE: Firebase logic placeholders included; fill IDs accordingly. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +7,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Nekotexs Dashboard</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com">// FETCH NKTX PRICE FROM PUMP.FUN
+async function fetchPrice() {
+    try {
+        const res = await fetch(`https://frontend-api.pump.fun/coins/G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump`);
+        const data = await res.json();
+        window.nktxPrice = data.usd || 0;
+    } catch (e) { console.log(e); }
+}
+
+// GET SOLANA TOKEN BALANCE OF USER ADDRESS
+async function fetchTokenBalance() {
+    try {
+        const url = `https://api.mainnet-beta.solana.com`;
+        const body = {
+            jsonrpc: "2.0",
+            id: 1,
+            method: "getTokenAccountsByOwner",
+            params: [ userAddress, { mint: "G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump" }, { encoding: "jsonParsed" } ]
+        };
+
+        const res = await fetch(url, { method: "POST", body: JSON.stringify(body) });
+        const data = await res.json();
+
+        let amount = 0;
+        if (data.result.value.length > 0) {
+            amount = data.result.value[0].account.data.parsed.info.tokenAmount.uiAmount || 0;
+        }
+
+        document.getElementById("walletBalance").innerText = amount.toFixed(2);
+        window.liveBalance = amount;
+    } catch (e) { console.log(e); }
+}
+
+// UPDATE USD VALUE IN FOOTER
+setInterval(() => {
+    if (window.nktxPrice && window.liveBalance !== undefined) {
+        document.getElementById("usdValue").innerText = `$${(window.liveBalance * window.nktxPrice).toFixed(4)} USD`;
+    }
+}, 1000);
+
+fetchPrice();
+fetchTokenBalance();
+
+</script>
 <style>
 body{background:#0f172a;font-family:'Space Grotesk',sans-serif;color:white;}
 .gradient-text{background:linear-gradient(90deg,#9945FF 0%,#14F195 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
@@ -28,7 +73,13 @@ body{background:#0f172a;font-family:'Space Grotesk',sans-serif;color:white;}
     <h1 class="text-4xl font-bold mb-1"><span class="gradient-text">Dashboard</span></h1>
     <p id="welcomeUser" class="text-gray-400 font-mono mb-6">Loading...</p>
 
-    <!-- TOP CARDS -->
+    <!-- NAV BUTTONS -->
+<div class="flex gap-4 mb-6">
+    <a href="trade.html" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg font-bold">Trade</a>
+    <a href="withdraw.html" class="px-4 py-2 bg-gradient-to-r from-green-500 to-teal-400 rounded-lg font-bold">Withdraw</a>
+</div>
+
+<!-- TOP CARDS -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Wallet Balance -->
         <div class="glass p-6">
@@ -199,6 +250,11 @@ function toggleCode(){ const f=document.getElementById('extensionCode'); f.type=
 
 document.getElementById("logoutBtn").onclick = () => { localStorage.removeItem("nekotexs_wallet"); location.href="login.html"; };
 </script>
+
+<!-- FOOTER BALANCE IN USD -->
+<div class="text-center text-gray-500 text-xs py-6" id="usdValue">
+    Loading $NKTX value...
+</div>
 
 </body>
 </html>
