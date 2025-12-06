@@ -80,12 +80,13 @@
             </div>
         </div>
         <div class="glass p-6">
-            <h3 class="text-xs uppercase text-gray-400 font-bold mb-3">Extension Code</h3>
+            <h3 class="text-xs uppercase text-gray-400 font-bold mb-3">Referral Code</h3>
             <div class="flex items-center gap-3">
                 <input id="extensionCode" readonly type="password" class="bg-transparent w-full font-mono text-sm" />
                 <button onclick="toggleCode()"><i id="eyeIcon" class="fa-solid fa-eye text-gray-400 hover:text-white"></i></button>
                 <button onclick="copyVal('extensionCode')"><i class="fa-regular fa-copy text-gray-400 hover:text-white"></i></button>
             </div>
+            <p class="text-xs text-gray-500 mt-2">Share this code to invite friends and earn 10% from their mining rewards!</p>
         </div>
     </div>
 
@@ -107,34 +108,36 @@
         </div>
     </div>
 
-    <!-- КРАСИВАЯ ЛЕНТА НОВОСТЕЙ (вместо кривых виджетов) -->
-    <h2 class="text-3xl font-bold mb-6 gradient-text text-center">Latest News & Updates</h2>
+    <!-- REFERRALS SECTION -->
+    <div class="glass p-6 mb-12">
+        <h3 class="text-xl font-bold mb-5">My Referrals</h3>
+        <p class="text-sm text-gray-400 mb-4">You earn 10% of each referral's mining balance. Total potential earnings: <span id="totalRefEarnings" class="text-green-400">0.00 $NKTX</span></p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-gray-500 text-xs uppercase border-b border-white/10">
+                        <th class="py-3">Referral Address</th>
+                        <th class="py-3">Joined</th>
+                        <th class="py-3">Their Mining</th>
+                        <th class="py-3 text-right">Your Earnings</th>
+                    </tr>
+                </thead>
+                <tbody id="refList" class="text-sm"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TG POSTS FEED -->
+    <h2 class="text-3xl font-bold mb-6 gradient-text text-center">Latest News from Telegram</h2>
     <div class="space-y-6">
-        <div class="glass p-6 flex items-start gap-5 hover:ring-2 hover:ring-purple-500/50 transition rounded-2xl">
-            <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex-shrink-0 flex items-center justify-center text-2xl">📢</div>
-            <div>
-                <h4 class="font-bold text-lg">Nekotexs Airdrop Phase 2 Started!</h4>
-                <p class="text-gray-400 mt-1">Daily rewards increased to 30 NKTX max. Invite friends and earn more!</p>
-                <span class="text-xs text-gray-500">2 hours ago</span>
-            </div>
+        <div class="glass p-4 rounded-2xl">
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/18" data-width="100%"></script>
         </div>
-
-        <div class="glass p-6 flex items-start gap-5 hover:ring-2 hover:ring-green-500/50 transition rounded-2xl">
-            <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-500 rounded-xl flex-shrink-0 flex items-center justify-center text-2xl">🚀</div>
-            <div>
-                <h4 class="font-bold text-lg">Token Listed on Raydium</h4>
-                <p class="text-gray-400 mt-1">You can now trade $NKTX directly on Raydium DEX. Liquidity locked for 1 year.</p>
-                <span class="text-xs text-gray-500">1 day ago</span>
-            </div>
+        <div class="glass p-4 rounded-2xl">
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/14" data-width="100%"></script>
         </div>
-
-        <div class="glass p-6 flex items-start gap-5 hover:ring-2 hover:ring-blue-500/50 transition rounded-2xl">
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex-shrink-0 flex items-center justify-center text-2xl">🎉</div>
-            <div>
-                <h4 class="font-bold text-lg">100K+ Users Milestone</h4>
-                <p class="text-gray-400 mt-1">Thank you for your support! More rewards and features coming soon.</p>
-                <span class="text-xs text-gray-500">3 days ago</span>
-            </div>
+        <div class="glass p-4 rounded-2xl">
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/10" data-width="100%"></script>
         </div>
     </div>
 
@@ -194,9 +197,12 @@ function updateUSDValues(walletBal, miningBal) {
 // === ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ===
 const userRef = doc(db, "users", userAddress);
 
+let currentUserData; // Для хранения данных пользователя
+
 onSnapshot(userRef, (snap) => {
     if (!snap.exists()) return;
     const d = snap.data();
+    currentUserData = d;
 
     const walletBal = Number(d.nkTxBalance || 0);
     const miningBal = Number(d.earnedBalance || 0);
@@ -248,6 +254,53 @@ onSnapshot(txQuery, (snap) => {
         });
     }
     document.getElementById("txList").innerHTML = html;
+});
+
+// === REFERRALS (assuming 'referrer' field in users collection) ===
+function loadReferrals(extensionCode) {
+    const refQuery = query(
+        collection(db, "users"),
+        where("referrer", "==", extensionCode),
+        orderBy("joinedAt", "desc"),
+        limit(20)
+    );
+
+    onSnapshot(refQuery, (snap) => {
+        let html = "";
+        let totalEarnings = 0;
+
+        if (snap.empty) {
+            html = `<tr><td colspan="4" class="text-center py-8 text-gray-500">No referrals yet. Share your code!</td></tr>`;
+        } else {
+            snap.forEach(doc => {
+                const r = doc.data();
+                const refAddress = doc.id;
+                const joined = r.joinedAt ? new Date(r.joinedAt.toMillis()).toLocaleDateString() : 'Unknown';
+                const theirMining = Number(r.earnedBalance || 0).toFixed(4);
+                const yourEarnings = (theirMining * 0.1).toFixed(4); // 10% 
+                totalEarnings += parseFloat(yourEarnings);
+
+                html += `<tr>
+                    <td class="py-3 font-mono">${refAddress.slice(0,6)}...${refAddress.slice(-4)}</td>
+                    <td class="py-3 text-gray-400">${joined}</td>
+                    <td class="py-3 text-gray-400">${theirMining} NKTX</td>
+                    <td class="py-3 text-right text-green-400">+${yourEarnings} NKTX</td>
+                </tr>`;
+            });
+        }
+
+        document.getElementById("refList").innerHTML = html;
+        document.getElementById("totalRefEarnings").innerText = `${totalEarnings.toFixed(2)} $NKTX`;
+    });
+}
+
+// Call after user data loaded
+onSnapshot(userRef, (snap) => {
+    if (snap.exists()) {
+        const d = snap.data();
+        const extCode = d.extensionCode || userAddress;
+        loadReferrals(extCode);
+    }
 });
 
 // === DAILY CLAIM + ТАЙМЕР ===
@@ -317,6 +370,8 @@ claimBtn.onclick = async () => {
         createdAt: new Date()
     });
 
+    // Bonus for referrals (if any, but not implementing claim here)
+
     document.getElementById("claimStatus").innerText = `+${reward} NKTX claimed! Next in 24h`;
     checkClaimStatus({ lastClaim: Date.now(), dailyDay: day });
 };
@@ -324,7 +379,7 @@ claimBtn.onclick = async () => {
 // Утилиты
 function copyVal(id) {
     navigator.clipboard.writeText(document.getElementById(id).value);
-    alert("Copied to clipboard!");
+    alert("Copied!");
 }
 
 function toggleCode() {
