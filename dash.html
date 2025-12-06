@@ -9,7 +9,8 @@
 <style>
   body { background:#0f172a; font-family:'Space Grotesk',sans-serif; color:white; }
   .gradient-text { background:linear-gradient(90deg,#9945FF 0%,#14F195 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-  .glass { background:rgba(255,255,255,0.04); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.08); border-radius:1rem; }
+  .glass { background:rgba(255,255,255,0.04); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.08); border-radius:1rem; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .glass:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
   .day-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:5rem; font-weight:900; opacity:0.07; pointer-events:none; }
   .timer { font-size:1.1rem; font-weight:bold; color:#14F195; }
 </style>
@@ -22,7 +23,10 @@
         <img src="img/logo.svg" class="w-12 h-12 bg-white rounded-full p-1" />
         <span class="text-xl font-bold tracking-wider">Nekotexs</span>
     </div>
-    <button id="logoutBtn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-right-from-bracket"></i> Log out</button>
+    <div class="flex items-center gap-4">
+        <a href="user/login.html" class="text-gray-400 hover:text-white font-bold">Referral Program</a>
+        <button id="logoutBtn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-right-from-bracket"></i> Log out</button>
+    </div>
 </nav>
 
 <div class="max-w-7xl mx-auto px-4 py-8">
@@ -131,15 +135,16 @@
     <h2 class="text-3xl font-bold mb-6 gradient-text text-center">Latest News from Telegram</h2>
     <div class="space-y-6">
         <div class="glass p-4 rounded-2xl">
-            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/18" data-width="100%"></script>
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/18" data-width="100%" data-dark="1"></script>
         </div>
         <div class="glass p-4 rounded-2xl">
-            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/14" data-width="100%"></script>
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/14" data-width="100%" data-dark="1"></script>
         </div>
         <div class="glass p-4 rounded-2xl">
-            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/10" data-width="100%"></script>
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/10" data-width="100%" data-dark="1"></script>
         </div>
     </div>
+    <p class="text-sm text-gray-500 mt-4 text-center">Note: Telegram posts are displayed in dark mode. For automatic translation to English, use your browser's built-in translation feature (e.g., right-click and translate page).</p>
 
 </div>
 
