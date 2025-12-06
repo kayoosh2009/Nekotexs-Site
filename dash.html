@@ -1,5 +1,3 @@
-<!-- FULLY REBUILT DASHBOARD (YOUR ORIGINAL DESIGN, CLEAN + FIXED + DAILY REWARD) -->
-<!-- NOTE: Firebase logic placeholders included; fill IDs accordingly. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,50 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Nekotexs Dashboard</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-<script src="https://cdn.tailwindcss.com">// FETCH NKTX PRICE FROM PUMP.FUN
-async function fetchPrice() {
-    try {
-        const res = await fetch(`https://frontend-api.pump.fun/coins/G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump`);
-        const data = await res.json();
-        window.nktxPrice = data.usd || 0;
-    } catch (e) { console.log(e); }
-}
-
-// GET SOLANA TOKEN BALANCE OF USER ADDRESS
-async function fetchTokenBalance() {
-    try {
-        const url = `https://api.mainnet-beta.solana.com`;
-        const body = {
-            jsonrpc: "2.0",
-            id: 1,
-            method: "getTokenAccountsByOwner",
-            params: [ userAddress, { mint: "G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump" }, { encoding: "jsonParsed" } ]
-        };
-
-        const res = await fetch(url, { method: "POST", body: JSON.stringify(body) });
-        const data = await res.json();
-
-        let amount = 0;
-        if (data.result.value.length > 0) {
-            amount = data.result.value[0].account.data.parsed.info.tokenAmount.uiAmount || 0;
-        }
-
-        document.getElementById("walletBalance").innerText = amount.toFixed(2);
-        window.liveBalance = amount;
-    } catch (e) { console.log(e); }
-}
-
-// UPDATE USD VALUE IN FOOTER
-setInterval(() => {
-    if (window.nktxPrice && window.liveBalance !== undefined) {
-        document.getElementById("usdValue").innerText = `$${(window.liveBalance * window.nktxPrice).toFixed(4)} USD`;
-    }
-}, 1000);
-
-fetchPrice();
-fetchTokenBalance();
-
-</script>
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{background:#0f172a;font-family:'Space Grotesk',sans-serif;color:white;}
 .gradient-text{background:linear-gradient(90deg,#9945FF 0%,#14F195 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
@@ -65,7 +20,7 @@ body{background:#0f172a;font-family:'Space Grotesk',sans-serif;color:white;}
         <img src="img/logo.svg" class="w-12 h-12 bg-white rounded-full p-1" />
         <span class="text-xl font-bold tracking-wider">Nekotexs</span>
     </div>
-    <button id="logoutBtn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    <button id="logoutBtn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-right-from-bracket"></i> Log out</button>
 </nav>
 
 <!-- CONTENT -->
@@ -74,14 +29,13 @@ body{background:#0f172a;font-family:'Space Grotesk',sans-serif;color:white;}
     <p id="welcomeUser" class="text-gray-400 font-mono mb-6">Loading...</p>
 
     <!-- NAV BUTTONS -->
-<div class="flex gap-4 mb-6">
-    <a href="trade.html" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg font-bold">Trade</a>
-    <a href="withdraw.html" class="px-4 py-2 bg-gradient-to-r from-green-500 to-teal-400 rounded-lg font-bold">Withdraw</a>
-</div>
+    <div class="flex gap-4 mb-6">
+        <a href="trade.html" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg font-bold">Trade</a>
+        <a href="withdraw.html" class="px-4 py-2 bg-gradient-to-r from-green-500 to-teal-400 rounded-lg font-bold">Withdraw</a>
+    </div>
 
-<!-- TOP CARDS -->
+    <!-- TOP CARDS -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Wallet Balance -->
         <div class="glass p-6">
             <h3 class="text-xs uppercase text-gray-400 font-bold">Wallet Balance</h3>
             <div class="flex items-end gap-2 mt-3">
@@ -90,7 +44,6 @@ body{background:#0f172a;font-family:'Space Grotesk',sans-serif;color:white;}
             </div>
         </div>
 
-        <!-- Mining/Earned Balance -->
         <div class="glass p-6">
             <h3 class="text-xs uppercase text-gray-400 font-bold">Mining Balance (Locked)</h3>
             <div class="flex items-end gap-2 mt-3 text-solana-green">
@@ -99,7 +52,6 @@ body{background:#0f172a;font-family:'Space Grotesk',sans-serif;color:white;}
             </div>
         </div>
 
-        <!-- Daily Reward Series -->
         <div class="glass p-6">
             <h3 class="text-xs uppercase text-gray-400 font-bold">Daily Reward</h3>
             <p class="text-sm text-gray-400 mt-2">Day <span id="dailyDay">0</span> / 30</p>
@@ -129,7 +81,7 @@ body{background:#0f172a;font-family:'Space Grotesk',sans-serif;color:white;}
     </div>
 
     <!-- TRANSACTIONS -->
-    <div class="glass p-6">
+    <div class="glass p-6 mb-10">
         <h3 class="text-lg font-bold mb-4">Recent Transactions</h3>
         <table class="w-full text-left">
             <thead>
@@ -143,18 +95,75 @@ body{background:#0f172a;font-family:'Space Grotesk',sans-serif;color:white;}
             <tbody id="txList" class="text-sm"></tbody>
         </table>
     </div>
+
+    <!-- NEWS FEED (TELEGRAM POSTS) -->
+    <h2 class="text-2xl font-bold mb-3 gradient-text">Latest News</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass p-4">
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/18" data-width="100%"></script>
+        </div>
+        <div class="glass p-4">
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/14" data-width="100%"></script>
+        </div>
+        <div class="glass p-4">
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/13" data-width="100%"></script>
+        </div>
+    </div>
 </div>
 
-<!-- FIREBASE + LOGIC -->
-<script type="module">
-/* IMPORTS */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import {
-    getFirestore, doc, getDoc, updateDoc, setDoc,
-    onSnapshot, collection, query, where, orderBy, limit, addDoc
-} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+<!-- FOOTER BALANCE USD -->
+<div class="text-center text-gray-500 text-xs py-6" id="usdValue">
+    Loading $NKTX value...
+</div>
 
-/* FIREBASE CONFIG */
+<script>
+// FETCH NKTX PRICE
+async function fetchPrice() {
+    try {
+        const res = await fetch(`https://frontend-api.pump.fun/coins/G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump`);
+        const data = await res.json();
+        window.nktxPrice = data.usd || 0;
+    } catch (e) { console.log(e); }
+}
+
+// TOKEN BALANCE
+async function fetchTokenBalance() {
+    try {
+        const url = `https://api.mainnet-beta.solana.com`;
+        const body = {
+            jsonrpc: "2.0",
+            id: 1,
+            method: "getTokenAccountsByOwner",
+            params: [ userAddress, { mint: "G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump" }, { encoding: "jsonParsed" } ]
+        };
+
+        const res = await fetch(url, { method: "POST", body: JSON.stringify(body) });
+        const data = await res.json();
+
+        let amount = 0;
+        if (data.result.value.length > 0) {
+            amount = data.result.value[0].account.data.parsed.info.tokenAmount.uiAmount || 0;
+        }
+
+        document.getElementById("walletBalance").innerText = amount.toFixed(2);
+        window.liveBalance = amount;
+    } catch (e) { console.log(e); }
+}
+
+setInterval(() => {
+    if (window.nktxPrice && window.liveBalance !== undefined) {
+        document.getElementById("usdValue").innerText = `$${(window.liveBalance * window.nktxPrice).toFixed(4)} USD`;
+    }
+}, 1000);
+
+fetchPrice();
+fetchTokenBalance();
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc, setDoc, onSnapshot, collection, query, where, orderBy, limit, addDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
 const firebaseConfig = {
     apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
     authDomain: "nekotexs.firebaseapp.com",
@@ -182,33 +191,21 @@ onSnapshot(userRef, snap => {
     document.getElementById("walletBalance").innerText = (d.nkTxBalance || 0).toFixed(2);
     document.getElementById("miningBalance").innerText = (d.earnedBalance || 0).toFixed(4);
     document.getElementById("extensionCode").value = d.extensionCode || userAddress;
-
     document.getElementById("dailyDay").innerText = d.dailyDay || 0;
 });
 
 /* TRANSACTIONS */
-const txRef = query(
-    collection(db, "transactions"),
-    where("owner", "==", userAddress),
-    orderBy("createdAt", "desc"),
-    limit(10)
-);
+const txRef = query(collection(db, "transactions"), where("owner", "==", userAddress), orderBy("createdAt", "desc"), limit(10));
 onSnapshot(txRef, snap => {
     let html = "";
     snap.forEach(doc => {
         const t = doc.data();
-        html += `
-            <tr>
-                <td class='py-2'>${t.type}</td>
-                <td class='py-2 text-gray-400'>${t.status}</td>
-                <td class='py-2 text-gray-400'>${new Date(t.createdAt).toLocaleString()}</td>
-                <td class='py-2 text-right ${t.amount>0?'text-green-400':'text-red-400'}'>${t.amount} NKTX</td>
-            </tr>`;
+        html += `<tr><td class='py-2'>${t.type}</td><td class='py-2 text-gray-400'>${t.status}</td><td class='py-2 text-gray-400'>${new Date(t.createdAt).toLocaleString()}</td><td class='py-2 text-right ${t.amount>0?'text-green-400':'text-red-400'}'>${t.amount} NKTX</td></tr>`;
     });
     document.getElementById("txList").innerHTML = html || "<tr><td colspan='4' class='text-center py-4 text-gray-500'>No transactions</td></tr>";
 });
 
-/* DAILY CLAIM SYSTEM */
+/* DAILY CLAIM */
 document.getElementById("claimBtn").onclick = async () => {
     const snap = await getDoc(userRef);
     const d = snap.data();
@@ -241,20 +238,14 @@ document.getElementById("claimBtn").onclick = async () => {
         createdAt: now
     });
 
-    document.getElementById("claimStatus").innerText = `Reward +${reward} NKTX added to mining balance.`;
+    document.getElementById("claimStatus").innerText = `Reward +${reward} NKTX added.`;
 };
 
-/* HELPERS */
 function copyVal(id){navigator.clipboard.writeText(document.getElementById(id).value);} 
 function toggleCode(){ const f=document.getElementById('extensionCode'); f.type=f.type==='password'?'text':'password'; }
 
-document.getElementById("logoutBtn").onclick = () => { localStorage.removeItem("nekotexs_wallet"); location.href="login.html"; };
+document.getElementById("logoutBtn").onclick = () => { localStorage.removeItem("nekotexs_wallet"); location.href="index.html"; };
 </script>
-
-<!-- FOOTER BALANCE IN USD -->
-<div class="text-center text-gray-500 text-xs py-6" id="usdValue">
-    Loading $NKTX value...
-</div>
 
 </body>
 </html>
