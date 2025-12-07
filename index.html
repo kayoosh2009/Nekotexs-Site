@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nekotexs ($NKTX) | Solana Cat Charity Token</title>
-   
+  
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,46 +13,31 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Space Grotesk', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Space Grotesk', 'sans-serif'] },
                     colors: {
-                        solana: {
-                            purple: '#9945FF',
-                            green: '#14F195',
-                            dark: '#1B1B1B'
-                        }
+                        solana: { purple: '#9945FF', green: '#14F195', dark: '#1B1B1B' }
                     },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    }
+                    animation: { 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
                 }
             }
         }
     </script>
-   
+  
     <style>
-        body {
-            background-color: #0f172a;
-            color: #ffffff;
-            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%);
-        }
-        .gradient-text {
-            background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-        }
+        body { background-color: #0f172a; color: #ffffff;
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%); }
+        .gradient-text { background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .glass-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; }
         .accordion-item { display: none; }
-        .accordion-item.active { display: block; }
+        .accordion-item.active .accordion-item { display: block; }
+        .accordion.active i { transform: rotate(180deg); }
+        .tab-active { background: linear-gradient(90deg,#9945FF,#14F195); color:#000 !important; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen justify-between">
+
     <nav class="w-full py-6 px-4 md:px-12 flex justify-between items-center max-w-7xl mx-auto relative z-50">
         <div class="flex items-center gap-3">
             <div class="w-12 h-12 md:w-14 md:h-14 bg-white rounded-full flex items-center justify-center p-1">
@@ -60,25 +45,19 @@
             </div>
             <span class="text-2xl font-bold tracking-wider">Nekotexs</span>
         </div>
-       
         <div class="hidden md:flex gap-8 text-sm font-semibold uppercase tracking-widest text-gray-400 items-center">
             <a href="#trading" class="hover:text-solana-green transition">Trading</a>
             <a href="#tokenomics" class="hover:text-solana-green transition">Tokenomics</a>
             <a href="#about" class="hover:text-solana-green transition">About</a>
         </div>
         <div class="flex items-center gap-4">
-            <a href="user/login.html" class="text-white hover:text-solana-green font-semibold transition hidden sm:block">
-                Log In
-            </a>
-            <a href="user/register.html" class="bg-solana-green text-black px-6 py-2 rounded-full font-bold hover:bg-white transition hover:text-black shadow-[0_0_15px_rgba(20,241,149,0.4)]">
-                Sign Up
-            </a>
+            <a href="user/login.html" class="text-white hover:text-solana-green font-semibold transition hidden sm:block">Log In</a>
+            <a href="user/register.html" class="bg-solana-green text-black px-6 py-2 rounded-full font-bold hover:bg-white transition shadow-[0_0_15px_rgba(20,241,149,0.4)]">Sign Up</a>
         </div>
     </nav>
 
     <header class="text-center pt-12 pb-32 px-4 relative overflow-hidden">
         <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-solana-purple opacity-20 blur-[120px] rounded-full -z-10"></div>
-       
         <div class="max-w-4xl mx-auto mt-8" data-aos="fade-up">
             <span class="inline-block py-1 px-3 rounded-full bg-solana-green/10 text-solana-green text-xs font-bold uppercase tracking-widest mb-6 border border-solana-green/20">
                 Live on Solana • $NKTX Active Now
@@ -89,7 +68,6 @@
             <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10">
                 Nekotexs ($NKTX) is live! Trade, grow your portfolio, and help cats worldwide through our charity mechanism on Solana.
             </p>
-           
             <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
                 <a href="#trading" class="px-8 py-4 bg-gradient-to-r from-solana-purple to-solana-green rounded-xl font-bold text-lg hover:opacity-90 transition shadow-lg shadow-solana-purple/25 w-full md:w-auto text-white">
                     Start Trading
@@ -101,12 +79,10 @@
         </div>
     </header>
 
-    <!-- Live Trading Hub - Moved UP -->
+    <!-- Live Trading Hub -->
     <section id="trading" class="py-20 px-4 relative">
         <div class="max-w-7xl mx-auto">
             <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center gradient-text" data-aos="fade-down">Live Trading Hub</h2>
-           
-            <!-- Active Status & Quick Buy -->
             <div class="text-center mb-12" data-aos="fade-up">
                 <div class="text-solana-green text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center gap-3">
                     <i class="fa-solid fa-bolt animate-pulse-slow"></i> TOKEN IS ACTIVE <i class="fa-solid fa-bolt animate-pulse-slow"></i>
@@ -121,249 +97,95 @@
                 </div>
             </div>
 
-            <!-- Live Stats Grid -->
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12" data-aos="fade-up" data-aos-delay="100">
-                <div class="glass-card p-4 text-center">
-                    <i class="fa-solid fa-dollar-sign text-solana-green mb-2 text-xl"></i>
-                    <div class="text-sm text-gray-400">Price</div>
-                    <div id="price" class="text-xl font-bold text-white">$0.00000</div>
-                </div>
-                <div class="glass-card p-4 text-center">
-                    <i class="fa-solid fa-coins text-solana-purple mb-2 text-xl"></i>
-                    <div class="text-sm text-gray-400">Market Cap</div>
-                    <div id="mcap" class="text-xl font-bold text-white">$0</div>
-                </div>
-                <div class="glass-card p-4 text-center">
-                    <i class="fa-solid fa-exchange-alt text-solana-green mb-2 text-xl"></i>
-                    <div class="text-sm text-gray-400">24h Volume</div>
-                    <div id="volume" class="text-xl font-bold text-white">$0</div>
-                </div>
-                <div class="glass-card p-4 text-center">
-                    <i class="fa-solid fa-users text-solana-purple mb-2 text-xl"></i>
-                    <div class="text-sm text-gray-400">Holders</div>
-                    <div id="holders" class="text-xl font-bold text-white">0</div>
-                </div>
-                <div class="glass-card p-4 text-center">
-                    <i class="fa-solid fa-arrow-trend-up text-solana-green mb-2 text-xl"></i>
-                    <div class="text-sm text-gray-400">24h Change</div>
-                    <div id="change" class="text-xl font-bold text-white">0%</div>
-                </div>
+                <div class="glass-card p-4 text-center"><i class="fa-solid fa-dollar-sign text-solana-green mb-2 text-xl"></i><div class="text-sm text-gray-400">Price</div><div id="price" class="text-xl font-bold text-white">$0.00000</div></div>
+                <div class="glass-card p-4 text-center"><i class="fa-solid fa-coins text-solana-purple mb-2 text-xl"></i><div class="text-sm text-gray-400">Market Cap</div><div id="mcap" class="text-xl font-bold text-white">$0</div></div>
+                <div class="glass-card p-4 text-center"><i class="fa-solid fa-exchange-alt text-solana-green mb-2 text-xl"></i><div class="text-sm text-gray-400">24h Volume</div><div id="volume" class="text-xl font-bold text-white">$0</div></div>
+                <div class="glass-card p-4 text-center"><i class="fa-solid fa-users text-solana-purple mb-2 text-xl"></i><div class="text-sm text-gray-400">Holders</div><div id="holders" class="text-xl font-bold text-white">0</div></div>
+                <div class="glass-card p-4 text-center"><i class="fa-solid fa-arrow-trend-up text-solana-green mb-2 text-xl"></i><div class="text-sm text-gray-400">24h Change</div><div id="change" class="text-xl font-bold text-white">0%</div></div>
             </div>
 
-            <!-- Live Chart -->
             <div class="glass-card p-4 mb-8" data-aos="fade-up" data-aos-delay="200">
                 <h3 class="text-xl font-bold mb-4 text-center">Real-Time Chart</h3>
-                <iframe
-                    src="https://dexscreener.com/solana/G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump?embed=1&theme=dark&trades=1&info=1"
-                    width="100%"
-                    height="500"
-                    frameborder="0"
-                    allowtransparency="true"
-                    class="rounded-lg bg-[#1B1B1B]"
-                ></iframe>
+                <iframe src="https://dexscreener.com/solana/G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump?embed=1&theme=dark&trades=1&info=1" width="100%" height="500" frameborder="0" class="rounded-lg bg-[#1B1B1B]"></iframe>
             </div>
 
-            <!-- Social Proof -->
-            <div class="grid md:grid-cols-4 gap-4 mb-12" data-aos="fade-up" data-aos-delay="300">
-                <div class="glass-card p-4 text-center">
-                    <i class="fa-brands fa-x-twitter text-2xl text-solana-purple mb-2"></i>
-                    <div class="text-2xl font-bold text-white">1</div>
-                    <div class="text-sm text-gray-400">Twitter Followers</div>
-                </div>
-                <div class="glass-card p-4 text-center">
-                    <i class="fa-brands fa-telegram text-2xl text-solana-green mb-2"></i>
-                    <div class="text-2xl font-bold text-white">6</div>
-                    <div class="text-sm text-gray-400">Telegram Members</div>
-                </div>
-                <div class="glass-card p-4 text-center">
-                    <i class="fa-solid fa-paw text-2xl text-solana-purple mb-2"></i>
-                    <div class="text-2xl font-bold text-white">$0.88</div>
-                    <div class="text-sm text-gray-400">Charity Raised</div>
-                </div>
-                <div class="glass-card p-4 text-center">
-                    <i class="fa-solid fa-heart text-2xl text-red-500 mb-2"></i>
-                    <div class="text-2xl font-bold text-white">0</div>
-                    <div class="text-sm text-gray-400">Cat Shelters Helped</div>
-                </div>
-            </div>
-
-            <!-- Contract Address -->
             <div class="text-center mb-8" data-aos="fade-up" data-aos-delay="400">
                 <p class="text-gray-500 mb-2">Contract Address</p>
-                <div class="inline-flex items-center gap-2 bg-gray-900 px-4 py-2 rounded border border-solana-green text-solana-green font-mono text-sm cursor-pointer hover:bg-solana-green/10 transition mx-auto max-w-max" onclick="navigator.clipboard.writeText('G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump'); alert('Copied!')">
+                <div class="inline-flex items-center gap-2 bg-gray-900 px-4 py-2 rounded border border-solana-green text-solana-green font-mono text-sm cursor-pointer hover:bg-solana-green/10 transition" onclick="navigator.clipboard.writeText('G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump'); alert('Copied!')">
                     <i class="fa-solid fa-lock"></i> G5k8...pump <span class="text-xs">(Click to copy)</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="py-16 px-4">
-        <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-6">
-            <div class="glass-card p-6 text-center">
-                <div class="text-2xl font-bold" id="price">$0.0000</div>
-                <div class="text-gray-400 text-sm">Price</div>
-            </div>
-            <div class="glass-card p-6 text-center">
-                <div class="text-2xl font-bold" id="mcap">$0</div>
-                <div class="text-gray-400 text-sm">Market Cap</div>
-            </div>
-            <div class="glass-card p-6 text-center">
-                <div class="text-2xl font-bold" id="volume24h">$0</div>
-                <div class="text-gray-400 text-sm">24h Volume</div>
-            </div>
-            <div class="glass-card p-6 text-center">
-                <div class="text-2xl font-bold" id="holders">0</div>
-                <div class="text-gray-400 text-sm">Holders</div>
-            </div>
-            <div class="glass-card p-6 text-center">
-                <div class="text-2xl font-bold text-solana-green" id="change">0%</div>
-                <div class="text-gray-400 text-sm">24h Change</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- TOP USERS DASHBOARD FROM FIREBASE -->
-    <section class="py-20 px-4">
+    <!-- ТОП ДАШБОРД ИЗ FIREBASE -->
+    <section class="py-20 px-4 bg-gray-900/30">
         <div class="max-w-7xl mx-auto">
-            <h2 class="text-4xl md:text-5xl font-bold text-center mb-12 gradient-text">Top Community Members</h2>
-
-            <!-- Tabs -->
-            <div class="flex justify-center gap-4 mb-10">
-                <button id="tab-earned" class="tab-btn active px-8 py-3 rounded-full font-bold text-lg">Top Earners</button>
-                <button id="tab-streak" class="tab-btn px-8 py-3 rounded-full font-bold text-lg">Best Daily Streaks</button>
+            <h2 class="text-4xl md:text-5xl font-bold text-center mb-12 gradient-text">Top Community Legends</h2>
+            <div class="flex justify-center gap-6 mb-10">
+                <button id="tab-earned" class="tab-active px-8 py-3 rounded-full font-bold text-lg text-white">Top Earners</button>
+                <button id="tab-streak" class="px-8 py-3 rounded-full font-bold text-lg bg-gray-800 hover:bg-gray-700 text-white transition">Best Streaks</button>
             </div>
 
-            <!-- Tables -->
             <div class="glass-card overflow-hidden">
-                <!-- Top by Earned Balance -->
                 <table id="table-earned" class="w-full text-left">
                     <thead class="bg-white/5">
-                        <tr>
-                            <th class="px-6 py-4">Rank</th>
-                            <th class="px-6 py-4">Wallet</th>
-                            <th class="px-6 py-4 text-right">Earned $NKTX</th>
-                            <th class="px-6 py-4 text-right">Daily Streak</th>
-                        </tr>
+                        <tr><th class="px-6 py-4">#</th><th class="px-6 py-4">Wallet</th><th class="px-6 py-4 text-right">Earned $NKTX</th><th class="px-6 py-4 text-right">Streak</th></tr>
                     </thead>
-                    <tbody id="top-earned-body" class="text-sm"></tbody>
+                    <tbody id="top-earned-body" class="divide-y divide-gray-800"></tbody>
                 </table>
-
-                <!-- Top by Daily Streak -->
                 <table id="table-streak" class="w-full text-left hidden">
                     <thead class="bg-white/5">
-                        <tr>
-                            <th class="px-6 py-4">Rank</th>
-                            <th class="px-6 py-4">Wallet</th>
-                            <th class="px-6 py-4 text-right">Current Streak</th>
-                            <th class="px-6 py-4 text-right">Earned Total</th>
-                        </tr>
+                        <tr><th class="px-6 py-4">#</th><th class="px-6 py-4">Wallet</th><th class="px-6 py-4 text-right">Current Streak</th><th class="px-6 py-4 text-right">Total Earned</th></tr>
                     </thead>
-                    <tbody id="top-streak-body" class="text-sm"></tbody>
+                    <tbody id="top-streak-body" class="divide-y divide-gray-800"></tbody>
                 </table>
             </div>
         </div>
     </section>
-    <!-- Tokenomics - New Section -->
+
+    <!-- Tokenomics -->
     <section id="tokenomics" class="py-20 bg-gray-900/50">
         <div class="max-w-6xl mx-auto px-4" data-aos="fade-up">
             <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center gradient-text">Tokenomics</h2>
             <div class="grid md:grid-cols-4 gap-6">
-                <div class="glass-card p-6 text-center">
-                    <i class="fa-solid fa-coins text-3xl text-solana-green mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">Total Supply</h3>
-                    <p class="text-2xl font-bold text-white">1,000,000,000 $NKTX</p>
-                    <p class="text-sm text-gray-400 mt-2">Fair launch, no presale</p>
-                </div>
-                <div class="glass-card p-6 text-center">
-                    <i class="fa-solid fa-percentage text-3xl text-solana-purple mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">Transaction Tax</h3>
-                    <p class="text-2xl font-bold text-white">2% Charity Fee</p>
-                    <p class="text-sm text-gray-400 mt-2">1% to charity wallet</p>
-                </div>
-                <div class="glass-card p-6 text-center">
-                    <i class="fa-solid fa-lock-open text-3xl text-solana-green mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">Liquidity</h3>
-                    <p class="text-2xl font-bold text-white">Burned LP</p>
-                    <p class="text-sm text-gray-400 mt-2">Locked forever</p>
-                </div>
-                <div class="glass-card p-6 text-center">
-                    <i class="fa-solid fa-shield-halved text-3xl text-solana-purple mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">Audited</h3>
-                    <p class="text-2xl font-bold text-white">Rug-Free</p>
-                    <p class="text-sm text-gray-400 mt-2">Community verified</p>
-                </div>
+                <div class="glass-card p-6 text-center"><i class="fa-solid fa-coins text-3xl text-solana-green mb-4"></i><h3 class="text-xl font-bold mb-2">Total Supply</h3><p class="text-2xl font-bold text-white">1,000,000,000 $NKTX</p><p class="text-sm text-gray-400 mt-2">Fair launch, no presale</p></div>
+                <div class="glass-card p-6 text-center"><i class="fa-solid fa-percentage text-3xl text-solana-purple mb-4"></i><h3 class="text-xl font-bold mb-2">Transaction Tax</h3><p class="text-2xl font-bold text-white">2% Charity Fee</p><p class="text-sm text-gray-400 mt-2">1% to charity wallet</p></div>
+                <div class="glass-card p-6 text-center"><i class="fa-solid fa-lock-open text-3xl text-solana-green mb-4"></i><h3 class="text-xl font-bold mb-2">Liquidity</h3><p class="text-2xl font-bold text-white">Burned LP</p><p class="text-sm text-gray-400 mt-2">Locked forever</p></div>
+                <div class="glass-card p-6 text-center"><i class="fa-solid fa-shield-halved text-3xl text-solana-purple mb-4"></i><h3 class="text-xl font-bold mb-2">Audited</h3><p class="text-2xl font-bold text-white">Rug-Free</p><p class="text-sm text-gray-400 mt-2">Community verified</p></div>
             </div>
         </div>
     </section>
 
-    <!-- Roadmap - New Section -->
+    <!-- Roadmap -->
     <section class="py-20 px-4">
         <div class="max-w-4xl mx-auto">
             <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center gradient-text" data-aos="fade-down">Roadmap</h2>
             <div class="relative border-l-4 border-solana-purple pl-8 space-y-8">
-                <div class="glass-card p-6 relative" data-aos="fade-right">
-                    <div class="absolute -left-4 w-8 h-8 bg-solana-purple rounded-full flex items-center justify-center">
-                        <i class="fa-solid fa-flag text-white text-sm"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Q4 2025: Launch</h3>
-                    <p class="text-gray-400">Token launch on pump.fun, community building, first charity vote.</p>
-                </div>
-                <div class="glass-card p-6 relative" data-aos="fade-left">
-                    <div class="absolute -left-4 w-8 h-8 bg-solana-purple rounded-full flex items-center justify-center">
-                        <i class="fa-solid fa-rocket text-white text-sm"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Q1 2026: Growth</h3>
-                    <p class="text-gray-400">Listings on DEX, DAO voting live, first donation to cat shelter.</p>
-                </div>
-                <div class="glass-card p-6 relative" data-aos="fade-right">
-                    <div class="absolute -left-4 w-8 h-8 bg-solana-purple rounded-full flex items-center justify-center">
-                        <i class="fa-solid fa-globe text-white text-sm"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Q2 2026: Global</h3>
-                    <p class="text-gray-400">Partnerships with global charities, NFT drops for cats, app launch.</p>
-                </div>
+                <div class="glass-card p-6 relative" data-aos="fade-right"><div class="absolute -left-4 w-8 h-8 bg-solana-purple rounded-full flex items-center justify-center"><i class="fa-solid fa-flag text-white text-sm"></i></div><h3 class="text-xl font-bold mb-2">Q4 2025: Launch</h3><p class="text-gray-400">Token launch on pump.fun, community building, first charity vote.</p></div>
+                <div class="glass-card p-6 relative" data-aos="fade-left"><div class="absolute -left-4 w-8 h-8 bg-solana-purple rounded-full flex items-center justify-center"><i class="fa-solid fa-rocket text-white text-sm"></i></div><h3 class="text-xl font-bold mb-2">Q1 2026: Growth</h3><p class="text-gray-400">Listings on DEX, DAO voting live, first donation to cat shelter.</p></div>
+                <div class="glass-card p-6 relative" data-aos="fade-right"><div class="absolute -left-4 w-8 h-8 bg-solana-purple rounded-full flex items-center justify-center"><i class="fa-solid fa-globe text-white text-sm"></i></div><h3 class="text-xl font-bold mb-2">Q2 2026: Global</h3><p class="text-gray-400">Partnerships with global charities, NFT drops for cats, app launch.</p></div>
             </div>
         </div>
     </section>
 
-    <!-- About & Mission - Moved DOWN -->
+    <!-- About & Mission -->
     <section id="about" class="py-20 bg-gray-900/50">
         <div class="max-w-6xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
             <div data-aos="fade-right">
                 <h2 class="text-3xl md:text-4xl font-bold mb-6">Built for the <span class="text-solana-green">Community</span>,<br>Dedicated to <span class="text-solana-purple">Cats</span>.</h2>
-                <p class="text-gray-400 mb-6 leading-relaxed">
-                    Nekotexs is a unique crypto project designed specifically for feline enthusiasts. Now live on pump.fun — blockchain for good.
-                </p>
-                <p class="text-gray-400 mb-6 leading-relaxed">
-                    While you trade and grow your portfolio, you are actively contributing to the well-being of cats. No complex mechanisms, just a simple, transparent way to make a difference.
-                </p>
+                <p class="text-gray-400 mb-6 leading-relaxed">Nekotexs is a unique crypto project designed specifically for feline enthusiasts. Now live on pump.fun — blockchain for good.</p>
+                <p class="text-gray-400 mb-6 leading-relaxed">While you trade and grow your portfolio, you are actively contributing to the well-being of cats. No complex mechanisms, just a simple, transparent way to make a difference.</p>
                 <ul class="space-y-4 mt-8">
-                    <li class="flex items-center gap-3">
-                        <i class="fa-solid fa-check text-solana-green"></i>
-                        <span>Transparent Operations</span>
-                    </li>
-                    <li class="flex items-center gap-3">
-                        <i class="fa-solid fa-check text-solana-green"></i>
-                        <span>Community Voting System</span>
-                    </li>
-                    <li class="flex items-center gap-3">
-                        <i class="fa-solid fa-check text-solana-green"></i>
-                        <span>Secure Solana Infrastructure</span>
-                    </li>
+                    <li class="flex items-center gap-3"><i class="fa-solid fa-check text-solana-green"></i><span>Transparent Operations</span></li>
+                    <li class="flex items-center gap-3"><i class="fa-solid fa-check text-solana-green"></i><span>Community Voting System</span></li>
+                    <li class="flex items-center gap-3"><i class="fa-solid fa-check text-solana-green"></i><span>Secure Solana Infrastructure</span></li>
                 </ul>
             </div>
-           
             <div class="grid gap-4" data-aos="fade-left">
-                <div class="glass-card p-6 transform hover:-translate-y-1 transition duration-300">
-                    <i class="fa-solid fa-paw text-3xl text-solana-purple mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">Charity Focused</h3>
-                    <p class="text-sm text-gray-400">Funds are accumulated and sent to cat shelters and charities.</p>
-                </div>
-                <div class="glass-card p-6 transform hover:-translate-y-1 transition duration-300">
-                    <i class="fa-solid fa-users text-3xl text-solana-green mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">DAO Voting</h3>
-                    <p class="text-sm text-gray-400">Users vote on social media to decide which charity receives the donation.</p>
-                </div>
+                <div class="glass-card p-6 transform hover:-translate-y-1 transition duration-300"><i class="fa-solid fa-paw text-3xl text-solana-purple mb-4"></i><h3 class="text-xl font-bold mb-2">Charity Focused</h3><p class="text-sm text-gray-400">Funds are accumulated and sent to cat shelters and charities.</p></div>
+                <div class="glass-card p-6 transform hover:-translate-y-1 transition duration-300"><i class="fa-solid fa-users text-3xl text-solana-green mb-4"></i><h3 class="text-xl font-bold mb-2">DAO Voting</h3><p class="text-sm text-gray-400">Users vote on social media to decide which charity receives the donation.</p></div>
             </div>
         </div>
     </section>
@@ -371,91 +193,48 @@
     <section id="mission" class="py-20 px-4 relative">
         <div class="max-w-4xl mx-auto text-center" data-aos="fade-up">
             <h2 class="text-3xl md:text-4xl font-bold mb-12">The <span class="gradient-text">Nekotexs</span> Mechanism</h2>
-           
             <div class="glass-card p-8 md:p-12 border-t-4 border-t-solana-green">
                 <div class="flex flex-col items-center justify-center">
                     <div class="text-6xl font-bold text-white mb-2">2%</div>
                     <div class="text-xl text-solana-green font-bold uppercase tracking-widest mb-6">Transaction Fee</div>
-                    <p class="text-gray-300 max-w-xl mx-auto text-lg">
-                        From every single transaction of $NKTX, <b>2%</b> is automatically collected into a dedicated Charity Wallet.
-                    </p>
-                   
+                    <p class="text-gray-300 max-w-xl mx-auto text-lg">From every single transaction of $NKTX, <b>2%</b> is automatically collected into a dedicated Charity Wallet.</p>
                     <div class="my-8 w-px h-16 bg-gray-700"></div>
-                   
                     <div class="grid md:grid-cols-3 gap-8 w-full">
-                        <div class="text-center">
-                            <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i class="fa-solid fa-wallet text-solana-purple"></i>
-                            </div>
-                            <h4 class="font-bold">1. Accumulate</h4>
-                            <p class="text-xs text-gray-500 mt-1">Fees gather in the safe wallet.</p>
-                        </div>
-                        <div class="text-center">
-                            <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i class="fa-solid fa-bolt text-yellow-400"></i>
-                            </div>
-                            <h4 class="font-bold">2. Trigger</h4>
-                            <p class="text-xs text-gray-500 mt-1">Threshold reached.</p>
-                        </div>
-                        <div class="text-center">
-                            <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i class="fa-solid fa-heart text-red-500"></i>
-                            </div>
-                            <h4 class="font-bold">3. Donate</h4>
-                            <p class="text-xs text-gray-500 mt-1">Sent to community chosen charity.</p>
-                        </div>
+                        <div class="text-center"><div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-wallet text-solana-purple"></i></div><h4 class="font-bold">1. Accumulate</h4><p class="text-xs text-gray-500 mt-1">Fees gather in the safe wallet.</p></div>
+                        <div class="text-center"><div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-bolt text-yellow-400"></i></div><h4 class="font-bold">2. Trigger</h4><p class="text-xs text-gray-500 mt-1">Threshold reached.</p></div>
+                        <div class="text-center"><div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-heart text-red-500"></i></div><h4 class="font-bold">3. Donate</h4><p class="text-xs text-gray-500 mt-1">Sent to community chosen charity.</p></div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- FAQ - New Section -->
+    <!-- FAQ -->
     <section class="py-20 bg-gray-900/50">
         <div class="max-w-4xl mx-auto px-4">
             <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center gradient-text" data-aos="fade-down">FAQ</h2>
             <div class="space-y-4">
-                <div class="glass-card p-4 cursor-pointer" onclick="toggleAccordion(this)">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold">What is the charity mechanism?</h3>
-                        <i class="fa-solid fa-chevron-down transition-transform"></i>
-                    </div>
-                    <div class="accordion-item mt-2 text-gray-400">
-                        2% of each transaction goes to a charity wallet. Community votes on which cat shelter receives it monthly.
-                    </div>
+                <div class="glass-card p-4 cursor-pointer accordion" onclick="this.classList.toggle('active')">
+                    <div class="flex justify-between items-center"><h3 class="font-bold">What is the charity mechanism?</h3><i class="fa-solid fa-chevron-down transition-transform"></i></div>
+                    <div class="accordion-item mt-2 text-gray-400">2% of each transaction goes to a charity wallet. Community votes on which cat shelter receives it monthly.</div>
                 </div>
-                <div class="glass-card p-4 cursor-pointer" onclick="toggleAccordion(this)">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold">Is $NKTX safe?</h3>
-                        <i class="fa-solid fa-chevron-down transition-transform"></i>
-                    </div>
-                    <div class="accordion-item mt-2 text-gray-400">
-                        Yes! LP is burned, contract renounced, audited by community. Built on secure Solana.
-                    </div>
+                <div class="glass-card p-4 cursor-pointer accordion" onclick="this.classList.toggle('active')">
+                    <div class="flex justify-between items-center"><h3 class="font-bold">Is $NKTX safe?</h3><i class="fa-solid fa-chevron-down transition-transform"></i></div>
+                    <div class="accordion-item mt-2 text-gray-400">Yes! LP is burned, contract renounced, audited by community. Built on secure Solana.</div>
                 </div>
-                <div class="glass-card p-4 cursor-pointer" onclick="toggleAccordion(this)">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold">How to buy $NKTX?</h3>
-                        <i class="fa-solid fa-chevron-down transition-transform"></i>
-                    </div>
-                    <div class="accordion-item mt-2 text-gray-400">
-                        Connect wallet on pump.fun, swap SOL for $NKTX. Start with as little as 0.01 SOL.
-                    </div>
+                <div class="glass-card p-4 cursor-pointer accordion" onclick="this.classList.toggle('active')">
+                    <div class="flex justify-between items-center"><h3 class="font-bold">How to buy $NKTX?</h3><i class="fa-solid fa-chevron-down transition-transform"></i></div>
+                    <div class="accordion-item mt-2 text-gray-400">Connect wallet on pump.fun, swap SOL for $NKTX. Start with as little as 0.01 SOL.</div>
                 </div>
-                <div class="glass-card p-4 cursor-pointer" onclick="toggleAccordion(this)">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold">When is the first donation?</h3>
-                        <i class="fa-solid fa-chevron-down transition-transform"></i>
-                    </div>
-                    <div class="accordion-item mt-2 text-gray-400">
-                        Once charity wallet hits 10 SOL (~end of Q4 2025). Vote starts in Telegram.
-                    </div>
+                <div class="glass-card p-4 cursor-pointer accordion" onclick="this.classList.toggle('active')">
+                    <div class="flex justify-between items-center"><h3 class="font-bold">When is the first donation?</h3><i class="fa-solid fa-chevron-down transition-transform"></i></div>
+                    <div class="accordion-item mt-2 text-gray-400">Once charity wallet hits 10 SOL (~end of Q4 2025). Vote starts in Telegram.</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Newsletter - New Section -->
+    <!-- Newsletter -->
     <section class="py-20 px-4 text-center">
         <div class="max-w-2xl mx-auto glass-card p-8" data-aos="fade-up">
             <h2 class="text-2xl font-bold mb-4 gradient-text">Stay Updated</h2>
@@ -467,9 +246,9 @@
         </div>
     </section>
 
+    <!-- Footer -->
     <footer class="border-t border-gray-800 bg-black pt-12 pb-6 px-4">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-           
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1">
                     <img src="img/logo.svg" alt="Logo" class="h-6 w-6 grayscale opacity-50">
@@ -477,46 +256,89 @@
                 <span class="text-gray-500 font-bold">Nekotexs</span>
             </div>
             <div class="flex gap-6 items-center">
-                <a href="https://x.com/nekotexs_netw" target="_blank" class="text-gray-500 hover:text-white transition" title="X (Twitter)">
-                    <i class="fa-brands fa-x-twitter text-xl"></i>
-                </a>
-                <a href="https://t.me/kayoosh_onlyfans" target="_blank" class="text-gray-500 hover:text-white transition" title="Telegram">
-                    <i class="fa-brands fa-telegram text-xl"></i>
-                </a>
-                <a href="https://youtube.com/@nekotexs" target="_blank" class="text-gray-500 hover:text-white transition" title="YouTube">
-                    <i class="fa-brands fa-youtube text-xl"></i>
-                </a>
-                <a href="mailto:Nekotexs@gmx.com" class="text-gray-500 hover:text-white transition" title="Email Us">
-                    <i class="fa-solid fa-envelope text-xl"></i>
-                </a>
+                <a href="https://x.com/nekotexs_netw" target="_blank" class="text-gray-500 hover:text-white transition"><i class="fa-brands fa-x-twitter text-xl"></i></a>
+                <a href="https://t.me/kayoosh_onlyfans" target="_blank" class="text-gray-500 hover:text-white transition"><i class="fa-brands fa-telegram text-xl"></i></a>
+                <a href="https://youtube.com/@nekotexs" target="_blank" class="text-gray-500 hover:text-white transition"><i class="fa-brands fa-youtube text-xl"></i></a>
+                <a href="mailto:Nekotexs@gmx.com" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-envelope text-xl"></i></a>
             </div>
         </div>
-       
         <div class="max-w-7xl mx-auto mt-12 pt-6 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center text-xs text-gray-600 font-mono">
-            <p>&copy; 2025 Nekotexs Project. All rights reserved.</p>
-            <p id="server-time" class="mt-2 md:mt-0 text-solana-green/70">
-                Server Time (Loading...)
-            </p>
+            <p>© 2025 Nekotexs Project. All rights reserved.</p>
+            <p id="server-time" class="mt-2 md:mt-0 text-solana-green/70">Server Time (Loading...)</p>
         </div>
     </footer>
 
     <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
-    <script>
-        AOS.init({ duration: 1000, once: true });
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-        // Accordion Toggle
-        function toggleAccordion(element) {
-            const item = element.querySelector('.accordion-item');
-            const icon = element.querySelector('i');
-            item.classList.toggle('active');
-            icon.style.transform = item.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
-        }
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+            authDomain: "nekotexs.firebaseapp.com",
+            projectId: "nekotexs",
+            storageBucket: "nekotexs.appspot.com",
+            messagingSenderId: "596436176972",
+            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+        };
 
-        // Enhanced Stats Fetch with Fallback & Holders
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Tabs
+        document.getElementById('tab-earned').onclick = () => {
+            document.getElementById('tab-earned').classList.add('tab-active');
+            document.getElementById('tab-streak').classList.remove('tab-active');
+            document.getElementById('table-earned').classList.remove('hidden');
+            document.getElementById('table-streak').classList.add('hidden');
+        };
+        document.getElementById('tab-streak').onclick = () => {
+            document.getElementById('tab-streak').classList.add('tab-active');
+            document.getElementById('tab-earned').classList.remove('tab-active');
+            document.getElementById('table-streak').classList.remove('hidden');
+            document.getElementById('table-earned').classList.add('hidden');
+        };
+
+        // Top Earners
+        const earnedQ = query(collection(db, "users"), orderBy("earnedBalance", "desc"), limit(10));
+        onSnapshot(earnedQ, snap => {
+            const tbody = document.getElementById("top-earned-body");
+            tbody.innerHTML = "";
+            let rank = 1;
+            snap.forEach(doc => {
+                const d = doc.data();
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-white/5";
+                tr.innerHTML = `<td class="px-6 py-4 text-solana-green font-bold">${rank++}</td>
+                                <td class="px-6 py-4 font-mono text-sm">${doc.id.slice(0,8)}...${doc.id.slice(-6)}</td>
+                                <td class="px-6 py-4 text-right text-solana-green font-bold">${Number(d.earnedBalance || 0).toFixed(2)}</td>
+                                <td class="px-6 py-4 text-right">${d.dailyDay || 0} days</td>`;
+                tbody.appendChild(tr);
+            });
+        });
+
+        // Top Streaks
+        const streakQ = query(collection(db, "users"), orderBy("dailyDay", "desc"), limit(10));
+        onSnapshot(streakQ, snap => {
+            const tbody = document.getElementById("top-streak-body");
+            tbody.innerHTML = "";
+            let rank = 1;
+            snap.forEach(doc => {
+                const d = doc.data();
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-white/5";
+                tr.innerHTML = `<td class="px-6 py-4 text-solana-green font-bold">${rank++}</td>
+                                <td class="px-6 py-4 font-mono text-sm">${doc.id.slice(0,8)}...${doc.id.slice(-6)}</td>
+                                <td class="px-6 py-4 text-right text-solana-green font-bold">${d.dailyDay || 0} days</td>
+                                <td class="px-6 py-4 text-right">${Number(d.earnedBalance || 0).toFixed(2)} $NKTX</td>`;
+                tbody.appendChild(tr);
+            });
+        });
+
+        // Оригинальные скрипты статистики токена
         let statsCache = {};
         async function fetchTokenStats() {
             try {
-                // DexScreener Primary
                 const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump');
                 const data = await response.json();
                 if (data.pairs && data.pairs.length > 0) {
@@ -525,35 +347,13 @@
                         price: parseFloat(pair.priceUsd).toFixed(8),
                         mcap: pair.marketCap ? `$${parseFloat(pair.marketCap).toLocaleString()}` : '$0',
                         volume: `$${pair.volume?.h24 ? parseFloat(pair.volume.h24).toLocaleString() : '0'}`,
-                        change: pair.priceChange?.h24 || 0
+                        change: pair.priceChange?.h24 || 0,
+                        holders: pair.holders || 0
                     };
                 }
             } catch (e) {
-                console.warn('DexScreener failed, trying Pump.fun fallback');
-                // Pump.fun Fallback (static for now, can add API if needed)
-                statsCache = { price: '0.00000398', mcap: '$4.0K', volume: '$287', change: -0.01 };
+                statsCache = { price: '0.00000398', mcap: '$4.0K', volume: '$287', change: -0.01, holders: '—' };
             }
-
-            // Holders via Solana RPC (simple query)
-            try {
-                const rpcResponse = await fetch('https://api.mainnet-beta.solana.com', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        jsonrpc: '2.0',
-                        id: 1,
-                        method: 'getTokenLargestAccounts',
-                        params: ['G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump']
-                    })
-                });
-                const rpcData = await rpcResponse.json();
-                const holders = rpcData.result?.value?.length || 0;
-                statsCache.holders = holders.toLocaleString();
-            } catch (e) {
-                statsCache.holders = 'Loading...';
-            }
-
-            // Update DOM
             document.getElementById('price').innerText = `$${statsCache.price || '0.00000'}`;
             document.getElementById('mcap').innerText = statsCache.mcap || '$0';
             document.getElementById('volume').innerText = statsCache.volume || '$0';
@@ -563,16 +363,16 @@
             changeEl.className = `text-xl font-bold ${statsCache.change >= 0 ? 'text-solana-green' : 'text-red-500'}`;
         }
         fetchTokenStats();
-        setInterval(fetchTokenStats, 10000); // Retry every 10s
+        setInterval(fetchTokenStats, 10000);
 
-        // SERVER TIME
         function updateServerTime() {
             const options = { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, year: 'numeric', month: 'numeric', day: 'numeric' };
-            const timeString = new Intl.DateTimeFormat([], options).format(new Date());
-            document.getElementById('server-time').innerText = `Server Time (Jerusalem +3): ${timeString}`;
+            document.getElementById('server-time').innerText = `Server Time (Jerusalem +3): ${new Intl.DateTimeFormat([], options).format(new Date())}`;
         }
         updateServerTime();
         setInterval(updateServerTime, 1000);
+
+        AOS.init({ duration: 1000, once: true });
     </script>
 </body>
 </html>
