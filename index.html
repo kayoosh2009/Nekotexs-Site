@@ -197,6 +197,72 @@
         </div>
     </section>
 
+    <section class="py-16 px-4">
+        <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-6">
+            <div class="glass-card p-6 text-center">
+                <div class="text-2xl font-bold" id="price">$0.0000</div>
+                <div class="text-gray-400 text-sm">Price</div>
+            </div>
+            <div class="glass-card p-6 text-center">
+                <div class="text-2xl font-bold" id="mcap">$0</div>
+                <div class="text-gray-400 text-sm">Market Cap</div>
+            </div>
+            <div class="glass-card p-6 text-center">
+                <div class="text-2xl font-bold" id="volume24h">$0</div>
+                <div class="text-gray-400 text-sm">24h Volume</div>
+            </div>
+            <div class="glass-card p-6 text-center">
+                <div class="text-2xl font-bold" id="holders">0</div>
+                <div class="text-gray-400 text-sm">Holders</div>
+            </div>
+            <div class="glass-card p-6 text-center">
+                <div class="text-2xl font-bold text-solana-green" id="change">0%</div>
+                <div class="text-gray-400 text-sm">24h Change</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TOP USERS DASHBOARD FROM FIREBASE -->
+    <section class="py-20 px-4">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-4xl md:text-5xl font-bold text-center mb-12 gradient-text">Top Community Members</h2>
+
+            <!-- Tabs -->
+            <div class="flex justify-center gap-4 mb-10">
+                <button id="tab-earned" class="tab-btn active px-8 py-3 rounded-full font-bold text-lg">Top Earners</button>
+                <button id="tab-streak" class="tab-btn px-8 py-3 rounded-full font-bold text-lg">Best Daily Streaks</button>
+            </div>
+
+            <!-- Tables -->
+            <div class="glass-card overflow-hidden">
+                <!-- Top by Earned Balance -->
+                <table id="table-earned" class="w-full text-left">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="px-6 py-4">Rank</th>
+                            <th class="px-6 py-4">Wallet</th>
+                            <th class="px-6 py-4 text-right">Earned $NKTX</th>
+                            <th class="px-6 py-4 text-right">Daily Streak</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top-earned-body" class="text-sm"></tbody>
+                </table>
+
+                <!-- Top by Daily Streak -->
+                <table id="table-streak" class="w-full text-left hidden">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="px-6 py-4">Rank</th>
+                            <th class="px-6 py-4">Wallet</th>
+                            <th class="px-6 py-4 text-right">Current Streak</th>
+                            <th class="px-6 py-4 text-right">Earned Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top-streak-body" class="text-sm"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
     <!-- Tokenomics - New Section -->
     <section id="tokenomics" class="py-20 bg-gray-900/50">
         <div class="max-w-6xl mx-auto px-4" data-aos="fade-up">
