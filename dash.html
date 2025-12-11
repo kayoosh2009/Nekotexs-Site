@@ -134,7 +134,7 @@
                     </button>
                 </div>
                 <p class="text-xs text-gray-500 mt-4 text-center">
-                    1 $NKTX ≈ <span id="priceDisplay" class="text-solana-green">$0.00000408</span>
+                    1 $NKTX ≈ <span id="priceDisplay" class="text-solana-green">$0.00000369</span>
                 </p>
             </div>
         </div>
@@ -242,14 +242,20 @@
     document.getElementById("welcomeUser").innerHTML = `Wallet: <span class="text-white font-mono">${userAddress.slice(0,6)}...${userAddress.slice(-4)}</span>`;
 
     // 1. PRICE LOGIC
-    let nktxPrice = 0.00000408;
+    // CHANGED DEFAULT PRICE HERE
+    let nktxPrice = 0.00000369; 
+    
     async function updatePrice() {
         try {
             const res = await fetch(`https://frontend-api.pump.fun/coins/G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump`);
             const data = await res.json();
+            // If the API returns a valid price, it will override the static one.
+            // If you want STRICTLY 0.00000369 always, comment out the line below:
             if (data?.usd && data.usd > 0) nktxPrice = data.usd;
         } catch (e) {}
+        
         document.getElementById("priceDisplay").innerText = `$${nktxPrice.toFixed(10)}`;
+        
         // Recalculate displayed USD value if balance exists
         const currentBal = parseFloat(document.getElementById("miningBalance").innerText);
         if(!isNaN(currentBal)) updateUSDValues(currentBal);
@@ -277,9 +283,14 @@
 
         document.getElementById("dailyDay").innerText = d.dailyDay || 0;
 
-        // Referral Link
+        // Referral Link - DYNAMIC DOMAIN LOGIC
         const refCode = d.extensionCode || userAddress;
-        document.getElementById("refLink").value = `https://nekotexs.com/user/login.html?ref=${refCode}`;
+        
+        // Get the current domain origin (e.g., https://yourdomain.com or http://localhost:5500)
+        const currentDomain = window.location.origin; 
+        
+        // Use the dynamic domain to build the link
+        document.getElementById("refLink").value = `${currentDomain}/user/login.html?ref=${refCode}`;
 
         // Load referrals list once we have the code
         loadReferrals(refCode);
@@ -305,8 +316,7 @@
             
             try {
                 let day = (data.dailyDay || 0) + 1;
-                if (day > 30) day = 1; // Optional: Reset after 30 or keep at 30? Usually caps or resets. Left as logic implies capping or linear.
-                // Assuming simple linear increment based on old code, but capped visually at 30 in UI
+                if (day > 30) day = 1; 
                 
                 const reward = day; // Reward equals day number
 
@@ -378,7 +388,6 @@
 
     // 4. REFERRALS
     function loadReferrals(code) {
-        // Only load if not loaded or if we want real-time updates
         const q = query(collection(db, "users"), where("referrer", "==", code), limit(10));
         onSnapshot(q, snap => {
             let total = 0;
@@ -403,7 +412,6 @@
     // UTILS
     window.copyVal = (id) => {
         navigator.clipboard.writeText(document.getElementById(id).value);
-        // Simple visual feedback could be added here
     }
 
     document.getElementById("copyRefBtn").onclick = function() {
