@@ -1,360 +1,423 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Nekotexs Dashboard</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  body { background:#0f172a; font-family:'Space Grotesk',sans-serif; color:white; }
-  .gradient-text { background:linear-gradient(90deg,#9945FF 0%,#14F195 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-  .glass { background:rgba(255,255,255,0.04); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.08); border-radius:1rem; transition:all .3s; }
-  .glass:hover { transform:translateY(-6px); box-shadow:0 12px 40px rgba(0,0,0,0.3); }
-  .day-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:6rem; font-weight:900; opacity:0.07; pointer-events:none; }
-  .timer { font-size:1.3rem; font-weight:bold; color:#14F195; }
-  .ref-link { background:rgba(255,255,255,0.08); border-radius:0.75rem; padding:0.75rem 1rem; font-family:monospace; }
-</style>
-</head>
-<body class="min-h-screen">
-
-<!-- NAVBAR -->
-<nav class="max-w-7xl mx-auto py-5 px-4 flex justify-between items-center">
-    <div class="flex items-center gap-3">
-        <img src="img/logo.svg" class="w-12 h-12 bg-white rounded-full p-1" />
-        <span class="text-xl font-bold tracking-wider">Nekotexs</span>
-    </div>
-    <div class="flex items-center gap-6">
-        <a href="../index.html" class="text-gray-300 hover:text-white font-bold">
-            <i class="fa-solid fa-home mr-2"></i> Back to Home
-        </a>
-        <button id="logoutBtn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-right-from-bracket"></i> Log out</button>
-    </div>
-</nav>
-
-<div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-5xl font-bold mb-2"><span class="gradient-text">Dashboard</span></h1>
-    <p id="welcomeUser" class="text-gray-400 font-mono mb-10">Loading wallet...</p>
-
-    <div class="flex flex-wrap gap-5 mb-10">
-        <a href="trade.html" class="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-500 rounded-xl font-bold text-lg shadow-2xl hover:scale-105 transition">Trade</a>
-        <a href="withdraw.html" class="px-8 py-4 bg-gradient-to-r from-green-500 to-teal-400 rounded-xl font-bold text-lg shadow-2xl hover:scale-105 transition">Withdraw</a>
-    </div>
-
-    <!-- БАЛАНСЫ -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-        <div class="glass p-8 relative overflow-hidden">
-            <h3 class="text-xs uppercase text-gray-400 font-bold">Wallet Balance</h3>
-            <div class="mt-4">
-                <div class="text-5xl font-bold" id="walletBalance">0.00</div>
-                <div class="text-2xl text-gray-300">$NKTX</div>
-                <div class="text-sm text-gray-500 mt-2" id="walletUSD">~ $0.0000 USD</div>
-            </div>
-        </div>
-
-        <div class="glass p-8 relative overflow-hidden">
-            <h3 class="text-xs uppercase text-gray-400 font-bold">Mining Balance (Locked)</h3>
-            <div class="mt-4">
-                <div class="text-5xl font-bold text-green-400" id="miningBalance">0.0000</div>
-                <div class="text-2xl text-gray-300">$NKTX</div>
-                <div class="text-sm text-gray-500 mt-2" id="miningUSD">~ $0.0000 USD</div>
-            </div>
-        </div>
-
-        <div class="glass p-8 relative overflow-hidden">
-            <h3 class="text-xs uppercase text-gray-400 font-bold">Daily Reward</h3>
-            <p class="text-sm text-gray-400 mt-3">Day <span id="dailyDay" class="font-bold">0</span> / 30</p>
-            <div class="relative mt-8 inline-block">
-                <div id="dayOverlay" class="day-overlay" style="display:none"></div>
-                <button id="claimBtn" class="relative px-12 py-6 bg-gradient-to-r from-purple-600 to-green-400 rounded-2xl font-bold text-2xl shadow-2xl hover:scale-110 transition">
-                    Claim Reward
-                </button>
-                <div id="timerDisplay" class="timer mt-4 text-center" style="display:none"></div>
-            </div>
-            <p id="claimStatus" class="text-sm text-gray-500 mt-4 text-center"></p>
-        </div>
-    </div>
-
-    <!-- РЕФЕРАЛЬНАЯ ССЫЛКА -->
-    <div class="glass p-10 mb-12 text-center">
-        <h3 class="text-3xl font-bold mb-6 gradient-text">Your Referral Link</h3>
-        <div class="max-w-3xl mx-auto">
-            <div class="flex flex-col sm:flex-row items-center gap-4">
-                <input id="refLink" readonly class="ref-link flex-1 text-sm sm:text-lg w-full text-center sm:text-left" value="Loading..." />
-                <button id="copyRefBtn" class="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl font-bold text-lg hover:scale-105 transition">
-                    <i class="fa-solid fa-copy mr-2"></i>Copy Link
-                </button>
-            </div>
-            <p class="text-gray-300 mt-4">Earn <span class="text-green-400 font-bold">10%</span> from every invited friend's mining rewards!</p>
-        </div>
-    </div>
-
-    <!-- КОШЕЛЁК -->
-    <div class="glass p-6 mb-12">
-        <h3 class="text-xs uppercase text-gray-400 font-bold mb-3">Wallet Address</h3>
-        <div class="flex items-center gap-3">
-            <input id="walletAddress" readonly class="bg-transparent w-full font-mono text-sm" />
-            <button onclick="copyVal('walletAddress')"><i class="fa-regular fa-copy text-gray-400 hover:text-white"></i></button>
-        </div>
-    </div>
-
-    <!-- ТРАНЗАКЦИИ -->
-    <div class="glass p-8 mb-12">
-        <h3 class="text-2xl font-bold mb-6">Recent Transactions</h3>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="text-gray-500 text-xs uppercase border-b border-white/10">
-                        <th class="py-3">Type</th>
-                        <th class="py-3">Status</th>
-                        <th class="py-3">Date</th>
-                        <th class="py-3 text-right">Amount</th>
-                    </tr>
-                </thead>
-                <tbody id="txList" class="text-sm"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- РЕФЕРАЛЫ -->
-    <div class="glass p-8 mb-12">
-        <h3 class="text-2xl font-bold mb-6">My Referrals</h3>
-        <p class="text-gray-400 mb-6">Total earnings from referrals: <span id="totalRefEarnings" class="text-green-400 font-bold">0.00 $NKTX</span></p>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="text-gray-500 text-xs uppercase border-b border-white/10">
-                        <th class="py-3">Address</th>
-                        <th class="py-3">Joined</th>
-                        <th class="py-3">Their Mining</th>
-                        <th class="py-3 text-right">Your Earnings</th>
-                    </tr>
-                </thead>
-                <tbody id="refList" class="text-sm"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- НОВОСТИ ИЗ ТЕЛЕГРАМА — ВЕРНУЛ КАК БЫЛО -->
-    <h2 class="text-4xl font-bold mb-10 gradient-text text-center">Latest News</h2>
-    <div class="space-y-10">
-        <div class="glass p-6 rounded-3xl overflow-hidden">
-            <script async src="https://telegram.org/js/telegram-widget.js?22"
-                    data-telegram-post="kayoosh_onlyfans/18"
-                    data-width="100%"
-                    data-dark="1"></script>
-        </div>
-        <div class="glass p-6 rounded-3xl overflow-hidden">
-            <script async src="https://telegram.org/js/telegram-widget.js?22"
-                    data-telegram-post="kayoosh_onlyfans/14"
-                    data-width="100%"
-                    data-dark="1"></script>
-        </div>
-        <div class="glass p-6 rounded-3xl overflow-hidden">
-            <script async src="https://telegram.org/js/telegram-widget.js?22"
-                    data-telegram-post="kayoosh_onlyfans/10"
-                    data-width="100%"
-                    data-dark="1"></script>
-        </div>
-    </div>
-</div>
-
-<!-- ФУТЕР -->
-<div class="text-center text-gray-500 text-sm py-10 mt-16">
-    <span id="totalUSD">Loading price...</span> • 1 $NKTX ≈ <span id="priceDisplay">$0.00000408</span>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc, onSnapshot, collection, query, where, orderBy, limit, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
-    authDomain: "nekotexs.firebaseapp.com",
-    projectId: "nekotexs",
-    storageBucket: "nekotexs.appspot.com",
-    messagingSenderId: "596436176972",
-    appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const userAddress = localStorage.getItem("nekotexs_wallet");
-if (!userAddress) location.href = "login.html";
-
-document.getElementById("walletAddress").value = userAddress;
-document.getElementById("welcomeUser").innerText = `Wallet: ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
-
-// ЦЕНА ТОКЕНА
-let nktxPrice = 0.00000408;
-async function updatePrice() {
-    try {
-        const res = await fetch(`https://frontend-api.pump.fun/coins/G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump`);
-        const data = await res.json();
-        if (data?.usd && data.usd > 0) nktxPrice = data.usd;
-    } catch (e) {}
-    document.getElementById("priceDisplay").innerText = `$${nktxPrice.toFixed(10)}`;
-}
-updatePrice();
-setInterval(updatePrice, 30000);
-
-function updateUSDValues(w, m) {
-    const wUSD = w * nktxPrice;
-    const mUSD = m * nktxPrice;
-    document.getElementById("walletUSD").innerText = `~ $${wUSD.toFixed(6)} USD`;
-    document.getElementById("miningUSD").innerText = `~ $${mUSD.toFixed(6)} USD`;
-    document.getElementById("totalUSD").innerText = `Total ≈ $${(wUSD + mUSD).toFixed(6)} USD`;
-}
-
-const userRef = doc(db, "users", userAddress);
-
-onSnapshot(userRef, (snap) => {
-    if (!snap.exists()) return;
-    const d = snap.data();
-    document.getElementById("walletBalance").innerText = Number(d.nkTxBalance || 0).toFixed(2);
-    document.getElementById("miningBalance").innerText = Number(d.earnedBalance || 0).toFixed(4);
-    document.getElementById("dailyDay").innerText = d.dailyDay || 0;
-    updateUSDValues(d.nkTxBalance || 0, d.earnedBalance || 0);
-
-    const refCode = d.extensionCode || userAddress;
-    document.getElementById("refLink").value = `https://nekotexs.com/user/login.html?ref=${refCode}`;
-
-    const day = d.dailyDay || 0;
-    const overlay = document.getElementById("dayOverlay");
-    if (day > 0) {
-        overlay.innerText = day;
-        overlay.style.display = "flex";
-    } else overlay.style.display = "none";
-
-    checkClaimStatus(d);
-});
-
-// Остальные функции (транзакции, рефералы, клейм, копирование) — полностью рабочие, как у тебя было
-// (я их оставил без изменений, только чуть почистил)
-
-const txQuery = query(collection(db, "transactions"), where("owner", "==", userAddress), orderBy("createdAt", "desc"), limit(10));
-onSnapshot(txQuery, snap => {
-    let html = "";
-    if (snap.empty) {
-        html = `<tr><td colspan="4" class="text-center py-10 text-gray-500">No transactions yet</td></tr>`;
-    } else {
-        snap.forEach(doc => {
-            const t = doc.data();
-            const color = t.amount > 0 ? "text-green-400" : "text-red-400";
-            html += `<tr>
-                <td class="py-3">${t.type}</td>
-                <td class="py-3 text-gray-400">${t.status}</td>
-                <td class="py-3 text-gray-400">${new Date(t.createdAt?.toMillis() || t.createdAt).toLocaleString()}</td>
-                <td class="py-3 text-right ${color}">${t.amount > 0 ? '+' : ''}${t.amount} NKTX</td>
-            </tr>`;
-        });
-    }
-    document.getElementById("txList").innerHTML = html;
-});
-
-function loadReferrals(code) {
-    const q = query(collection(db, "users"), where("referrer", "==", code), limit(20));
-    onSnapshot(q, snap => {
-        let total = 0;
-        let rows = "";
-        snap.forEach(doc => {
-            const r = doc.data();
-            const their = Number(r.earnedBalance || 0);
-            const earn = their * 0.1;
-            total += earn;
-            rows += `<tr>
-                <td class="py-3 font-mono">${doc.id.slice(0,6)}...${doc.id.slice(-4)}</td>
-                <td class="py-3 text-gray-400">${r.joinedAt ? new Date(r.joinedAt.toMillis()).toLocaleDateString() : '-'}</td>
-                <td class="py-3 text-gray-400">${their.toFixed(4)} NKTX</td>
-                <td class="py-3 text-right text-green-400">+${earn.toFixed(4)} NKTX</td>
-            </tr>`;
-        });
-        if (rows === "") rows = `<tr><td colspan="4" class="text-center py-10 text-gray-500">No referrals yet</td></tr>`;
-        document.getElementById("refList").innerHTML = rows;
-        document.getElementById("totalRefEarnings").innerText = `${total.toFixed(2)} $NKTX`;
-    });
-}
-onSnapshot(userRef, snap => { if (snap.exists()) loadReferrals(snap.data().extensionCode || userAddress); });
-
-const claimBtn = document.getElementById("claimBtn");
-const timerDisplay = document.getElementById("timerDisplay");
-
-function checkClaimStatus(data) {
-    const last = data.lastClaim?.toMillis() || data.lastClaim || 0;
-    const now = Date.now();
-    const dayMs = 24*60*60*1000;
-    if (now - last < dayMs && data.dailyDay > 0) {
-        claimBtn.style.display = "none";
-        timerDisplay.style.display = "block";
-        startTimer(dayMs - (now - last));
-    } else {
-        claimBtn.style.display = "block";
-        timerDisplay.style.display = "none";
-        claimBtn.disabled = false;
-        claimBtn.innerText = "Claim Reward";
-    }
-}
-
-function startTimer(ms) {
-    let remain = ms;
-    const int = setInterval(() => {
-        remain -= 1000;
-        if (remain <= 0) {
-            clearInterval(int);
-            timerDisplay.style.display = "none";
-            claimBtn.style.display = "block";
-            return;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nekotexs Dashboard</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Space Grotesk', 'sans-serif'] },
+                    colors: {
+                        solana: { purple: '#9945FF', green: '#14F195', dark: '#1B1B1B' }
+                    },
+                    animation: { 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
+                }
+            }
         }
-        const h = Math.floor(remain / 3600000).toString().padStart(2,'0');
-        const m = Math.floor((remain % 3600000) / 60000).toString().padStart(2,'0');
-        const s = Math.floor((remain % 60000) / 1000).toString().padStart(2,'0');
-        timerDisplay.innerText = `Next claim: ${h}:${m}:${s}`;
-    }, 1000);
-}
+    </script>
+    
+    <style>
+        body { 
+            background-color: #0f172a; 
+            color: #ffffff;
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%); 
+            min-height: 100vh;
+        }
+        .gradient-text { 
+            background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-clip: text; 
+        }
+        .glass-card { 
+            background: rgba(255,255,255,0.03); 
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.08); 
+            border-radius: 1.5rem; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+            border-color: rgba(153, 69, 255, 0.3);
+        }
+        
+        /* Toast Notification Animation */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-enter { animation: slideIn 0.5s forwards; }
+    </style>
+</head>
+<body class="flex flex-col">
 
-claimBtn.onclick = async () => {
-    claimBtn.disabled = true;
-    claimBtn.innerText = "Claiming...";
-    const snap = await getDoc(userRef);
-    const d = snap.data();
-    let day = (d.dailyDay || 0) + 1;
-    day = Math.min(day, 30);
-    const reward = day;
-    await updateDoc(userRef, {
-        dailyDay: day,
-        lastClaim: serverTimestamp(),
-        earnedBalance: (d.earnedBalance || 0) + reward
+    <nav class="w-full py-6 px-4 md:px-12 flex justify-between items-center max-w-7xl mx-auto relative z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 shadow-[0_0_15px_rgba(153,69,255,0.5)]">
+                <img src="img/logo.svg" alt="Logo" class="h-8 w-8">
+            </div>
+            <span class="text-2xl font-bold tracking-wider">Nekotexs</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <a href="../index.html" class="text-gray-400 hover:text-white font-semibold transition text-sm uppercase tracking-widest">
+                <i class="fa-solid fa-home mr-2"></i> Home
+            </a>
+            <button id="logoutBtn" class="text-gray-400 hover:text-red-400 transition font-semibold text-sm uppercase tracking-widest">
+                <i class="fa-solid fa-right-from-bracket mr-2"></i> Log out
+            </button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
+        
+        <div class="mb-10" data-aos="fade-down">
+            <h1 class="text-4xl md:text-5xl font-bold mb-2">User <span class="gradient-text">Dashboard</span></h1>
+            <p id="welcomeUser" class="text-gray-400 font-mono text-sm md:text-base opacity-80">Connecting to wallet...</p>
+        </div>
+
+        <div class="flex flex-wrap gap-4 mb-12">
+            <a href="trade.html" class="px-8 py-4 bg-gradient-to-r from-solana-purple to-blue-600 rounded-2xl font-bold text-lg shadow-lg hover:shadow-solana-purple/50 hover:scale-105 transition flex items-center gap-2">
+                <i class="fa-solid fa-chart-line"></i> Trade
+            </a>
+            <a href="withdraw.html" class="px-8 py-4 bg-gradient-to-r from-solana-green to-emerald-600 rounded-2xl font-bold text-lg shadow-lg text-black hover:shadow-solana-green/50 hover:scale-105 transition flex items-center gap-2">
+                <i class="fa-solid fa-money-bill-transfer"></i> Withdraw
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            
+            <div class="glass-card p-8 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                    <i class="fa-solid fa-coins text-6xl text-solana-green"></i>
+                </div>
+                <h3 class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-1">Total Earned Balance</h3>
+                <div class="mt-2">
+                    <div class="text-4xl md:text-5xl font-bold text-solana-green" id="miningBalance">0.0000</div>
+                    <div class="text-xl text-white font-bold">$NKTX</div>
+                    <div class="text-sm text-gray-500 mt-2 font-mono" id="miningUSD">~ $0.0000 USD</div>
+                </div>
+            </div>
+
+            <div class="glass-card p-8 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                    <i class="fa-solid fa-fire text-6xl text-orange-500"></i>
+                </div>
+                <h3 class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-1">Daily Streak</h3>
+                <div class="mt-4 flex items-end gap-2">
+                    <span class="text-5xl font-bold text-white" id="dailyDay">0</span>
+                    <span class="text-lg text-gray-400 mb-2">/ 30 Days</span>
+                </div>
+                <div class="mt-4 pt-4 border-t border-white/10">
+                    <div id="autoClaimStatus" class="flex items-center gap-2 text-sm text-solana-green font-bold">
+                        <i class="fa-solid fa-robot"></i> Auto-Claim Active
+                    </div>
+                    <div id="nextClaimTimer" class="text-xs text-gray-500 mt-1 font-mono">
+                        Checking status...
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-8 flex flex-col justify-center">
+                <h3 class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-4">Your Wallet Address</h3>
+                <div class="relative">
+                    <input id="walletAddress" readonly class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-300 font-mono outline-none focus:border-solana-purple transition" />
+                    <button onclick="copyVal('walletAddress')" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-2">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-4 text-center">
+                    1 $NKTX ≈ <span id="priceDisplay" class="text-solana-green">$0.00000408</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="glass-card p-8 md:p-10 mb-12 text-center relative overflow-hidden">
+            <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-solana-purple opacity-10 blur-[80px] rounded-full pointer-events-none"></div>
+            
+            <h3 class="text-2xl md:text-3xl font-bold mb-6">Invite Friends & <span class="gradient-text">Earn 10%</span></h3>
+            <div class="max-w-3xl mx-auto relative z-10">
+                <div class="flex flex-col sm:flex-row items-center gap-3">
+                    <input id="refLink" readonly class="flex-1 bg-black/40 border border-white/10 rounded-xl px-6 py-4 text-center sm:text-left text-gray-300 font-mono text-sm md:text-base outline-none w-full" value="Loading link..." />
+                    <button id="copyRefBtn" class="w-full sm:w-auto px-8 py-4 bg-white text-black rounded-xl font-bold hover:bg-gray-200 transition shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                        <i class="fa-solid fa-copy mr-2"></i> Copy
+                    </button>
+                </div>
+                <p class="text-gray-400 text-sm mt-4">Receive 10% of all $NKTX mined by your referrals instantly.</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            
+            <div class="glass-card p-6 md:p-8">
+                <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-solana-purple"></i> History
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-gray-500 text-xs uppercase border-b border-white/10">
+                                <th class="py-3 pl-2">Type</th>
+                                <th class="py-3">Date</th>
+                                <th class="py-3 text-right pr-2">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="txList" class="text-sm divide-y divide-white/5"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-users text-solana-green"></i> Referrals
+                    </h3>
+                    <span id="totalRefEarnings" class="text-xs bg-solana-green/10 text-solana-green px-3 py-1 rounded-full font-bold border border-solana-green/20">0.00 $NKTX</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-gray-500 text-xs uppercase border-b border-white/10">
+                                <th class="py-3 pl-2">User</th>
+                                <th class="py-3">Joined</th>
+                                <th class="py-3 text-right pr-2">Your 10%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="refList" class="text-sm divide-y divide-white/5"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="max-w-3xl mx-auto space-y-6">
+            <h2 class="text-center text-2xl font-bold mb-6 text-gray-400">Community Updates</h2>
+            <div class="glass-card p-1 rounded-2xl overflow-hidden">
+                <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="kayoosh_onlyfans/18" data-width="100%" data-dark="1"></script>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="toast" class="fixed top-24 right-5 bg-gray-800 border border-solana-green rounded-xl p-4 shadow-2xl flex items-center gap-4 transform translate-x-[200%] transition-transform duration-500 z-50">
+        <div class="w-10 h-10 bg-solana-green/20 rounded-full flex items-center justify-center text-solana-green">
+            <i class="fa-solid fa-gift"></i>
+        </div>
+        <div>
+            <h4 class="font-bold text-white text-sm">Daily Reward Claimed!</h4>
+            <p class="text-xs text-gray-400" id="toastMessage">+10 NKTX added to balance</p>
+        </div>
+    </div>
+
+    <footer class="text-center text-gray-600 text-xs py-8 border-t border-white/5 mt-8">
+        <p>&copy; 2025 Nekotexs. All rights reserved.</p>
+    </footer>
+
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc, onSnapshot, collection, query, where, orderBy, limit, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+        authDomain: "nekotexs.firebaseapp.com",
+        projectId: "nekotexs",
+        storageBucket: "nekotexs.appspot.com",
+        messagingSenderId: "596436176972",
+        appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const userAddress = localStorage.getItem("nekotexs_wallet");
+    if (!userAddress) location.href = "login.html";
+
+    document.getElementById("walletAddress").value = userAddress;
+    document.getElementById("welcomeUser").innerHTML = `Wallet: <span class="text-white font-mono">${userAddress.slice(0,6)}...${userAddress.slice(-4)}</span>`;
+
+    // 1. PRICE LOGIC
+    let nktxPrice = 0.00000408;
+    async function updatePrice() {
+        try {
+            const res = await fetch(`https://frontend-api.pump.fun/coins/G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump`);
+            const data = await res.json();
+            if (data?.usd && data.usd > 0) nktxPrice = data.usd;
+        } catch (e) {}
+        document.getElementById("priceDisplay").innerText = `$${nktxPrice.toFixed(10)}`;
+        // Recalculate displayed USD value if balance exists
+        const currentBal = parseFloat(document.getElementById("miningBalance").innerText);
+        if(!isNaN(currentBal)) updateUSDValues(currentBal);
+    }
+    updatePrice();
+    setInterval(updatePrice, 60000);
+
+    function updateUSDValues(earned) {
+        const mUSD = earned * nktxPrice;
+        document.getElementById("miningUSD").innerText = `~ $${mUSD.toFixed(6)} USD`;
+    }
+
+    // 2. USER DATA & AUTO CLAIM LOGIC
+    const userRef = doc(db, "users", userAddress);
+    let isProcessingClaim = false; // Flag to prevent double submission
+
+    onSnapshot(userRef, (snap) => {
+        if (!snap.exists()) return;
+        const d = snap.data();
+
+        // Display ONLY Earned Balance as requested
+        const earned = Number(d.earnedBalance || 0);
+        document.getElementById("miningBalance").innerText = earned.toFixed(4);
+        updateUSDValues(earned);
+
+        document.getElementById("dailyDay").innerText = d.dailyDay || 0;
+
+        // Referral Link
+        const refCode = d.extensionCode || userAddress;
+        document.getElementById("refLink").value = `https://nekotexs.com/user/login.html?ref=${refCode}`;
+
+        // Load referrals list once we have the code
+        loadReferrals(refCode);
+
+        // AUTO CLAIM CHECK
+        checkAndAutoClaim(d);
     });
-    await addDoc(collection(db, "transactions"), {
-        owner: userAddress,
-        type: "Daily Reward",
-        amount: reward,
-        status: "Completed",
-        createdAt: serverTimestamp()
+
+    async function checkAndAutoClaim(data) {
+        if (isProcessingClaim) return;
+
+        const last = data.lastClaim?.toMillis() || data.lastClaim || 0;
+        const now = Date.now();
+        const cooldown = 24 * 60 * 60 * 1000; // 24 hours
+        const diff = now - last;
+
+        const timerDiv = document.getElementById("nextClaimTimer");
+
+        if (diff >= cooldown) {
+            // TIME TO CLAIM AUTOMATICALLY
+            isProcessingClaim = true;
+            timerDiv.innerHTML = "<span class='text-green-400'>Claiming reward...</span>";
+            
+            try {
+                let day = (data.dailyDay || 0) + 1;
+                if (day > 30) day = 1; // Optional: Reset after 30 or keep at 30? Usually caps or resets. Left as logic implies capping or linear.
+                // Assuming simple linear increment based on old code, but capped visually at 30 in UI
+                
+                const reward = day; // Reward equals day number
+
+                await updateDoc(userRef, {
+                    dailyDay: day,
+                    lastClaim: serverTimestamp(),
+                    earnedBalance: (data.earnedBalance || 0) + reward
+                });
+
+                await addDoc(collection(db, "transactions"), {
+                    owner: userAddress,
+                    type: "Auto Daily Reward",
+                    amount: reward,
+                    status: "Completed",
+                    createdAt: serverTimestamp()
+                });
+
+                showToast(reward);
+
+            } catch (error) {
+                console.error("Auto claim failed", error);
+            } finally {
+                isProcessingClaim = false;
+            }
+
+        } else {
+            // SHOW COUNTDOWN
+            const remain = cooldown - diff;
+            const h = Math.floor(remain / 3600000).toString().padStart(2,'0');
+            const m = Math.floor((remain % 3600000) / 60000).toString().padStart(2,'0');
+            timerDiv.innerText = `Next reward in: ${h}h ${m}m`;
+        }
+    }
+
+    // TOAST NOTIFICATION UI
+    function showToast(amount) {
+        const toast = document.getElementById("toast");
+        const msg = document.getElementById("toastMessage");
+        msg.innerText = `+${amount} $NKTX added to your balance!`;
+        
+        toast.classList.remove("translate-x-[200%]"); // Show
+        toast.classList.add("translate-x-0");
+        
+        setTimeout(() => {
+            toast.classList.remove("translate-x-0");
+            toast.classList.add("translate-x-[200%]"); // Hide
+        }, 4000);
+    }
+
+    // 3. TRANSACTIONS
+    const txQuery = query(collection(db, "transactions"), where("owner", "==", userAddress), orderBy("createdAt", "desc"), limit(5));
+    onSnapshot(txQuery, snap => {
+        let html = "";
+        if (snap.empty) {
+            html = `<tr><td colspan="3" class="text-center py-6 text-gray-500 text-xs">No transactions yet</td></tr>`;
+        } else {
+            snap.forEach(doc => {
+                const t = doc.data();
+                const isPlus = t.amount > 0;
+                html += `<tr>
+                    <td class="py-3 pl-2 text-gray-300 font-medium">${t.type}</td>
+                    <td class="py-3 text-gray-500 text-xs">${new Date(t.createdAt?.toMillis() || t.createdAt).toLocaleDateString()}</td>
+                    <td class="py-3 text-right pr-2 ${isPlus ? 'text-solana-green' : 'text-red-400'} font-bold">${isPlus ? '+' : ''}${t.amount}</td>
+                </tr>`;
+            });
+        }
+        document.getElementById("txList").innerHTML = html;
     });
-    document.getElementById("claimStatus").innerText = `+${reward} NKTX claimed!`;
-    checkClaimStatus({ lastClaim: Date.now(), dailyDay: day });
-};
 
-function copyVal(id) {
-    navigator.clipboard.writeText(document.getElementById(id).value);
-    alert("Copied!");
-}
+    // 4. REFERRALS
+    function loadReferrals(code) {
+        // Only load if not loaded or if we want real-time updates
+        const q = query(collection(db, "users"), where("referrer", "==", code), limit(10));
+        onSnapshot(q, snap => {
+            let total = 0;
+            let rows = "";
+            snap.forEach(doc => {
+                const r = doc.data();
+                const their = Number(r.earnedBalance || 0);
+                const earn = their * 0.1;
+                total += earn;
+                rows += `<tr>
+                    <td class="py-3 pl-2 font-mono text-gray-300">${doc.id.slice(0,4)}...${doc.id.slice(-4)}</td>
+                    <td class="py-3 text-gray-500 text-xs">${r.joinedAt ? new Date(r.joinedAt.toMillis()).toLocaleDateString() : '-'}</td>
+                    <td class="py-3 text-right pr-2 text-solana-green">+${earn.toFixed(2)}</td>
+                </tr>`;
+            });
+            if (rows === "") rows = `<tr><td colspan="3" class="text-center py-6 text-gray-500 text-xs">No referrals yet</td></tr>`;
+            document.getElementById("refList").innerHTML = rows;
+            document.getElementById("totalRefEarnings").innerText = `${total.toFixed(2)} $NKTX`;
+        });
+    }
 
-// Кнопка копирования реферальной ссылки
-document.getElementById("copyRefBtn").onclick = function() {
-    navigator.clipboard.writeText(document.getElementById("refLink").value);
-    const btn = this;
-    const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-check text-green-400"></i> Copied!';
-    setTimeout(() => btn.innerHTML = original, 2000);
-};
+    // UTILS
+    window.copyVal = (id) => {
+        navigator.clipboard.writeText(document.getElementById(id).value);
+        // Simple visual feedback could be added here
+    }
 
-document.getElementById("logoutBtn").onclick = () => {
-    localStorage.removeItem("nekotexs_wallet");
-    location.href = "../index.html";
-};
-</script>
+    document.getElementById("copyRefBtn").onclick = function() {
+        navigator.clipboard.writeText(document.getElementById("refLink").value);
+        const btn = this;
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check text-green-600"></i> Copied!';
+        setTimeout(() => btn.innerHTML = original, 2000);
+    };
+
+    document.getElementById("logoutBtn").onclick = () => {
+        localStorage.removeItem("nekotexs_wallet");
+        location.href = "../index.html";
+    };
+    </script>
 </body>
 </html>
