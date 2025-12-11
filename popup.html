@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nekotexs Miner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="login-screen" class="screen">
+        <div class="logo-container">
+            <img src="img/icon128.png" alt="Logo" class="logo-img">
+        </div>
+        <h1><span class="gradient-text">Welcome</span> Back</h1>
+        <p>Enter your Solana address to start mining $NKTX in background.</p>
+        
+        <div class="glass" style="width: 100%; box-sizing: border-box;">
+            <input type="text" id="wallet-input" placeholder="Solana Address (Base58)">
+            <button id="login-btn" class="btn-primary btn-login">Connect Wallet</button>
+        </div>
+    </div>
+
+    <div id="dashboard-screen" class="screen hidden">
+        <div class="logo-container" style="width: 50px; height: 50px; margin-bottom: 10px;">
+            <img src="img/icon128.png" alt="Logo" style="width: 30px; height: 30px;">
+        </div>
+        
+        <div class="sync-badge">
+            <span class="dot"></span> System Active
+        </div>
+
+        <div class="glass balance-card">
+            <p style="margin:0; font-size:12px; text-transform:uppercase;">Current Balance</p>
+            <div class="balance-val" id="balance-display">0.00</div>
+            <span class="gradient-text" style="font-size: 18px;">$NKTX</span>
+            <div class="balance-usd" id="usd-display">≈ $0.0000 USD</div>
+        </div>
+
+        <div class="glass" style="width: 100%; box-sizing: border-box;">
+            <h3 style="margin-top:0; font-size:14px;">Mining Stats</h3>
+            <div class="stat-row">
+                <span>Rate per Minute:</span>
+                <span style="color: var(--solana-green)">0.00001</span>
+            </div>
+            <div class="stat-row">
+                <span>Rate per Page:</span>
+                <span style="color: var(--solana-green)">0.0003</span>
+            </div>
+            <div class="stat-row" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                <span>Wallet:</span>
+                <span id="short-address" style="font-family: monospace;">...</span>
+            </div>
+        </div>
+
+        <button id="logout-btn" class="btn-primary btn-logout">Log Out</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
