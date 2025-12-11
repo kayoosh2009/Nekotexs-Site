@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Nekotexs Sync</title>
+</head>
+<body>
+    <h3>Syncing... do not close.</h3>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
+            authDomain: "nekotexs.firebaseapp.com",
+            databaseURL: "https://nekotexs-default-rtdb.firebaseio.com",
+            projectId: "nekotexs",
+            storageBucket: "nekotexs.firebasestorage.app",
+            messagingSenderId: "596436176972",
+            appId: "1:596436176972:web:d2870ff374ce52acb9e4e9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function sync() {
+            // Получаем данные из URL параметров
+            const params = new URLSearchParams(window.location.search);
+            const wallet = params.get('wallet');
+            const balanceStr = params.get('balance');
+
+            if (!wallet || !balanceStr) {
+                console.error("No data provided");
+                window.close(); // Закрываем, если данных нет
+                return;
+            }
+
+            const balance = parseFloat(balanceStr);
+            const userRef = doc(db, "users", wallet);
+
+            try {
+                const snap = await getDoc(userRef);
+
+                if (snap.exists()) {
+                    // Если юзер есть — обновляем баланс расширения
+                    // Мы используем nkTxBalance как баланс расширения (как в твоем коде)
+                    await updateDoc(userRef, {
+                        nkTxBalance: balance,
+                        lastExtensionSync: serverTimestamp()
+                    });
+                } else {
+                    // Если юзера нет в БД — создаем его
+                    await setDoc(userRef, {
+                        nkTxBalance: balance,
+                        earnedBalance: 0, // Майнинг на сайте
+                        joinedAt: serverTimestamp(),
+                        lastExtensionSync: serverTimestamp(),
+                        dailyDay: 0
+                    });
+                }
+                console.log("Synced successfully!");
+            } catch (e) {
+                console.error("Sync failed:", e);
+            } finally {
+                // САМОЕ ВАЖНОЕ: Закрываем окно после работы
+                window.close();
+            }
+        }
+
+        sync();
+    </script>
+</body>
+</html>
