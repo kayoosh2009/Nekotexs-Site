@@ -1,0 +1,395 @@
+background.js
+< - - - >
+const PROJECT_ID = "nekotexs";
+const COLLECTION = "users";
+// Используем Firestore REST API для записи без тяжелых библиотек
+const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`;
+
+const REWARD_PAGE_LOAD = 0.0003;
+const REWARD_TIME_1MIN = 0.00001;
+
+// --- INIT ---
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.local.get(['nkTxBalance', 'walletAddress'], (result) => {
+    if (result.nkTxBalance === undefined) {
+      chrome.storage.local.set({ 
+        nkTxBalance: 0, 
+        walletAddress: null 
+      });
+    }
+  });
+
+  // Таймеры
+  chrome.alarms.create("miningTimer", { periodInMinutes: 1 }); // Начисление за время
+  chrome.alarms.create("firebaseSync", { periodInMinutes: 15 }); // Синхронизация с БД
+});
+
+// --- ОБРАБОТЧИКИ ТАЙМЕРОВ ---
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "miningTimer") {
+    addReward(REWARD_TIME_1MIN);
+  } else if (alarm.name === "firebaseSync") {
+    syncToFirestore();
+  }
+});
+
+// --- НАЧИСЛЕНИЕ ЗА АКТИВНОСТЬ (СТРАНИЦЫ) ---
+chrome.webNavigation.onCommitted.addListener((details) => {
+  // frameId 0 = основная страница (не реклама)
+  if (details.frameId === 0 && !details.url.startsWith('chrome://')) {
+    addReward(REWARD_PAGE_LOAD);
+  }
+});
+
+// --- ЛОГИКА БАЛАНСА ---
+function addReward(amount) {
+  chrome.storage.local.get(['nkTxBalance', 'walletAddress'], (res) => {
+    if (res.walletAddress) {
+      let current = parseFloat(res.nkTxBalance || 0);
+      let newVal = current + amount;
+      // Сохраняем локально (быстро)
+      chrome.storage.local.set({ nkTxBalance: parseFloat(newVal.toFixed(8)) });
+    }
+  });
+}
+
+// --- СИНХРОНИЗАЦИЯ С FIREBASE (Скрытая) ---
+async function syncToFirestore() {
+  const data = await chrome.storage.local.get(['nkTxBalance', 'walletAddress']);
+  
+  if (!data.walletAddress) return;
+
+  // Формируем URL для конкретного юзера
+  const url = `${FIRESTORE_URL}/${data.walletAddress}?updateMask.fieldPaths=nkTxBalance&updateMask.fieldPaths=lastExtensionSync`;
+
+  // Формат данных для REST API Firestore (строгая типизация)
+  const body = {
+    fields: {
+      nkTxBalance: { doubleValue: data.nkTxBalance },
+      lastExtensionSync: { timestampValue: new Date().toISOString() }
+    }
+  };
+
+  try {
+    // Используем PATCH чтобы обновить только баланс, не затирая другие данные (рефералов и т.д.)
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (response.ok) {
+      console.log(`[Nekotexs] Synced ${data.nkTxBalance} for ${data.walletAddress}`);
+    } else {
+      console.error(`[Nekotexs] Sync Error: ${response.status}`);
+    }
+  } catch (err) {
+    console.error("Network Error:", err);
+  }
+}
+
+
+
+manifest.json
+< - - - >
+{
+  "manifest_version": 3,
+  "name": "Nekotexs Miner",
+  "version": "1.0",
+  "description": "Earn $NKTX while browsing. Auto-sync with Firebase.",
+  "icons": {
+    "128": "img/icon128.png"
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "https://firestore.googleapis.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "img/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
+
+
+
+popup.html
+< - - - >
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nekotexs Miner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="login-screen" class="screen">
+        <div class="logo-container">
+            <img src="img/icon128.png" alt="Logo" class="logo-img">
+        </div>
+        <h1><span class="gradient-text">Welcome</span> Back</h1>
+        <p>Enter your Solana address to start mining $NKTX in background.</p>
+        
+        <div class="glass" style="width: 100%; box-sizing: border-box;">
+            <input type="text" id="wallet-input" placeholder="Solana Address (Base58)">
+            <button id="login-btn" class="btn-primary btn-login">Connect Wallet</button>
+        </div>
+    </div>
+
+    <div id="dashboard-screen" class="screen hidden">
+        <div class="logo-container" style="width: 50px; height: 50px; margin-bottom: 10px;">
+            <img src="img/icon128.png" alt="Logo" style="width: 30px; height: 30px;">
+        </div>
+        
+        <div class="sync-badge">
+            <span class="dot"></span> System Active
+        </div>
+
+        <div class="glass balance-card">
+            <p style="margin:0; font-size:12px; text-transform:uppercase;">Current Balance</p>
+            <div class="balance-val" id="balance-display">0.00</div>
+            <span class="gradient-text" style="font-size: 18px;">$NKTX</span>
+            <div class="balance-usd" id="usd-display">≈ $0.0000 USD</div>
+        </div>
+
+        <div class="glass" style="width: 100%; box-sizing: border-box;">
+            <h3 style="margin-top:0; font-size:14px;">Mining Stats</h3>
+            <div class="stat-row">
+                <span>Rate per Minute:</span>
+                <span style="color: var(--solana-green)">0.00001</span>
+            </div>
+            <div class="stat-row">
+                <span>Rate per Page:</span>
+                <span style="color: var(--solana-green)">0.0003</span>
+            </div>
+            <div class="stat-row" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                <span>Wallet:</span>
+                <span id="short-address" style="font-family: monospace;">...</span>
+            </div>
+        </div>
+
+        <button id="logout-btn" class="btn-primary btn-logout">Log Out</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
+
+
+
+popup.js
+< - - - >
+const PRICE_NKTX = 0.00000408; // Цена из твоего кода
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Проверка авторизации
+    chrome.storage.local.get(['walletAddress', 'nkTxBalance'], (data) => {
+        if (data.walletAddress) {
+            showDashboard(data.walletAddress, data.nkTxBalance || 0);
+        } else {
+            showLogin();
+        }
+    });
+
+    // Логика Входа
+    document.getElementById('login-btn').addEventListener('click', () => {
+        const addr = document.getElementById('wallet-input').value.trim();
+        // Простая валидация (длина Solana адреса 32-44)
+        if (addr.length >= 32 && addr.length <= 44) {
+            chrome.storage.local.set({ 
+                walletAddress: addr,
+                nkTxBalance: 0 // Или загрузить из БД при первом входе, если нужно
+            }, () => {
+                showDashboard(addr, 0);
+            });
+        } else {
+            alert("Invalid Solana Address");
+        }
+    });
+
+    // Логика Выхода
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        chrome.storage.local.clear(() => {
+            showLogin();
+        });
+    });
+});
+
+function showLogin() {
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('dashboard-screen').classList.add('hidden');
+}
+
+function showDashboard(address, balance) {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('dashboard-screen').classList.remove('hidden');
+
+    // Форматирование адреса (4TK4...vVon)
+    const short = `${address.slice(0, 4)}...${address.slice(-4)}`;
+    document.getElementById('short-address').innerText = short;
+
+    updateBalanceUI(balance);
+
+    // Слушаем изменения баланса в реальном времени (из background.js)
+    chrome.storage.onChanged.addListener((changes) => {
+        if (changes.nkTxBalance) {
+            updateBalanceUI(changes.nkTxBalance.newValue);
+        }
+    });
+}
+
+function updateBalanceUI(balance) {
+    document.getElementById('balance-display').innerText = balance.toFixed(4);
+    const usd = (balance * PRICE_NKTX).toFixed(6);
+    document.getElementById('usd-display').innerText = `≈ $${usd} USD`;
+}
+
+
+
+style.css
+< - - - >
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg-dark: #0f172a;
+    --bg-darker: #020617;
+    --solana-purple: #9945FF;
+    --solana-green: #14F195;
+    --text-main: #ffffff;
+    --text-muted: #94a3b8;
+}
+
+body {
+    width: 360px;
+    height: 550px;
+    margin: 0;
+    font-family: 'Space Grotesk', sans-serif;
+    background-color: var(--bg-dark);
+    background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%);
+    color: var(--text-main);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Утилиты из твоего кода */
+.hidden { display: none !important; }
+
+.gradient-text {
+    background: linear-gradient(90deg, var(--solana-purple) 0%, var(--solana-green) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+.glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Экраны */
+.screen {
+    padding: 20px;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Логотип */
+.logo-container {
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+.logo-img { width: 50px; height: 50px; }
+
+h1 { font-size: 24px; margin: 0 0 10px 0; }
+p { color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 20px; }
+
+/* Формы */
+input {
+    width: 100%;
+    padding: 12px 15px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    color: white;
+    font-family: 'Space Grotesk', sans-serif;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+    outline: none;
+    transition: 0.3s;
+}
+input:focus { border-color: var(--solana-purple); }
+
+/* Кнопки как в твоем коде */
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 16px;
+    transition: transform 0.2s;
+}
+.btn-login {
+    background: linear-gradient(90deg, var(--solana-green), #00d1b2);
+    color: #000;
+}
+.btn-logout {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: auto;
+}
+.btn-primary:hover { transform: scale(1.02); }
+
+/* Дашборд элементы */
+.balance-card {
+    text-align: center;
+    width: 100%;
+}
+.balance-val { font-size: 36px; font-weight: 700; margin: 10px 0; }
+.balance-usd { font-size: 14px; color: var(--text-muted); }
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+.sync-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--solana-green);
+    margin-bottom: 10px;
+}
+.dot { width: 6px; height: 6px; background: var(--solana-green); border-radius: 50%; animation: pulse 2s infinite; }
+
+@keyframes pulse { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
