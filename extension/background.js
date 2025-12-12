@@ -1,12 +1,33 @@
-// --- // --- КОНФИГУРАЦИЯ ---
+// --- КОНФИГУРАЦИЯ ---
 const SYNC_PAGE_URL = "https://kayoosh2009.github.io/Nekotexs-Site/sync.html"; 
-
 const REWARD_PAGE_LOAD = 0.0003;
 const REWARD_TIME_1MIN = 0.00001;
 
-// --- ИНИЦИАЛИЗАЦИЯ ---
+// --- УПРАВЛЕНИЕ ТАЙМЕРАМИ ---
+function setupAlarms() {
+  // Сначала удаляем старые, чтобы не дублировать
+  chrome.alarms.clearAll(() => {
+    // 1. Таймер майнинга (каждую 1 минуту)
+    chrome.alarms.create("miningTimer", { periodInMinutes: 1 });
+    
+    // 2. Таймер синхронизации (каждую 1 минуту)
+    chrome.alarms.create("bridgeSync", { periodInMinutes: 1 });
+    
+    console.log("[Nekotexs] Alarms started/restarted.");
+  });
+}
+
+// Запускаем таймеры при установке И при запуске браузера
 chrome.runtime.onInstalled.addListener(() => {
-  // Инициализируем переменные, если их нет, но НЕ перезаписываем существующие
+  setupData();
+  setupAlarms();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  setupAlarms();
+});
+
+function setupData() {
   chrome.storage.local.get(['nkTxBalance', 'walletAddress'], (result) => {
     if (result.nkTxBalance === undefined) {
       chrome.storage.local.set({ 
@@ -15,17 +36,12 @@ chrome.runtime.onInstalled.addListener(() => {
       });
     }
   });
-
-  // Создаем таймеры
-  // 1. Таймер майнинга (каждую минуту начисляет награду)
-  chrome.alarms.create("miningTimer", { periodInMinutes: 1 }); 
-  
-  // 2. Таймер синхронизации (каждую минуту открывает скрытое окно для отправки в Firebase)
-  chrome.alarms.create("bridgeSync", { periodInMinutes: 1 });  
-});
+}
 
 // --- ОБРАБОТЧИКИ ТАЙМЕРОВ ---
 chrome.alarms.onAlarm.addListener((alarm) => {
+  console.log(`[Nekotexs] Alarm fired: ${alarm.name}`); // Для отладки
+  
   if (alarm.name === "miningTimer") {
     addReward(REWARD_TIME_1MIN);
   } else if (alarm.name === "bridgeSync") {
@@ -34,9 +50,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 // --- НАЧИСЛЕНИЕ ЗА ЗАГРУЗКУ СТРАНИЦ ---
-// Используем onCompleted, чтобы считать только полностью загруженные страницы
 chrome.webNavigation.onCompleted.addListener((details) => {
-  // frameId 0 = это основная вкладка, а не реклама или iframe
   if (details.frameId === 0 && !details.url.startsWith('chrome://')) {
     addReward(REWARD_PAGE_LOAD);
   }
@@ -45,16 +59,18 @@ chrome.webNavigation.onCompleted.addListener((details) => {
 // --- ЛОГИКА ИЗМЕНЕНИЯ БАЛАНСА ---
 function addReward(amount) {
   chrome.storage.local.get(['nkTxBalance', 'walletAddress'], (res) => {
+    // ВАЖНО: Если кошелек не введен, майнинг не идет!
     if (res.walletAddress) {
-      // Получаем текущий баланс
       let current = parseFloat(res.nkTxBalance || 0);
       let newVal = current + amount;
       
-      // Округляем до 8 знаков, чтобы избежать ошибок javascript (0.0000000199999)
+      // Округляем
       newVal = Math.round(newVal * 100000000) / 100000000;
 
-      // Сохраняем обратно
       chrome.storage.local.set({ nkTxBalance: newVal });
+      console.log(`[Nekotexs] Balance updated: ${newVal}`);
+    } else {
+      console.log("[Nekotexs] No wallet connected. Mining paused.");
     }
   });
 }
@@ -62,33 +78,25 @@ function addReward(amount) {
 // --- ФУНКЦИЯ СКРЫТОЙ СИНХРОНИЗАЦИИ ---
 function triggerBridgeSync() {
   chrome.storage.local.get(['nkTxBalance', 'walletAddress'], (data) => {
-    // Если пользователь не залогинен, ничего не делаем
     if (!data.walletAddress) return;
 
-    // Формируем URL с параметрами
     const finalUrl = `${SYNC_PAGE_URL}?wallet=${data.walletAddress}&balance=${data.nkTxBalance}`;
 
-    // Создаем окно:
-    // type: 'popup' - чтобы было без адресной строки
-    // state: 'minimized' - чтобы оно свернулось в панель задач (не мешало юзеру)
-    // focused: false - чтобы не перехватывало клавиатуру
+    // ИСПРАВЛЕНИЕ: Не используем 'minimized', так как Chrome тормозит JS в свернутых окнах.
+    // Вместо этого делаем окно маленьким и не в фокусе.
     chrome.windows.create({
       url: finalUrl,
       type: 'popup',
-      focused: false,
-      state: 'minimized', 
-      width: 1,  // Минимальный размер
-      height: 1
+      focused: false, 
+      width: 100, 
+      height: 100, 
+      left: 10000, // Уводим окно за пределы экрана
+      top: 10000
     }, (window) => {
-      // Окно откроется, sync.html выполнит код и сам вызовет window.close()
-      
-      // Но на всякий случай поставим таймер-предохранитель.
-      // Если через 15 секунд окно всё еще висит (например, интернет отпал), мы закроем его принудительно.
+      // Предохранитель
       setTimeout(() => {
         if (window && window.id) {
-          chrome.windows.remove(window.id).catch(() => { 
-            // Игнорируем ошибку, если окно уже закрылось само
-          });
+          chrome.windows.remove(window.id).catch(() => {});
         }
       }, 15000);
     });

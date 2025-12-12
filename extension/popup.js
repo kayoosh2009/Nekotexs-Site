@@ -1,7 +1,7 @@
-const PRICE_NKTX = 0.00000408; // Цена из твоего кода
+const PRICE_NKTX = 0.00000408;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Проверка авторизации
+    // Проверка авторизации при открытии попапа
     chrome.storage.local.get(['walletAddress', 'nkTxBalance'], (data) => {
         if (data.walletAddress) {
             showDashboard(data.walletAddress, data.nkTxBalance || 0);
@@ -13,13 +13,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Логика Входа
     document.getElementById('login-btn').addEventListener('click', () => {
         const addr = document.getElementById('wallet-input').value.trim();
-        // Простая валидация (длина Solana адреса 32-44)
+        
         if (addr.length >= 32 && addr.length <= 44) {
-            chrome.storage.local.set({ 
-                walletAddress: addr,
-                nkTxBalance: 0 // Или загрузить из БД при первом входе, если нужно
-            }, () => {
-                showDashboard(addr, 0);
+            // ИСПРАВЛЕНИЕ: Сначала получаем текущие данные, чтобы не стереть баланс
+            chrome.storage.local.get(['nkTxBalance'], (prevData) => {
+                const currentBalance = prevData.nkTxBalance || 0;
+                
+                chrome.storage.local.set({ 
+                    walletAddress: addr,
+                    nkTxBalance: currentBalance 
+                }, () => {
+                    showDashboard(addr, currentBalance);
+                });
             });
         } else {
             alert("Invalid Solana Address");
@@ -43,13 +48,11 @@ function showDashboard(address, balance) {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('dashboard-screen').classList.remove('hidden');
 
-    // Форматирование адреса (4TK4...vVon)
     const short = `${address.slice(0, 4)}...${address.slice(-4)}`;
     document.getElementById('short-address').innerText = short;
 
     updateBalanceUI(balance);
 
-    // Слушаем изменения баланса в реальном времени (из background.js)
     chrome.storage.onChanged.addListener((changes) => {
         if (changes.nkTxBalance) {
             updateBalanceUI(changes.nkTxBalance.newValue);
@@ -58,7 +61,8 @@ function showDashboard(address, balance) {
 }
 
 function updateBalanceUI(balance) {
-    document.getElementById('balance-display').innerText = balance.toFixed(4);
-    const usd = (balance * PRICE_NKTX).toFixed(6);
+    // Отображаем больше знаков после запятой, так как награды очень маленькие
+    document.getElementById('balance-display').innerText = balance.toFixed(5);
+    const usd = (balance * PRICE_NKTX).toFixed(7);
     document.getElementById('usd-display').innerText = `≈ $${usd} USD`;
 }
