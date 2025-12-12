@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Nekotexs Miner",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Earn $NKTX while browsing. Auto-sync with Firebase.",
   "icons": {
     "128": "img/icon128.png"
@@ -10,9 +10,6 @@
     "storage",
     "alarms",
     "webNavigation"
-  ],
-  "host_permissions": [
-    "https://firestore.googleapis.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
