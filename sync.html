@@ -3,13 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Nekotexs Sync</title>
+    <style>
+        body { font-family: monospace; background: #0f172a; color: #fff; padding: 20px; }
+        #status { color: #aaa; }
+        .error { color: #ff4444; }
+        .success { color: #00ff88; }
+    </style>
 </head>
 <body>
-    <h3>Syncing... do not close.</h3>
+    <h3>Nekotexs Background Sync</h3>
+    <div id="status">Initializing...</div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
+        // Твоя конфигурация (оставил как есть)
         const firebaseConfig = {
             apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
             authDomain: "nekotexs.firebaseapp.com",
@@ -22,48 +31,63 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const statusDiv = document.getElementById('status');
+
+        function log(msg, type = 'normal') {
+            console.log(msg);
+            statusDiv.innerHTML += `<br><span class="${type}">${msg}</span>`;
+        }
 
         async function sync() {
-            // Получаем данные из URL параметров
-            const params = new URLSearchParams(window.location.search);
-            const wallet = params.get('wallet');
-            const balanceStr = params.get('balance');
-
-            if (!wallet || !balanceStr) {
-                console.error("No data provided");
-                window.close(); // Закрываем, если данных нет
-                return;
-            }
-
-            const balance = parseFloat(balanceStr);
-            const userRef = doc(db, "users", wallet);
-
             try {
+                // 1. Получаем параметры
+                const params = new URLSearchParams(window.location.search);
+                const wallet = params.get('wallet');
+                const balanceStr = params.get('balance');
+
+                if (!wallet || !balanceStr) {
+                    throw new Error("Missing wallet or balance in URL");
+                }
+
+                log(`Wallet: ${wallet.slice(0, 4)}...`, 'normal');
+                
+                const balance = parseFloat(balanceStr);
+                const userRef = doc(db, "users", wallet);
+
+                // 2. Проверяем существование
                 const snap = await getDoc(userRef);
 
                 if (snap.exists()) {
-                    // Если юзер есть — обновляем баланс расширения
-                    // Мы используем nkTxBalance как баланс расширения (как в твоем коде)
+                    // Обновляем
                     await updateDoc(userRef, {
                         nkTxBalance: balance,
                         lastExtensionSync: serverTimestamp()
                     });
+                    log("Updated existing user.", "success");
                 } else {
-                    // Если юзера нет в БД — создаем его
+                    // Создаем
                     await setDoc(userRef, {
                         nkTxBalance: balance,
-                        earnedBalance: 0, // Майнинг на сайте
+                        earnedBalance: 0,
                         joinedAt: serverTimestamp(),
                         lastExtensionSync: serverTimestamp(),
                         dailyDay: 0
                     });
+                    log("Created new user.", "success");
                 }
-                console.log("Synced successfully!");
+
+                log("Sync Complete. Closing...", "success");
+
+                // Даем 1 секунду, чтобы статус обновился и запрос точно ушел
+                setTimeout(() => {
+                    window.close();
+                }, 1000);
+
             } catch (e) {
-                console.error("Sync failed:", e);
-            } finally {
-                // САМОЕ ВАЖНОЕ: Закрываем окно после работы
-                window.close();
+                // Если ошибка — выводим её красным и НЕ закрываем окно скриптом.
+                // Пусть его закроет таймер-предохранитель из расширения через 15 сек.
+                log(`ERROR: ${e.message}`, "error");
+                console.error(e);
             }
         }
 
