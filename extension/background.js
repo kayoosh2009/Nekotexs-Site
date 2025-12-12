@@ -1,3 +1,5 @@
+// background.js
+
 // --- КОНФИГУРАЦИЯ ---
 const SYNC_PAGE_URL = "https://kayoosh2009.github.io/Nekotexs-Site/sync.html"; 
 const REWARD_PAGE_LOAD = 0.0003;
@@ -5,7 +7,6 @@ const REWARD_TIME_1MIN = 0.00001;
 
 // --- УПРАВЛЕНИЕ ТАЙМЕРАМИ ---
 function setupAlarms() {
-  // Сначала удаляем старые, чтобы не дублировать
   chrome.alarms.clearAll(() => {
     // 1. Таймер майнинга (каждую 1 минуту)
     chrome.alarms.create("miningTimer", { periodInMinutes: 1 });
@@ -17,7 +18,6 @@ function setupAlarms() {
   });
 }
 
-// Запускаем таймеры при установке И при запуске браузера
 chrome.runtime.onInstalled.addListener(() => {
   setupData();
   setupAlarms();
@@ -40,8 +40,6 @@ function setupData() {
 
 // --- ОБРАБОТЧИКИ ТАЙМЕРОВ ---
 chrome.alarms.onAlarm.addListener((alarm) => {
-  console.log(`[Nekotexs] Alarm fired: ${alarm.name}`); // Для отладки
-  
   if (alarm.name === "miningTimer") {
     addReward(REWARD_TIME_1MIN);
   } else if (alarm.name === "bridgeSync") {
@@ -59,18 +57,18 @@ chrome.webNavigation.onCompleted.addListener((details) => {
 // --- ЛОГИКА ИЗМЕНЕНИЯ БАЛАНСА ---
 function addReward(amount) {
   chrome.storage.local.get(['nkTxBalance', 'walletAddress'], (res) => {
-    // ВАЖНО: Если кошелек не введен, майнинг не идет!
     if (res.walletAddress) {
-      let current = parseFloat(res.nkTxBalance || 0);
+      // Превращаем в число, если вдруг там строка
+      let current = parseFloat(res.nkTxBalance);
+      if (isNaN(current)) current = 0;
+
       let newVal = current + amount;
       
-      // Округляем
+      // Округляем до 8 знаков
       newVal = Math.round(newVal * 100000000) / 100000000;
 
       chrome.storage.local.set({ nkTxBalance: newVal });
       console.log(`[Nekotexs] Balance updated: ${newVal}`);
-    } else {
-      console.log("[Nekotexs] No wallet connected. Mining paused.");
     }
   });
 }
@@ -78,27 +76,40 @@ function addReward(amount) {
 // --- ФУНКЦИЯ СКРЫТОЙ СИНХРОНИЗАЦИИ ---
 function triggerBridgeSync() {
   chrome.storage.local.get(['nkTxBalance', 'walletAddress'], (data) => {
+    // Если кошелька нет, ничего не делаем
     if (!data.walletAddress) return;
 
-    const finalUrl = `${SYNC_PAGE_URL}?wallet=${data.walletAddress}&balance=${data.nkTxBalance}`;
+    // Гарантируем числовой формат
+    const safeBalance = parseFloat(data.nkTxBalance || 0);
 
-    // ИСПРАВЛЕНИЕ: Не используем 'minimized', так как Chrome тормозит JS в свернутых окнах.
-    // Вместо этого делаем окно маленьким и не в фокусе.
+    // Используем URLSearchParams для правильного формирования ссылки
+    const params = new URLSearchParams();
+    params.append('wallet', data.walletAddress);
+    params.append('balance', safeBalance);
+
+    const finalUrl = `${SYNC_PAGE_URL}?${params.toString()}`;
+
+    // Создаем маленькое окно в углу
     chrome.windows.create({
       url: finalUrl,
       type: 'popup',
       focused: false, 
-      width: 100, 
-      height: 100, 
-      left: 10000, // Уводим окно за пределы экрана
-      top: 10000
-    }, (window) => {
-      // Предохранитель
-      setTimeout(() => {
-        if (window && window.id) {
-          chrome.windows.remove(window.id).catch(() => {});
-        }
-      }, 15000);
+      width: 1,      // Минимально возможный размер
+      height: 1,     // Минимально возможный размер
+      left: 9999,    // Уводим за экран
+      top: 9999
+    }, (createdWindow) => {
+      // Подстраховка: закрыть окно через 10 секунд, если скрипт на странице сам не закрыл
+      if (createdWindow) {
+          setTimeout(() => {
+            // Проверяем, существует ли еще окно, прежде чем пытаться закрыть
+            chrome.windows.get(createdWindow.id).then(() => {
+                chrome.windows.remove(createdWindow.id);
+            }).catch(() => {
+                // Окно уже было закрыто скриптом страницы, игнорируем ошибку
+            });
+          }, 10000);
+      }
     });
     
     console.log(`[Nekotexs] Sync triggered for ${data.walletAddress}`);
