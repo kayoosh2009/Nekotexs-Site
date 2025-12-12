@@ -54,7 +54,6 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        .toast-enter { animation: slideIn 0.5s forwards; }
     </style>
 </head>
 <body class="flex flex-col">
@@ -187,7 +186,7 @@
                             <tr class="text-gray-500 text-xs uppercase border-b border-white/10">
                                 <th class="py-3 pl-2">User</th>
                                 <th class="py-3">Joined</th>
-                                <th class="py-3 text-right pr-2">Your 10%</th>
+                                <th class="py-3 text-right pr-2">Est. 10%</th>
                             </tr>
                         </thead>
                         <tbody id="refList" class="text-sm divide-y divide-white/5"></tbody>
@@ -210,7 +209,7 @@
             <i class="fa-solid fa-gift"></i>
         </div>
         <div>
-            <h4 class="font-bold text-white text-sm">Daily Reward Claimed!</h4>
+            <h4 class="font-bold text-white text-sm">Reward Claimed!</h4>
             <p class="text-xs text-gray-400" id="toastMessage">+10 NKTX added to balance</p>
         </div>
     </div>
@@ -221,7 +220,8 @@
 
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, updateDoc, onSnapshot, collection, query, where, orderBy, limit, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    // ВАЖНО: Добавлен импорт 'increment' для правильного начисления средств
+    import { getFirestore, doc, getDoc, updateDoc, onSnapshot, collection, query, where, orderBy, limit, addDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCNjblbAvTzTveZomoMOH4ZhtuLtg-EEfU",
@@ -235,30 +235,32 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // Проверка авторизации
     const userAddress = localStorage.getItem("nekotexs_wallet");
-    if (!userAddress) location.href = "login.html";
+    if (!userAddress) location.href = "login.html"; // Или login.html, если структура папок иная
 
+    // Инициализация UI пользователя
     document.getElementById("walletAddress").value = userAddress;
     document.getElementById("welcomeUser").innerHTML = `Wallet: <span class="text-white font-mono">${userAddress.slice(0,6)}...${userAddress.slice(-4)}</span>`;
 
-    // 1. PRICE LOGIC
-    // CHANGED DEFAULT PRICE HERE
+    // 1. ЛОГИКА ЦЕНЫ (PRICE)
     let nktxPrice = 0.00000369; 
     
     async function updatePrice() {
         try {
             const res = await fetch(`https://frontend-api.pump.fun/coins/G5k8Vgh9zTrm9oEkKNuJwA2tHFVh9tgZTYQMY4k5pump`);
             const data = await res.json();
-            // If the API returns a valid price, it will override the static one.
-            // If you want STRICTLY 0.00000369 always, comment out the line below:
             if (data?.usd && data.usd > 0) nktxPrice = data.usd;
         } catch (e) {}
         
         document.getElementById("priceDisplay").innerText = `$${nktxPrice.toFixed(10)}`;
         
-        // Recalculate displayed USD value if balance exists
-        const currentBal = parseFloat(document.getElementById("miningBalance").innerText);
-        if(!isNaN(currentBal)) updateUSDValues(currentBal);
+        // Обновляем отображение USD если баланс уже загружен
+        const currentBalElement = document.getElementById("miningBalance");
+        if(currentBalElement) {
+            const currentBal = parseFloat(currentBalElement.innerText);
+            if(!isNaN(currentBal)) updateUSDValues(currentBal);
+        }
     }
     updatePrice();
     setInterval(updatePrice, 60000);
@@ -268,64 +270,64 @@
         document.getElementById("miningUSD").innerText = `~ $${mUSD.toFixed(6)} USD`;
     }
 
-    // 2. USER DATA & AUTO CLAIM LOGIC
+    // 2. ДАННЫЕ ПОЛЬЗОВАТЕЛЯ И АВТО-КЛЕЙМ
     const userRef = doc(db, "users", userAddress);
-    let isProcessingClaim = false; // Flag to prevent double submission
+    let isProcessingClaim = false; // Блокировка двойного нажатия
 
     onSnapshot(userRef, (snap) => {
         if (!snap.exists()) return;
         const d = snap.data();
 
-        // Display ONLY Earned Balance as requested
+        // Баланс
         const earned = Number(d.earnedBalance || 0);
         document.getElementById("miningBalance").innerText = earned.toFixed(4);
         updateUSDValues(earned);
 
+        // День стрика
         document.getElementById("dailyDay").innerText = d.dailyDay || 0;
 
-        // Referral Link - DYNAMIC DOMAIN LOGIC
+        // Реферальная ссылка
         const refCode = d.extensionCode || userAddress;
-        
-        // Get the current domain origin (e.g., https://yourdomain.com or http://localhost:5500)
         const currentDomain = window.location.origin; 
-        
-        // Use the dynamic domain to build the link
         document.getElementById("refLink").value = `${currentDomain}/user/login.html?ref=${refCode}`;
 
-        // Load referrals list once we have the code
+        // Загрузка списка рефералов
         loadReferrals(refCode);
 
-        // AUTO CLAIM CHECK
+        // Проверка на возможность клейма
         checkAndAutoClaim(d);
     });
 
+    // 3. ФУНКЦИЯ АВТО-КЛЕЙМА (С РЕФЕРАЛЬНЫМИ ОТЧИСЛЕНИЯМИ)
     async function checkAndAutoClaim(data) {
         if (isProcessingClaim) return;
 
         const last = data.lastClaim?.toMillis() || data.lastClaim || 0;
         const now = Date.now();
-        const cooldown = 24 * 60 * 60 * 1000; // 24 hours
+        const cooldown = 24 * 60 * 60 * 1000; // 24 часа
         const diff = now - last;
 
         const timerDiv = document.getElementById("nextClaimTimer");
 
         if (diff >= cooldown) {
-            // TIME TO CLAIM AUTOMATICALLY
+            // ВРЕМЯ КЛЕЙМИТЬ
             isProcessingClaim = true;
-            timerDiv.innerHTML = "<span class='text-green-400'>Claiming reward...</span>";
+            timerDiv.innerHTML = "<span class='text-green-400'>Processing reward...</span>";
             
             try {
                 let day = (data.dailyDay || 0) + 1;
                 if (day > 30) day = 1; 
                 
-                const reward = day; // Reward equals day number
+                const reward = day; // Награда равна номеру дня
 
+                // A. Обновляем пользователя (Баланс + Стрик + Время)
                 await updateDoc(userRef, {
                     dailyDay: day,
                     lastClaim: serverTimestamp(),
-                    earnedBalance: (data.earnedBalance || 0) + reward
+                    earnedBalance: increment(reward) // Атомарное увеличение
                 });
 
+                // B. Записываем транзакцию
                 await addDoc(collection(db, "transactions"), {
                     owner: userAddress,
                     type: "Auto Daily Reward",
@@ -334,16 +336,45 @@
                     createdAt: serverTimestamp()
                 });
 
+                // C. НАЧИСЛЕНИЕ РЕФЕРАЛУ (10%)
+                if (data.referrer && data.referrer.length > 10) {
+                    try {
+                        const referrerBonus = reward * 0.10; // 10%
+                        const referrerWallet = data.referrer;
+                        const referrerRef = doc(db, "users", referrerWallet);
+
+                        // Реально добавляем деньги на баланс реферера
+                        await updateDoc(referrerRef, {
+                            earnedBalance: increment(referrerBonus)
+                        });
+
+                        // Создаем запись в истории транзакций для реферера
+                        await addDoc(collection(db, "transactions"), {
+                            owner: referrerWallet,
+                            type: "Referral Bonus", // Помечаем как бонус
+                            amount: referrerBonus,
+                            fromUser: userAddress, // (Опционально) от кого пришло
+                            status: "Completed",
+                            createdAt: serverTimestamp()
+                        });
+                        console.log(`Referral bonus ${referrerBonus} sent to ${referrerWallet}`);
+                    } catch (err) {
+                        console.error("Referral Error:", err);
+                        // Не останавливаем процесс, если ошибка только в рефке
+                    }
+                }
+
                 showToast(reward);
 
             } catch (error) {
                 console.error("Auto claim failed", error);
+                timerDiv.innerText = "Error claiming. Retrying...";
             } finally {
                 isProcessingClaim = false;
             }
 
         } else {
-            // SHOW COUNTDOWN
+            // ПОКАЗАТЬ ТАЙМЕР
             const remain = cooldown - diff;
             const h = Math.floor(remain / 3600000).toString().padStart(2,'0');
             const m = Math.floor((remain % 3600000) / 60000).toString().padStart(2,'0');
@@ -351,22 +382,22 @@
         }
     }
 
-    // TOAST NOTIFICATION UI
+    // 4. ОТОБРАЖЕНИЕ ТОСТА (УВЕДОМЛЕНИЯ)
     function showToast(amount) {
         const toast = document.getElementById("toast");
         const msg = document.getElementById("toastMessage");
         msg.innerText = `+${amount} $NKTX added to your balance!`;
         
-        toast.classList.remove("translate-x-[200%]"); // Show
+        toast.classList.remove("translate-x-[200%]");
         toast.classList.add("translate-x-0");
         
         setTimeout(() => {
             toast.classList.remove("translate-x-0");
-            toast.classList.add("translate-x-[200%]"); // Hide
+            toast.classList.add("translate-x-[200%]");
         }, 4000);
     }
 
-    // 3. TRANSACTIONS
+    // 5. ИСТОРИЯ ТРАНЗАКЦИЙ
     const txQuery = query(collection(db, "transactions"), where("owner", "==", userAddress), orderBy("createdAt", "desc"), limit(5));
     onSnapshot(txQuery, snap => {
         let html = "";
@@ -376,27 +407,33 @@
             snap.forEach(doc => {
                 const t = doc.data();
                 const isPlus = t.amount > 0;
+                
+                // Цвет текста в зависимости от типа
+                let typeClass = "text-gray-300";
+                if (t.type === "Referral Bonus") typeClass = "text-solana-purple font-bold";
+
                 html += `<tr>
-                    <td class="py-3 pl-2 text-gray-300 font-medium">${t.type}</td>
-                    <td class="py-3 text-gray-500 text-xs">${new Date(t.createdAt?.toMillis() || t.createdAt).toLocaleDateString()}</td>
-                    <td class="py-3 text-right pr-2 ${isPlus ? 'text-solana-green' : 'text-red-400'} font-bold">${isPlus ? '+' : ''}${t.amount}</td>
+                    <td class="py-3 pl-2 ${typeClass} font-medium text-xs md:text-sm">${t.type}</td>
+                    <td class="py-3 text-gray-500 text-xs">${t.createdAt ? new Date(t.createdAt.toMillis()).toLocaleDateString() : 'Pending'}</td>
+                    <td class="py-3 text-right pr-2 ${isPlus ? 'text-solana-green' : 'text-red-400'} font-bold">${isPlus ? '+' : ''}${t.amount.toFixed(4)}</td>
                 </tr>`;
             });
         }
         document.getElementById("txList").innerHTML = html;
     });
 
-    // 4. REFERRALS
+    // 6. СПИСОК РЕФЕРАЛОВ
     function loadReferrals(code) {
         const q = query(collection(db, "users"), where("referrer", "==", code), limit(10));
         onSnapshot(q, snap => {
-            let total = 0;
+            let totalEst = 0;
             let rows = "";
             snap.forEach(doc => {
                 const r = doc.data();
                 const their = Number(r.earnedBalance || 0);
-                const earn = their * 0.1;
-                total += earn;
+                const earn = their * 0.1; // Это просто визуальная оценка "сколько принес реферал"
+                totalEst += earn;
+                
                 rows += `<tr>
                     <td class="py-3 pl-2 font-mono text-gray-300">${doc.id.slice(0,4)}...${doc.id.slice(-4)}</td>
                     <td class="py-3 text-gray-500 text-xs">${r.joinedAt ? new Date(r.joinedAt.toMillis()).toLocaleDateString() : '-'}</td>
@@ -405,11 +442,12 @@
             });
             if (rows === "") rows = `<tr><td colspan="3" class="text-center py-6 text-gray-500 text-xs">No referrals yet</td></tr>`;
             document.getElementById("refList").innerHTML = rows;
-            document.getElementById("totalRefEarnings").innerText = `${total.toFixed(2)} $NKTX`;
+            // Отображаем общую статистику
+            document.getElementById("totalRefEarnings").innerText = `${totalEst.toFixed(2)} $NKTX`;
         });
     }
 
-    // UTILS
+    // УТИЛИТЫ (Копирование и Выход)
     window.copyVal = (id) => {
         navigator.clipboard.writeText(document.getElementById(id).value);
     }
