@@ -52,13 +52,11 @@
         <div class="glass p-10">
             <div id="message" class="hidden p-4 mb-6 text-sm rounded-lg text-left"></div>
 
-            <!-- Phantom Connect Button -->
             <button id="phantomBtn" class="w-full flex items-center justify-center gap-4 bg-gradient-to-r from-[#9945FF] to-[#7c3aed] hover:from-[#7c3aed] hover:to-[#6d28d9] text-white font-bold text-lg py-5 rounded-xl transition-all shadow-xl mb-6">
                 <img src="../img/phantom.png" alt="Phantom" class="h-10 w-10">
                 <span id="btnText">Connect Phantom Wallet</span>
             </button>
 
-            <!-- Divider -->
             <div class="relative my-8">
                 <div class="absolute inset-0 flex items-center">
                     <div class="w-full border-t border-gray-700"></div>
@@ -68,7 +66,6 @@
                 </div>
             </div>
 
-            <!-- Manual Address Input -->
             <div class="space-y-4">
                 <input 
                     type="text" 
@@ -109,6 +106,17 @@
         const manualBtn = document.getElementById('manualBtn');
         const messageDiv = document.getElementById('message');
 
+        // --- REFERRAL LOGIC START ---
+        // 1. Считываем параметр ref из URL при загрузке страницы
+        const urlParams = new URLSearchParams(window.location.search);
+        const referralCode = urlParams.get('ref');
+        
+        if (referralCode) {
+            console.log("Referral code detected:", referralCode);
+            // Можно сохранить в sessionStorage на случай перезагрузки страницы, но пока используем переменную
+        }
+        // --- REFERRAL LOGIC END ---
+
         const showMessage = (text, error = false) => {
             messageDiv.textContent = text;
             messageDiv.className = `p-4 mb-6 text-sm rounded-lg ${error ? 'bg-red-900/70 text-red-200' : 'bg-green-900/70 text-green-200 font-bold'}`;
@@ -116,25 +124,50 @@
             setTimeout(() => messageDiv.classList.add('hidden'), 5000);
         };
 
-        // Функция обработки успешного входа (общая для обоих методов)
+        // Функция обработки успешного входа
         const handleSuccessfulLogin = async (walletAddress) => {
             localStorage.setItem('nekotexs_wallet', walletAddress);
 
             const userRef = doc(db, "users", walletAddress);
-            const userSnap = await getDoc(userRef);
+            
+            try {
+                const userSnap = await getDoc(userRef);
 
-            const userData = {
-                walletAddress,
-                lastLogin: serverTimestamp(),
-                nkTxBalance: userSnap.exists() ? (userSnap.data().nkTxBalance || 0) : 0,
-                loginCount: userSnap.exists() ? (userSnap.data().loginCount || 0) + 1 : 1
-            };
+                // Базовые данные, которые обновляем всегда
+                let userData = {
+                    walletAddress: walletAddress,
+                    lastLogin: serverTimestamp(),
+                    loginCount: userSnap.exists() ? (userSnap.data().loginCount || 0) + 1 : 1
+                };
 
-            await setDoc(userRef, userData, { merge: true });
-            showMessage("Success! Welcome back");
-            setTimeout(() => {
-                window.location.href = "../dash.html";
-            }, 1200);
+                // --- REFERRAL & NEW USER LOGIC ---
+                // Если пользователя еще нет в базе (Новый юзер)
+                if (!userSnap.exists()) {
+                    // Добавляем дату регистрации (нужно для таблицы рефералов в Dash)
+                    userData.joinedAt = serverTimestamp();
+                    // Начальный баланс
+                    userData.earnedBalance = 0.00; 
+                    userData.dailyDay = 0;
+
+                    // Если есть реферальный код, записываем его в профиль нового юзера
+                    if (referralCode && referralCode !== walletAddress) {
+                        userData.referrer = referralCode;
+                    }
+                }
+                // ---------------------------------
+
+                // Используем merge: true, чтобы не затереть существующие данные
+                await setDoc(userRef, userData, { merge: true });
+
+                showMessage("Success! Welcome back");
+                setTimeout(() => {
+                    window.location.href = "../dash.html";
+                }, 1200);
+
+            } catch (error) {
+                console.error("Login Error:", error);
+                showMessage("Database error. Please try again.", true);
+            }
         };
 
         // 1. Подключение через Phantom
@@ -168,7 +201,7 @@
                 return;
             }
 
-            // Базовая валидация base58 адреса Solana (длина 32-44 символа, только base58 символы)
+            // Валидация base58
             const base58Regex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
             if (!base58Regex.test(address)) {
                 showMessage("Invalid Solana address. Please check and try again.", true);
@@ -189,7 +222,6 @@
             }
         });
 
-        // Позволяем нажать Enter в поле ввода
         manualAddressInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 manualBtn.click();
