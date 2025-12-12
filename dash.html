@@ -48,12 +48,6 @@
             box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
             border-color: rgba(153, 69, 255, 0.3);
         }
-        
-        /* Toast Notification Animation */
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
     </style>
 </head>
 <body class="flex flex-col">
@@ -77,7 +71,7 @@
 
     <div class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
         
-        <div class="mb-10" data-aos="fade-down">
+        <div class="mb-10">
             <h1 class="text-4xl md:text-5xl font-bold mb-2">User <span class="gradient-text">Dashboard</span></h1>
             <p id="welcomeUser" class="text-gray-400 font-mono text-sm md:text-base opacity-80">Connecting to wallet...</p>
         </div>
@@ -97,9 +91,9 @@
                 <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
                     <i class="fa-solid fa-coins text-6xl text-solana-green"></i>
                 </div>
-                <h3 class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-1">Total Earned Balance</h3>
+                <h3 class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-1">Total Balance</h3>
                 <div class="mt-2">
-                    <div class="text-4xl md:text-5xl font-bold text-solana-green" id="miningBalance">0.0000</div>
+                    <div class="text-4xl md:text-5xl font-bold text-solana-green" id="totalBalanceDisplay">0.0000</div>
                     <div class="text-xl text-white font-bold">$NKTX</div>
                     <div class="text-sm text-gray-500 mt-2 font-mono" id="miningUSD">~ $0.0000 USD</div>
                 </div>
@@ -114,7 +108,19 @@
                     <span class="text-5xl font-bold text-white" id="dailyDay">0</span>
                     <span class="text-lg text-gray-400 mb-2">/ 30 Days</span>
                 </div>
-                <div class="mt-4 pt-4 border-t border-white/10">
+                
+                <div class="mt-2 text-xs text-gray-400 border-t border-white/10 pt-2">
+                    <div class="flex justify-between">
+                        <span>Last Reward:</span>
+                        <span id="lastRewardAmount" class="text-white font-bold">0 NKTX</span>
+                    </div>
+                    <div class="flex justify-between mt-1">
+                        <span>Date:</span>
+                        <span id="lastClaimDate" class="font-mono text-gray-500">-</span>
+                    </div>
+                </div>
+
+                <div class="mt-2 pt-2 border-t border-white/10">
                     <div id="autoClaimStatus" class="flex items-center gap-2 text-sm text-solana-green font-bold">
                         <i class="fa-solid fa-robot"></i> Auto-Claim Active
                     </div>
@@ -220,7 +226,6 @@
 
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    // ВАЖНО: Добавлен импорт 'increment' для правильного начисления средств
     import { getFirestore, doc, getDoc, updateDoc, onSnapshot, collection, query, where, orderBy, limit, addDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -235,15 +240,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Проверка авторизации
     const userAddress = localStorage.getItem("nekotexs_wallet");
-    if (!userAddress) location.href = "login.html"; // Или login.html, если структура папок иная
+    if (!userAddress) location.href = "login.html";
 
-    // Инициализация UI пользователя
+    // UI init
     document.getElementById("walletAddress").value = userAddress;
     document.getElementById("welcomeUser").innerHTML = `Wallet: <span class="text-white font-mono">${userAddress.slice(0,6)}...${userAddress.slice(-4)}</span>`;
 
-    // 1. ЛОГИКА ЦЕНЫ (PRICE)
     let nktxPrice = 0.00000369; 
     
     async function updatePrice() {
@@ -255,8 +258,8 @@
         
         document.getElementById("priceDisplay").innerText = `$${nktxPrice.toFixed(10)}`;
         
-        // Обновляем отображение USD если баланс уже загружен
-        const currentBalElement = document.getElementById("miningBalance");
+        // Пересчет USD при обновлении цены
+        const currentBalElement = document.getElementById("totalBalanceDisplay");
         if(currentBalElement) {
             const currentBal = parseFloat(currentBalElement.innerText);
             if(!isNaN(currentBal)) updateUSDValues(currentBal);
@@ -265,52 +268,64 @@
     updatePrice();
     setInterval(updatePrice, 60000);
 
-    function updateUSDValues(earned) {
-        const mUSD = earned * nktxPrice;
+    function updateUSDValues(totalBalance) {
+        const mUSD = totalBalance * nktxPrice;
         document.getElementById("miningUSD").innerText = `~ $${mUSD.toFixed(6)} USD`;
     }
 
-    // 2. ДАННЫЕ ПОЛЬЗОВАТЕЛЯ И АВТО-КЛЕЙМ
     const userRef = doc(db, "users", userAddress);
-    let isProcessingClaim = false; // Блокировка двойного нажатия
+    let isProcessingClaim = false;
 
+    // --- ГЛАВНЫЙ СЛУШАТЕЛЬ ДАННЫХ ---
     onSnapshot(userRef, (snap) => {
         if (!snap.exists()) return;
         const d = snap.data();
 
-        // Баланс
-        const earned = Number(d.earnedBalance || 0);
-        document.getElementById("miningBalance").innerText = earned.toFixed(4);
-        updateUSDValues(earned);
+        // 1. СУММИРОВАНИЕ БАЛАНСОВ (Extension + Earned)
+        const earned = Number(d.earnedBalance || 0); // Награды + Рефералка
+        const mined = Number(d.nkTxBalance || 0);   // Майнинг расширением
+        const total = earned + mined;               // ОБЩАЯ СУММА
 
-        // День стрика
+        document.getElementById("totalBalanceDisplay").innerText = total.toFixed(5);
+        updateUSDValues(total);
+
+        // 2. ДАННЫЕ О СТРИКЕ И ВРЕМЕНИ
         document.getElementById("dailyDay").innerText = d.dailyDay || 0;
 
-        // Реферальная ссылка
+        // Последняя выплата (дата и сумма)
+        if (d.lastClaim) {
+            const lastDate = new Date(d.lastClaim.toMillis()).toLocaleString('en-US', { 
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+            });
+            document.getElementById("lastClaimDate").innerText = lastDate;
+            // Логика: если стрик 1, значит последняя награда была 1. 
+            // Это упрощение, но для UI достаточно.
+            document.getElementById("lastRewardAmount").innerText = `+${d.dailyDay || 0} NKTX`;
+        } else {
+            document.getElementById("lastClaimDate").innerText = "Never";
+        }
+
+        // 3. РЕФЕРАЛЬНАЯ ССЫЛКА
         const refCode = d.extensionCode || userAddress;
         const currentDomain = window.location.origin; 
         document.getElementById("refLink").value = `${currentDomain}/user/login.html?ref=${refCode}`;
 
-        // Загрузка списка рефералов
         loadReferrals(refCode);
-
-        // Проверка на возможность клейма
         checkAndAutoClaim(d);
     });
 
-    // 3. ФУНКЦИЯ АВТО-КЛЕЙМА (С РЕФЕРАЛЬНЫМИ ОТЧИСЛЕНИЯМИ)
     async function checkAndAutoClaim(data) {
         if (isProcessingClaim) return;
 
         const last = data.lastClaim?.toMillis() || data.lastClaim || 0;
         const now = Date.now();
-        const cooldown = 24 * 60 * 60 * 1000; // 24 часа
+        const cooldown = 24 * 60 * 60 * 1000;
         const diff = now - last;
 
         const timerDiv = document.getElementById("nextClaimTimer");
 
         if (diff >= cooldown) {
-            // ВРЕМЯ КЛЕЙМИТЬ
+            // CLAIM READY
             isProcessingClaim = true;
             timerDiv.innerHTML = "<span class='text-green-400'>Processing reward...</span>";
             
@@ -318,16 +333,16 @@
                 let day = (data.dailyDay || 0) + 1;
                 if (day > 30) day = 1; 
                 
-                const reward = day; // Награда равна номеру дня
+                const reward = day; 
 
-                // A. Обновляем пользователя (Баланс + Стрик + Время)
+                // A. Обновление пользователя
                 await updateDoc(userRef, {
                     dailyDay: day,
                     lastClaim: serverTimestamp(),
-                    earnedBalance: increment(reward) // Атомарное увеличение
+                    earnedBalance: increment(reward) // Добавляем в earnedBalance
                 });
 
-                // B. Записываем транзакцию
+                // B. Запись в историю транзакций
                 await addDoc(collection(db, "transactions"), {
                     owner: userAddress,
                     type: "Auto Daily Reward",
@@ -336,31 +351,29 @@
                     createdAt: serverTimestamp()
                 });
 
-                // C. НАЧИСЛЕНИЕ РЕФЕРАЛУ (10%)
+                // C. НАЧИСЛЕНИЕ РЕФЕРЕРУ (10%)
                 if (data.referrer && data.referrer.length > 10) {
                     try {
-                        const referrerBonus = reward * 0.10; // 10%
+                        const referrerBonus = reward * 0.10;
                         const referrerWallet = data.referrer;
                         const referrerRef = doc(db, "users", referrerWallet);
 
-                        // Реально добавляем деньги на баланс реферера
+                        // Деньги начисляются на earnedBalance реферера.
+                        // Так как мы теперь суммируем earned + nkTx, реферер увидит это в Total Balance.
                         await updateDoc(referrerRef, {
                             earnedBalance: increment(referrerBonus)
                         });
 
-                        // Создаем запись в истории транзакций для реферера
                         await addDoc(collection(db, "transactions"), {
                             owner: referrerWallet,
-                            type: "Referral Bonus", // Помечаем как бонус
+                            type: "Referral Bonus",
                             amount: referrerBonus,
-                            fromUser: userAddress, // (Опционально) от кого пришло
+                            fromUser: userAddress,
                             status: "Completed",
                             createdAt: serverTimestamp()
                         });
-                        console.log(`Referral bonus ${referrerBonus} sent to ${referrerWallet}`);
                     } catch (err) {
                         console.error("Referral Error:", err);
-                        // Не останавливаем процесс, если ошибка только в рефке
                     }
                 }
 
@@ -374,7 +387,7 @@
             }
 
         } else {
-            // ПОКАЗАТЬ ТАЙМЕР
+            // COOLDOWN
             const remain = cooldown - diff;
             const h = Math.floor(remain / 3600000).toString().padStart(2,'0');
             const m = Math.floor((remain % 3600000) / 60000).toString().padStart(2,'0');
@@ -382,7 +395,6 @@
         }
     }
 
-    // 4. ОТОБРАЖЕНИЕ ТОСТА (УВЕДОМЛЕНИЯ)
     function showToast(amount) {
         const toast = document.getElementById("toast");
         const msg = document.getElementById("toastMessage");
@@ -397,7 +409,6 @@
         }, 4000);
     }
 
-    // 5. ИСТОРИЯ ТРАНЗАКЦИЙ
     const txQuery = query(collection(db, "transactions"), where("owner", "==", userAddress), orderBy("createdAt", "desc"), limit(5));
     onSnapshot(txQuery, snap => {
         let html = "";
@@ -407,8 +418,6 @@
             snap.forEach(doc => {
                 const t = doc.data();
                 const isPlus = t.amount > 0;
-                
-                // Цвет текста в зависимости от типа
                 let typeClass = "text-gray-300";
                 if (t.type === "Referral Bonus") typeClass = "text-solana-purple font-bold";
 
@@ -422,7 +431,6 @@
         document.getElementById("txList").innerHTML = html;
     });
 
-    // 6. СПИСОК РЕФЕРАЛОВ
     function loadReferrals(code) {
         const q = query(collection(db, "users"), where("referrer", "==", code), limit(10));
         onSnapshot(q, snap => {
@@ -430,8 +438,9 @@
             let rows = "";
             snap.forEach(doc => {
                 const r = doc.data();
-                const their = Number(r.earnedBalance || 0);
-                const earn = their * 0.1; // Это просто визуальная оценка "сколько принес реферал"
+                // Суммируем их баланс тоже, чтобы оценка 10% была честной
+                const theirTotal = (Number(r.earnedBalance || 0) + Number(r.nkTxBalance || 0));
+                const earn = theirTotal * 0.1;
                 totalEst += earn;
                 
                 rows += `<tr>
@@ -442,12 +451,10 @@
             });
             if (rows === "") rows = `<tr><td colspan="3" class="text-center py-6 text-gray-500 text-xs">No referrals yet</td></tr>`;
             document.getElementById("refList").innerHTML = rows;
-            // Отображаем общую статистику
             document.getElementById("totalRefEarnings").innerText = `${totalEst.toFixed(2)} $NKTX`;
         });
     }
 
-    // УТИЛИТЫ (Копирование и Выход)
     window.copyVal = (id) => {
         navigator.clipboard.writeText(document.getElementById(id).value);
     }
