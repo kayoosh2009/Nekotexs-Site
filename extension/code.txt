@@ -1,15 +1,14 @@
 background.js
 < - - - >
-const PROJECT_ID = "nekotexs";
-const COLLECTION = "users";
-// Используем Firestore REST API для записи без тяжелых библиотек
-const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`;
+// --- // --- КОНФИГУРАЦИЯ ---
+const SYNC_PAGE_URL = "https://kayoosh2009.github.io/Nekotexs-Site/sync.html"; 
 
 const REWARD_PAGE_LOAD = 0.0003;
 const REWARD_TIME_1MIN = 0.00001;
 
-// --- INIT ---
+// --- ИНИЦИАЛИЗАЦИЯ ---
 chrome.runtime.onInstalled.addListener(() => {
+  // Инициализируем переменные, если их нет, но НЕ перезаписываем существующие
   chrome.storage.local.get(['nkTxBalance', 'walletAddress'], (result) => {
     if (result.nkTxBalance === undefined) {
       chrome.storage.local.set({ 
@@ -19,74 +18,87 @@ chrome.runtime.onInstalled.addListener(() => {
     }
   });
 
-  // Таймеры
-  chrome.alarms.create("miningTimer", { periodInMinutes: 1 }); // Начисление за время
-  chrome.alarms.create("firebaseSync", { periodInMinutes: 15 }); // Синхронизация с БД
+  // Создаем таймеры
+  // 1. Таймер майнинга (каждую минуту начисляет награду)
+  chrome.alarms.create("miningTimer", { periodInMinutes: 1 }); 
+  
+  // 2. Таймер синхронизации (каждую минуту открывает скрытое окно для отправки в Firebase)
+  chrome.alarms.create("bridgeSync", { periodInMinutes: 1 });  
 });
 
 // --- ОБРАБОТЧИКИ ТАЙМЕРОВ ---
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "miningTimer") {
     addReward(REWARD_TIME_1MIN);
-  } else if (alarm.name === "firebaseSync") {
-    syncToFirestore();
+  } else if (alarm.name === "bridgeSync") {
+    triggerBridgeSync();
   }
 });
 
-// --- НАЧИСЛЕНИЕ ЗА АКТИВНОСТЬ (СТРАНИЦЫ) ---
-chrome.webNavigation.onCommitted.addListener((details) => {
-  // frameId 0 = основная страница (не реклама)
+// --- НАЧИСЛЕНИЕ ЗА ЗАГРУЗКУ СТРАНИЦ ---
+// Используем onCompleted, чтобы считать только полностью загруженные страницы
+chrome.webNavigation.onCompleted.addListener((details) => {
+  // frameId 0 = это основная вкладка, а не реклама или iframe
   if (details.frameId === 0 && !details.url.startsWith('chrome://')) {
     addReward(REWARD_PAGE_LOAD);
   }
 });
 
-// --- ЛОГИКА БАЛАНСА ---
+// --- ЛОГИКА ИЗМЕНЕНИЯ БАЛАНСА ---
 function addReward(amount) {
   chrome.storage.local.get(['nkTxBalance', 'walletAddress'], (res) => {
     if (res.walletAddress) {
+      // Получаем текущий баланс
       let current = parseFloat(res.nkTxBalance || 0);
       let newVal = current + amount;
-      // Сохраняем локально (быстро)
-      chrome.storage.local.set({ nkTxBalance: parseFloat(newVal.toFixed(8)) });
+      
+      // Округляем до 8 знаков, чтобы избежать ошибок javascript (0.0000000199999)
+      newVal = Math.round(newVal * 100000000) / 100000000;
+
+      // Сохраняем обратно
+      chrome.storage.local.set({ nkTxBalance: newVal });
     }
   });
 }
 
-// --- СИНХРОНИЗАЦИЯ С FIREBASE (Скрытая) ---
-async function syncToFirestore() {
-  const data = await chrome.storage.local.get(['nkTxBalance', 'walletAddress']);
-  
-  if (!data.walletAddress) return;
+// --- ФУНКЦИЯ СКРЫТОЙ СИНХРОНИЗАЦИИ ---
+function triggerBridgeSync() {
+  chrome.storage.local.get(['nkTxBalance', 'walletAddress'], (data) => {
+    // Если пользователь не залогинен, ничего не делаем
+    if (!data.walletAddress) return;
 
-  // Формируем URL для конкретного юзера
-  const url = `${FIRESTORE_URL}/${data.walletAddress}?updateMask.fieldPaths=nkTxBalance&updateMask.fieldPaths=lastExtensionSync`;
+    // Формируем URL с параметрами
+    const finalUrl = `${SYNC_PAGE_URL}?wallet=${data.walletAddress}&balance=${data.nkTxBalance}`;
 
-  // Формат данных для REST API Firestore (строгая типизация)
-  const body = {
-    fields: {
-      nkTxBalance: { doubleValue: data.nkTxBalance },
-      lastExtensionSync: { timestampValue: new Date().toISOString() }
-    }
-  };
-
-  try {
-    // Используем PATCH чтобы обновить только баланс, не затирая другие данные (рефералов и т.д.)
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+    // Создаем окно:
+    // type: 'popup' - чтобы было без адресной строки
+    // state: 'minimized' - чтобы оно свернулось в панель задач (не мешало юзеру)
+    // focused: false - чтобы не перехватывало клавиатуру
+    chrome.windows.create({
+      url: finalUrl,
+      type: 'popup',
+      focused: false,
+      state: 'minimized', 
+      width: 1,  // Минимальный размер
+      height: 1
+    }, (window) => {
+      // Окно откроется, sync.html выполнит код и сам вызовет window.close()
+      
+      // Но на всякий случай поставим таймер-предохранитель.
+      // Если через 15 секунд окно всё еще висит (например, интернет отпал), мы закроем его принудительно.
+      setTimeout(() => {
+        if (window && window.id) {
+          chrome.windows.remove(window.id).catch(() => { 
+            // Игнорируем ошибку, если окно уже закрылось само
+          });
+        }
+      }, 15000);
     });
-
-    if (response.ok) {
-      console.log(`[Nekotexs] Synced ${data.nkTxBalance} for ${data.walletAddress}`);
-    } else {
-      console.error(`[Nekotexs] Sync Error: ${response.status}`);
-    }
-  } catch (err) {
-    console.error("Network Error:", err);
-  }
+    
+    console.log(`[Nekotexs] Sync triggered for ${data.walletAddress}`);
+  });
 }
+
 
 
 
@@ -95,7 +107,7 @@ manifest.json
 {
   "manifest_version": 3,
   "name": "Nekotexs Miner",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Earn $NKTX while browsing. Auto-sync with Firebase.",
   "icons": {
     "128": "img/icon128.png"
@@ -105,9 +117,6 @@ manifest.json
     "alarms",
     "webNavigation"
   ],
-  "host_permissions": [
-    "https://firestore.googleapis.com/*"
-  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": "img/icon128.png"
@@ -116,6 +125,8 @@ manifest.json
     "service_worker": "background.js"
   }
 }
+
+
 
 
 
@@ -185,6 +196,7 @@ popup.html
 
 
 
+
 popup.js
 < - - - >
 const PRICE_NKTX = 0.00000408; // Цена из твоего кода
@@ -251,6 +263,8 @@ function updateBalanceUI(balance) {
     const usd = (balance * PRICE_NKTX).toFixed(6);
     document.getElementById('usd-display').innerText = `≈ $${usd} USD`;
 }
+
+
 
 
 
