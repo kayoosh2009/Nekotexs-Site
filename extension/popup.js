@@ -1,23 +1,26 @@
+// popup.js
+
 const PRICE_NKTX = 0.00000408;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Проверка авторизации при открытии попапа
     chrome.storage.local.get(['walletAddress', 'nkTxBalance'], (data) => {
+        // Убедимся, что баланс отображается как число
+        const balance = parseFloat(data.nkTxBalance || 0);
+        
         if (data.walletAddress) {
-            showDashboard(data.walletAddress, data.nkTxBalance || 0);
+            showDashboard(data.walletAddress, balance);
         } else {
             showLogin();
         }
     });
 
-    // Логика Входа
     document.getElementById('login-btn').addEventListener('click', () => {
         const addr = document.getElementById('wallet-input').value.trim();
         
         if (addr.length >= 32 && addr.length <= 44) {
-            // ИСПРАВЛЕНИЕ: Сначала получаем текущие данные, чтобы не стереть баланс
             chrome.storage.local.get(['nkTxBalance'], (prevData) => {
-                const currentBalance = prevData.nkTxBalance || 0;
+                // При входе берем старый баланс или 0
+                const currentBalance = parseFloat(prevData.nkTxBalance || 0);
                 
                 chrome.storage.local.set({ 
                     walletAddress: addr,
@@ -31,8 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Логика Выхода
     document.getElementById('logout-btn').addEventListener('click', () => {
+        // При выходе очищаем кошелек, но баланс в storage можно оставить (опционально)
+        // Но здесь чистим всё, как в оригинале
         chrome.storage.local.clear(() => {
             showLogin();
         });
@@ -53,6 +57,7 @@ function showDashboard(address, balance) {
 
     updateBalanceUI(balance);
 
+    // Слушаем изменения в реальном времени (пока открыто окно)
     chrome.storage.onChanged.addListener((changes) => {
         if (changes.nkTxBalance) {
             updateBalanceUI(changes.nkTxBalance.newValue);
@@ -61,8 +66,9 @@ function showDashboard(address, balance) {
 }
 
 function updateBalanceUI(balance) {
-    // Отображаем больше знаков после запятой, так как награды очень маленькие
-    document.getElementById('balance-display').innerText = balance.toFixed(5);
-    const usd = (balance * PRICE_NKTX).toFixed(7);
+    // Гарантируем, что balance это число
+    const numBalance = parseFloat(balance);
+    document.getElementById('balance-display').innerText = numBalance.toFixed(5);
+    const usd = (numBalance * PRICE_NKTX).toFixed(7);
     document.getElementById('usd-display').innerText = `≈ $${usd} USD`;
 }
